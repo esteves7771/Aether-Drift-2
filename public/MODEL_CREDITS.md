@@ -30,3 +30,6 @@ Source records checked 2026-11-14. The user supplied the archives and confirmed 
 - **Rocks007**, Lennart Demes / ambientCG — [original](https://ambientcg.com/view?id=Rocks007), [CC0](https://docs.ambientcg.com/license/). Official Rocks007_1K-JPG.zip; distributed only 1K Color, NormalGL, Roughness maps. Shared across seeded cratered meshes. NASA and Poly Haven catalogs evaluated; no additional rock geometry downloaded.
 
 [CC BY 4.0 terms](https://creativecommons.org/licenses/by/4.0/). Modifications above are by the Aether Drift 2.0 project; no endorsement implied. Source metadata is preserved in docs/licenses/models in the development project.
+
+## Menu satellite
+User-supplied space-satellite.zip / Satellite2.obj and Satellite2 PBR maps. Creator, source URL and license evidence were not included in the archive. User confirmed free-use status; independent verification is pending. See docs/licenses/models/satellite.md in the source project. No blanket license is applied.

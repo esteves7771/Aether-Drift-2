@@ -10,7 +10,8 @@ const names = [
     'sci-fi-box',
     'turret',
     'tesser',
-    'astronaut'
+    'astronaut',
+    'satellite'
 ];
 for (const name of names) {
     const b = fs.readFileSync(new URL('../public/models/' + name + '.glb', import.meta.url));

@@ -11,7 +11,9 @@ describe('Curated imported models', () => {
             s = t.size / t.dims[t.dimension];
         expect(t.dims[2] * s).toBeCloseTo(5.2);
         expect(MODEL_MOUNTS.surveyor.muzzle).toEqual([1.35, -0.12, -2.8]);
-        expect(MODEL_MOUNTS.surveyor.engines[0]).toEqual([-1.05, -0.1, 2.7]);
+        expect(MODEL_MOUNTS.surveyor.engines).toHaveLength(3);
+        expect(MODEL_MOUNTS.surveyor.engines[0]).toEqual([0, -0.257, 2.445]);
+        expect(MODEL_MOUNTS.surveyor.engines[1][0]).toBe(-1.373);
         expect(MODEL_MOUNTS.surveyor.radius).toBe(2.4);
         expect(MODEL_TUNING.raider.yaw).toBe(90);
         const forward = new Quat().setFromEulerAngles(0, 90, 0).transformVector(Vec3.RIGHT);

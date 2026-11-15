@@ -9,6 +9,7 @@ import {
     MeshInstance,
     Quat,
     StandardMaterial,
+    ShaderMaterial,
     Vec3
 } from 'playcanvas';
 import type { GraphicsDevice, Geometry, RenderComponent } from 'playcanvas';
@@ -174,8 +175,16 @@ export function validateRenderAttributes(root: Entity) {
     for (const render of root.findComponents('render')) {
         const component = render as RenderComponent;
         for (const instance of component.meshInstances) {
-            const m = instance.material as StandardMaterial;
+            const material = instance.material;
+            const m = material as StandardMaterial;
             const normals = instance.mesh!.vertexBuffer.format.elements.some((e) => e.name === 'NORMAL');
+            if (material instanceof ShaderMaterial) {
+                const required = Object.values(material.shaderDesc?.attributes ?? {});
+                for (const semantic of required)
+                    if (!instance.mesh!.vertexBuffer.format.elements.some((e) => e.name === semantic))
+                        throw new Error(`Missing shader attribute ${semantic}: ${instance.node.name}`);
+                continue;
+            }
             if (
                 (m.useLighting || m.useMetalness || m.specular.r > 0 || m.specular.g > 0 || m.specular.b > 0) &&
                 !normals

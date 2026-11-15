@@ -21,10 +21,10 @@ export class ShipHangar {
         this.ship = ship;
         this.original = ship.children[0] as Entity;
         document
-            .querySelector('#home-panel .patrol-brief')!
+            .querySelector('#roster-slot')!
             .insertAdjacentHTML(
-                'beforebegin',
-                `<div id="ship-hangar"><small>FLIGHTCRAFT / SHARED FLIGHT & WEAPONS</small><div><button id="ship-classic" type="button" aria-pressed="true">AE–01 <span>ORIGINAL FIGHTER</span></button><button id="ship-surveyor" type="button" aria-pressed="false">SURVEYOR <span>IMPORTED EXPLORER</span></button></div><p id="ship-status" role="status">AE–01 READY</p><a href="./MODEL_CREDITS.md" target="_blank" rel="noopener">MODEL CREDITS ↗</a></div>`
+                'beforeend',
+                `<div id="ship-hangar"><small>▪ PATROL ROSTER <em>/ AVAILABLE SHIPS</em></small><div><button id="ship-classic" type="button" aria-pressed="true"><img src="${import.meta.env.BASE_URL}images/menu-classic.webp" alt="AE-01 fighter"><b>AE-01</b><span>INTERCEPTOR</span></button><button id="ship-surveyor" type="button" aria-pressed="false"><img src="${import.meta.env.BASE_URL}images/menu-surveyor.webp" alt="Surveyor spacecraft"><b>SURVEYOR</b><span>EXPLORER</span></button></div><p id="ship-status" role="status">AE–01 READY</p></div>`
             );
         this.panel = document.getElementById('ship-hangar')!;
         this.status = document.getElementById('ship-status')!;
@@ -43,7 +43,7 @@ export class ShipHangar {
         this.status.textContent =
             this.selected === 'classic' ? 'AE–01 READY' : 'SURVEYOR READY / SAME FLIGHT PERFORMANCE';
         const caption = document.querySelector('.ship-index');
-        if (caption) caption.textContent = this.selected === 'classic' ? 'AE–01 / INTERCEPTOR' : 'SV–02 / SURVEYOR';
+        if (caption) caption.textContent = this.selected === 'classic' ? 'AE-01 / INTERCEPTOR' : 'SURVEYOR / EXPLORER';
     }
     chooseClassic() {
         this.desired = 'classic';

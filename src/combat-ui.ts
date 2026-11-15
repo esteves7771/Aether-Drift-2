@@ -4,6 +4,7 @@ import type { Entity } from 'playcanvas';
 import { ARCADE } from './arcade-config';
 import type { Combat } from './combat';
 import { COMBAT } from './combat-config';
+import { BLASTS } from './explosion-config';
 import { Guardian } from './guardian';
 import { Phantom } from './phantom';
 export class CombatHUD {
@@ -54,6 +55,9 @@ export class CombatHUD {
             h = window.innerHeight,
             focal = h / (2 * Math.tan((camera.camera!.fov * Math.PI) / 360));
         this.inverse.copy(camera.getRotation()).invert();
+        const cockpit = document.body.classList.contains('cockpit-view'),
+            minY = cockpit ? h * 0.14 : 105,
+            maxY = cockpit ? h * 0.52 : h - 100;
         for (const e of combat.targets) {
             const marker = this.markers[e.id];
             marker.hidden =
@@ -66,7 +70,7 @@ export class CombatHUD {
             this.inverse.transformVector(this.point, this.local);
             let x = w / 2 + (this.local.x / Math.max(0.01, -this.local.z)) * focal,
                 y = h / 2 - (this.local.y / Math.max(0.01, -this.local.z)) * focal;
-            const off = this.local.z >= 0 || x < 65 || x > w - 65 || y < 105 || y > h - 100;
+            const off = this.local.z >= 0 || x < 65 || x > w - 65 || y < minY || y > maxY;
             if (off) {
                 const dx = this.local.x,
                     dy = -this.local.y;
@@ -79,6 +83,7 @@ export class CombatHUD {
                 y = h / 2 + Math.sin(angle) * radius;
                 marker.style.setProperty('--angle', `${(angle * 180) / Math.PI}deg`);
             }
+            if (cockpit && off) y = Math.max(minY, Math.min(maxY, y));
             marker.style.transform = `translate(${x}px,${y}px)`;
             marker.classList.toggle('offscreen', off);
             marker.classList.toggle('label-left', x > w * 0.65);
@@ -223,7 +228,7 @@ export class CombatHUD {
         }
         let bolts = 0;
         for (const p of combat.projectiles.items) if (p.active) bolts++;
-        this.telemetry.textContent = `LASERS ${bolts}/${COMBAT.projectileCapacity} · FX ${effects}/${COMBAT.effectCapacity}`;
+        this.telemetry.textContent = `LASERS ${bolts}/${COMBAT.projectileCapacity} · FX ${effects}/${COMBAT.effectCapacity + BLASTS.capacity}`;
         this.telemetry.dataset.kills = String(combat.kills);
         this.telemetry.dataset.playerHits = String(combat.playerHits);
         this.telemetry.dataset.enemyHits = String(combat.enemyHits);

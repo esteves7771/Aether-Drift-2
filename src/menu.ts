@@ -1,7 +1,10 @@
+import { version } from '../package.json';
+
 import { ARCADE } from './arcade-config';
 import type { Settings } from './config';
+import { menuIcon } from './menu-icons';
 import type { Records, RecordName, RunSummary } from './records';
-type Screen = 'home' | 'pause' | 'records' | 'settings' | 'debrief' | 'flight';
+type Screen = 'home' | 'pause' | 'records' | 'settings' | 'credits' | 'debrief' | 'flight';
 const format = (n: number) => Math.round(n).toLocaleString('en-US');
 const clock = (n: number | null) =>
     n === null ? '—' : `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, '0')}`;
@@ -28,10 +31,48 @@ export class Menu {
         <section id="settings-panel" hidden><div id="settings-slot"></div><label class="challenge-option">Optional wave challenges <input id="challenges" type="checkbox" ${settings.challenges ? 'checked' : ''}></label><label>Camera & peripheral speed cues <input id="cameraEffects" type="checkbox" ${settings.cameraEffects ? 'checked' : ''}></label><p class="controls">FLOW / +${ARCADE.flow.step} every ${ARCADE.flow.killsPerStep} kills, up to ×${ARCADE.flow.maximum}. Hit an exposed target within ${ARCADE.flow.window} seconds to maintain Flow. Shield hits lower it one step; hull hits break the chain. Recovery and protected boss phases freeze the timer. Clean kills (+${ARCADE.scoring.clean}): no damage since your last kill. Boost kills: +${ARCADE.scoring.boost}. Bonuses are multiplied.</p><p class="controls">BASE POINTS / Interceptor ${ARCADE.scoring.interceptor} · Heavy ${ARCADE.scoring.heavy} · Elite ${ARCADE.scoring.elite}<br>Boss turret ${ARCADE.scoring.turret} · Capital victory ${ARCADE.scoring.boss}<br>Challenge preference applies at the next wave; failure never blocks progression.</p></section>
         <section id="debrief-panel" hidden><p class="intro" id="run-verdict"></p><div id="run-grid" class="stat-grid"></div><p id="run-records" role="status"></p><div class="debrief-actions"><button id="retry" class="primary">RETRY PATROL ↗</button><button id="return-home" class="secondary">MAIN MENU</button></div></section><p class="build">AD–02 / LOCAL FLIGHT RECORDS / NO SIGNAL REQUIRED</p>`;
         el('title-slot').append(this.heading);
+        this.panel
+            .querySelector('.menu-card')!
+            .insertAdjacentHTML(
+                'afterbegin',
+                '<svg class="command-frame" viewBox="0 0 600 1000" preserveAspectRatio="none" aria-hidden="true"><path d="M200 5H38L5 38V185L27 212V330L5 355V670L25 695V935L60 975H170L178 970H367L377 960H579L596 942V782L568 754H550V256L505 212H370"/><path d="M5 120V40L32 12H96M5 925V968L35 997H555L595 958"/></svg>'
+            );
         el('action-slot').append(launch, restart);
+        el('home-panel').insertAdjacentHTML(
+            'afterbegin',
+            `<div class="command-logo" aria-label="Aether Drift 2.0"><strong>AETHER</strong><span>DRIFT / 2.0</span></div><div class="command-sector"><i></i><div>PERSEID EXPANSE<small>COMBAT PATROL</small></div><b>///</b></div>`
+        );
+        el('show-records').innerHTML = `${menuIcon('records')}<span>RECORDS</span>`;
+        el('show-settings').innerHTML = `${menuIcon('settings')}<span>SETTINGS</span>`;
+        el('action-slot').insertAdjacentHTML(
+            'afterend',
+            `<button id="show-ships" class="command-secondary">${menuIcon('ship')}<span>SHIP SELECT</span></button>`
+        );
+        this.panel
+            .querySelector('.menu-links')!
+            .insertAdjacentHTML(
+                'beforeend',
+                `<button id="show-credits">${menuIcon('info')}<span>CREDITS</span></button>`
+            );
+        el('home-panel').insertAdjacentHTML('beforeend', '<div id="roster-slot"></div>');
+        el('settings-panel').insertAdjacentHTML(
+            'afterend',
+            `<section id="credits-panel" hidden><p class="intro">AETHER DRIFT / 2.0</p><p>Independent arcade space combat by Pedro Esteves.</p><p>Built with PlayCanvas Engine, TypeScript and Vite.</p><nav class="credits-links"><a href="${import.meta.env.BASE_URL}MODEL_CREDITS.md" target="_blank" rel="noopener">MODEL SOURCES & LICENSES ↗</a><a href="${import.meta.env.BASE_URL}MUSIC_CREDITS.md" target="_blank" rel="noopener">MUSIC SOURCES & LICENSES ↗</a></nav><p class="controls">Third-party works retain their individual licenses. Full attribution is provided in the linked records.</p></section>`
+        );
+        this.panel.insertAdjacentHTML(
+            'beforeend',
+            `<div class="command-status"><div>${menuIcon('ship')}<span><small>SELECTED SHIP</small><b class="ship-index">AE-01 / INTERCEPTOR</b></span></div><div>${menuIcon('records')}<span><small>PERSONAL BEST</small><b id="status-best">0</b></span></div><div>${menuIcon('records')}<span><small>LONGEST WAVE</small><b id="status-wave">WAVE 0</b></span></div><div>${menuIcon('planet')}<span><small>SECTOR</small><b>PERSEID EXPANSE</b></span></div><div>${menuIcon('code')}<span><small>BUILD</small><b>v${version}</b></span></div></div>`
+        );
+        el('show-ships').onclick = () => {
+            el('ship-classic').focus();
+            el('ship-hangar').animate([{ filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], { duration: 250 });
+        };
+        el('show-credits').onclick = () => {
+            this.parent = this.screen;
+            this.show('credits');
+        };
         el('settings-slot').append(details);
-        this.panel.querySelector('.menu-caption')!.innerHTML =
-            '<span class="ship-index">AE–01 / INTERCEPTOR</span><b>BEYOND<br>THE FAMILIAR.</b><span>THRUST VECTOR ONLINE · SIX AXES FREE</span>';
+        this.panel.querySelector('.menu-caption')!.remove();
         el('retry').onclick = retry;
         el('return-home').onclick = mainMenu;
         el('end-patrol').onclick = mainMenu;
@@ -73,7 +114,7 @@ export class Menu {
             'keydown',
             (e) => {
                 if (this.screen === 'flight') return;
-                if (e.code === 'Escape' && (this.screen === 'settings' || this.screen === 'records')) {
+                if (e.code === 'Escape' && ['settings', 'records', 'credits'].includes(this.screen)) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
                     this.show(this.parent);
@@ -100,7 +141,7 @@ export class Menu {
     get homeVisible() {
         return (
             this.screen === 'home' ||
-            ((this.screen === 'settings' || this.screen === 'records') && this.parent === 'home')
+            (['settings', 'records', 'credits'].includes(this.screen) && this.parent === 'home')
         );
     }
     private show(screen: Screen) {
@@ -108,12 +149,13 @@ export class Menu {
         this.panel.hidden = screen === 'flight';
         this.panel.dataset.screen = screen;
         document.body.classList.toggle('menu-open', screen !== 'flight');
-        for (const id of ['home', 'records', 'settings', 'debrief'])
+        for (const id of ['home', 'records', 'settings', 'credits', 'debrief'])
             document.getElementById(id + '-panel')!.hidden = id !== (screen === 'pause' ? 'home' : screen);
-        document.getElementById('menu-back')!.hidden = screen !== 'records' && screen !== 'settings';
+        document.getElementById('menu-back')!.hidden = !['records', 'settings', 'credits'].includes(screen);
         document.getElementById('restart')!.hidden = screen !== 'pause';
         document.getElementById('end-patrol')!.hidden = screen !== 'pause';
-        document.getElementById('launch')!.textContent = screen === 'pause' ? 'RESUME PATROL ↗' : 'LAUNCH PATROL ↗';
+        document.getElementById('launch')!.innerHTML =
+            `${menuIcon('play')}<span>${screen === 'pause' ? 'RESUME PATROL' : 'START PATROL'}</span><b>»</b>`;
         document.getElementById('restart')!.textContent = 'RESTART PATROL';
         this.heading.textContent =
             screen === 'pause'
@@ -124,7 +166,9 @@ export class Menu {
                     ? 'Make it yours.'
                     : screen === 'debrief'
                       ? 'Ship lost. Debrief.'
-                      : 'Find your flow.';
+                      : screen === 'credits'
+                        ? 'Credits.'
+                        : 'Aether Drift / 2.0';
         document.getElementById('menu-kicker')!.textContent =
             screen === 'records'
                 ? 'LOCAL FLIGHT ARCHIVE'
@@ -134,6 +178,8 @@ export class Menu {
                     ? 'PATROL COMPLETE / AFTER ACTION'
                     : 'ARCADE PATROL / VOL. 05';
         document.getElementById('home-best')!.textContent = 'PERSONAL BEST / ' + format(this.records.data.highScore);
+        document.getElementById('status-best')!.textContent = format(this.records.data.highScore);
+        document.getElementById('status-wave')!.textContent = 'WAVE ' + this.records.data.highWave;
     }
     menu(show: boolean) {
         this.show(show ? 'pause' : 'flight');

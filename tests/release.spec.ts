@@ -78,6 +78,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.locator('#menu-back').click();
         await page.locator('#launch').click();
         await page.keyboard.press('KeyR');
+        await page.locator('#restart-accept').click();
         await expect(page.locator('#hull-number')).toHaveText('100%');
         await page.keyboard.press('Escape');
         const manifest = await request.get(new URL('audio/music/manifest.json', baseURL).href);
@@ -179,5 +180,184 @@ for (const renderer of ['webgpu', 'webgl2'])
             rendered: art,
             tracks: Object.keys(tracks),
             consoleErrors: errors.length
+        });
+    });
+
+for (const renderer of ['webgpu', 'webgl2'])
+    test('Phase 5F public presentation / ' + renderer, async ({ page, baseURL }) => {
+        const errors: string[] = [],
+            bad: string[] = [],
+            requests: string[] = [];
+        page.on('pageerror', (e) => errors.push(e.message));
+        page.on('console', (m) => {
+            if (m.type() === 'error') errors.push(m.text());
+        });
+        page.on('response', (r) => {
+            if (r.status() >= 400) bad.push(r.url());
+        });
+        page.on('request', (r) => requests.push(r.url()));
+        await page.addInitScript({ path: '.agents/skills/inspect-runtime/scripts/devtools-hook.js' });
+        await page.addInitScript(() => {
+            const contexts: AudioContext[] = [];
+            Object.assign(globalThis, { __releaseAudioContexts: contexts });
+            globalThis.AudioContext = new Proxy(globalThis.AudioContext, {
+                construct(Target, args) {
+                    const context = Reflect.construct(Target, args) as AudioContext;
+                    contexts.push(context);
+                    return context;
+                }
+            });
+        });
+        await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
+        await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
+        await expect(page.locator('.command-logo')).toBeVisible();
+        await expect(page.locator('.command-status')).toContainText('v0.5.0-f');
+        await page.waitForFunction(
+            () =>
+                [
+                    ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+                ][0]?.root.findByName('Menu satellite 3'),
+            undefined,
+            { timeout: 45000 }
+        );
+        expect(requests.some((u) => u.includes('cockpit-overlay.png'))).toBe(false);
+        await page.screenshot({ path: `artifacts/public-release/5f-menu-${renderer}.png` });
+        await page.locator('#ship-classic').click();
+        for (const ship of ['classic', 'surveyor']) {
+            if (ship === 'surveyor') {
+                await page.keyboard.press('Escape');
+                await page.locator('#end-patrol').click();
+                await page.locator('#return-home').click();
+                await page.locator('#ship-surveyor').click();
+                await expect(page.locator('#ship-surveyor')).toHaveAttribute('aria-pressed', 'true');
+            }
+            await page.locator('#launch').click();
+            await expect(page.locator('#camera-toggle')).toBeVisible();
+            await expect
+                .poll(() =>
+                    page.evaluate(() =>
+                        (
+                            globalThis as unknown as { __releaseAudioContexts: AudioContext[] }
+                        ).__releaseAudioContexts.some((c) => c.state === 'running')
+                    )
+                )
+                .toBe(true);
+            await expect
+                .poll(() =>
+                    page.locator('audio[data-music-state=combat]').evaluate((a: HTMLAudioElement) => a.currentTime)
+                )
+                .toBeGreaterThan(0.1);
+            await page.locator('#application-canvas').focus();
+            await page.keyboard.down('KeyW');
+            await page.keyboard.down('ShiftLeft');
+            await expect
+                .poll(
+                    () =>
+                        page.evaluate(() => {
+                            const app = [
+                                ...(
+                                    globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }
+                                ).__playcanvasApps.keys()
+                            ][0];
+                            const c = app.root
+                                .findByName('Player engine 0')!
+                                .findComponents('render')[0] as RenderComponent;
+                            return (c.meshInstances[0].getParameter('uEngine').data as Float32Array)[1];
+                        }),
+                    { timeout: 3000 }
+                )
+                .toBeGreaterThan(0.7);
+            const propulsion = await page.evaluate(() => {
+                const app = [
+                    ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+                ][0];
+                const root = app.root.findByName('Player propulsion')!;
+                const engines = root.children.filter((e) => e.name.startsWith('Player engine ') && e.enabled);
+                const data = (engines[0] as Entity).findComponents('render')[0] as RenderComponent;
+                return {
+                    count: engines.length,
+                    power: (data.meshInstances[0].getParameter('uEngine').data as Float32Array)[1]
+                };
+            });
+            expect(propulsion.count).toBe(ship === 'classic' ? 2 : 3);
+            expect(propulsion.power).toBeGreaterThan(0.7);
+            await page.screenshot({ path: `artifacts/public-release/5f-${ship}-thrusters-${renderer}.png` });
+            await page.keyboard.up('KeyW');
+            await page.keyboard.up('ShiftLeft');
+            await page.keyboard.press('c');
+            await expect(page.locator('#cockpit')).toBeVisible();
+            await page.locator('#cockpit-art').evaluate((i: HTMLImageElement) => i.decode());
+            await expect(page.locator('#cp-hull')).toHaveText(/\d+%/);
+            await expect(page.locator('#cp-ammo')).toHaveText('6');
+            await page.screenshot({ path: `artifacts/public-release/5f-${ship}-cockpit-${renderer}.png` });
+            await page.locator('#camera-toggle').click();
+            await expect(page.locator('#cockpit')).toBeHidden();
+        }
+        await page.keyboard.press('c');
+        await expect(page.locator('#cockpit')).toBeVisible();
+        await page.keyboard.press('r');
+        await expect(page.locator('#restart-confirm')).toBeVisible();
+        const before = await page.locator('#combat-perf').getAttribute('data-enemyHits');
+        await page.waitForTimeout(150);
+        expect(await page.locator('#combat-perf').getAttribute('data-enemyHits')).toBe(before);
+        await page.screenshot({ path: `artifacts/public-release/5f-restart-${renderer}.png` });
+        await page.locator('#restart-cancel').click();
+        await expect(page.locator('#menu')).toBeHidden();
+        await page.keyboard.press('r');
+        await page.locator('#restart-accept').click();
+        await expect(page.locator('#camera-toggle')).toHaveAttribute('aria-pressed', 'false');
+        await page.keyboard.press('c');
+        await expect
+            .poll(() => page.locator('.enemy-marker[data-id="0"]').evaluate((e) => e.hasAttribute('hidden')), {
+                timeout: 20000
+            })
+            .toBe(false);
+        await expect(page.locator('.enemy-marker[data-id="0"]')).not.toHaveClass(/armored/, { timeout: 20000 });
+        // Only real controls and read-only Engine state: no simulation globals, health edits or effect injection.
+        await page.keyboard.down('Space');
+        let sawBlast = false;
+        for (let i = 0; i < 100; i++) {
+            const state = await page.evaluate(() => {
+                const app = [
+                    ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+                ][0];
+                const ship = app.root.findByName('Ship')!,
+                    target = app.root.children
+                        .find((e) => e.name === 'Combat')
+                        ?.children.find((e) => e.name.startsWith('Enemy ') && e.enabled);
+                const local = target
+                    ? ship
+                          .getRotation()
+                          .clone()
+                          .invert()
+                          .transformVector(target.getPosition().clone().sub(ship.getPosition()))
+                    : null;
+                return {
+                    yaw: local ? Math.atan2(local.x, -local.z) : 0,
+                    pitch: local ? Math.atan2(local.y, Math.hypot(local.x, local.z)) : 0,
+                    blast: app.root.findByName('Cinematic explosions')!.children.some((e) => e.enabled)
+                };
+            });
+            if (state.blast) {
+                sawBlast = true;
+                break;
+            }
+            for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) await page.keyboard.up(key);
+            if (Math.abs(state.yaw) > 0.035) await page.keyboard.down(state.yaw > 0 ? 'ArrowRight' : 'ArrowLeft');
+            if (Math.abs(state.pitch) > 0.035) await page.keyboard.down(state.pitch > 0 ? 'ArrowDown' : 'ArrowUp');
+            if (i % 12 === 0) await page.keyboard.press('m');
+            await page.waitForTimeout(65);
+        }
+        await page.screenshot({ path: `artifacts/public-release/5f-live-explosion-${renderer}.png` });
+        await page.keyboard.up('Space');
+        for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) await page.keyboard.up(key);
+        expect(sawBlast, 'actual combat generated an enabled explosion pool slot').toBe(true);
+        expect(bad).toEqual([]);
+        expect(errors).toEqual([]);
+        console.log('5F live smoke', renderer, {
+            url: baseURL,
+            sawBlast,
+            audio: 'streaming and AudioContext running',
+            errors: errors.length
         });
     });

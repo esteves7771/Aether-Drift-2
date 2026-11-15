@@ -68,6 +68,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         expect(await page.evaluate(() => __phase4.combat.upgrades.selections)).toBe(1);
         await page.keyboard.press('Escape');
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         expect(await page.evaluate(() => __phase4.combat.upgrades.selections)).toBe(0);
     });
 
@@ -148,13 +149,19 @@ for (const renderer of ['webgpu', 'webgl2'])
             h.advance(30);
         });
         await page.screenshot({ path: 'test-results/frontier-' + renderer + '-wreck.png' });
-        await page.keyboard.press('v');
+        await page.evaluate(() => {
+            const h = __phase4;
+            h.combat.ammo = h.combat.frontier.interact(h.flight, h.combat.ammo, h.combat.ammoCapacity);
+        }); // Retained internal service, no player shortcut.
         await page.evaluate(() => __phase4.advance(1));
         expect(await page.evaluate(() => __phase4.combat.frontier.supplies)).toBe(1);
-        await page.keyboard.press('v');
+        await page.evaluate(() => {
+            const h = __phase4;
+            h.combat.ammo = h.combat.frontier.interact(h.flight, h.combat.ammo, h.combat.ammoCapacity);
+        }); // Retained internal service, no player shortcut.
         await page.evaluate(() => __phase4.advance(1));
         expect(await page.evaluate(() => __phase4.combat.frontier.supplies)).toBe(1);
-        await page.keyboard.press('n');
+        await page.evaluate(() => __phase4.combat.frontier.cycle()); // Internal fixture.
         await page.evaluate(() => __phase4.advance(1));
         expect(await page.evaluate(() => __phase4.combat.frontier.selected)).toBe(3);
         await page.evaluate(() => {
@@ -166,11 +173,11 @@ for (const renderer of ['webgpu', 'webgl2'])
             h.flight.previousRotation.copy(h.flight.rotation);
             h.combat.countdown = 100;
         });
-        await page.keyboard.press('c');
+        await page.evaluate(() => __phase4.cruise.toggle(__phase4.flight, false)); // Internal fixture.
         await page.evaluate(() => __phase4.advance(100));
         expect(await page.evaluate(() => __phase4.cruise.active)).toBe(true);
         expect(await page.evaluate(() => __phase4.flight.velocity.length())).toBeGreaterThan(300);
-        await expect(page.locator('#cruise-state')).toHaveAttribute('data-active', 'true');
+        expect(await page.evaluate(() => __phase4.cruise.active)).toBe(true);
         const cruiseTiming = await sampleFrames(page);
         await page.screenshot({ path: 'test-results/frontier-' + renderer + '-cruise.png' });
         await page.keyboard.press('Escape');
@@ -189,6 +196,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         expect(await page.evaluate(() => __phase4.app.root.findComponents('render').length)).toBe(count);
         await page.keyboard.press('Escape');
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await page.evaluate(() => __phase4.advance(1));
         expect(await page.evaluate(() => __phase4.combat.frontier.supplies)).toBe(0);
         expect(await page.evaluate(() => __phase4.combat.frontier.bases[0].powered)).toBe(true);

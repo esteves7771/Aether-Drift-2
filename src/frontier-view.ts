@@ -144,7 +144,7 @@ export class FrontierView {
         validateRenderAttributes(this.root);
         document.body.insertAdjacentHTML(
             'beforeend',
-            `<aside id="navigation"><small>FRONTIER NAV / N CYCLE</small><strong id="nav-name"></strong><span id="nav-distance"></span><span id="nav-action"></span><span id="cruise-state"></span></aside><div id="destination-marker" hidden>◇</div><div id="discovery-notice" role="status"></div>`
+            `<aside id="navigation"><small>FRONTIER / LOCAL SIGNAL</small><strong id="nav-name"></strong><span id="nav-distance"></span><span id="nav-action"></span><span id="cruise-state"></span></aside><div id="destination-marker" hidden>◇</div><div id="discovery-notice" role="status"></div>`
         );
         this.panel = document.getElementById('navigation')!;
         this.marker = document.getElementById('destination-marker')!;
@@ -156,7 +156,7 @@ export class FrontierView {
         this.animated = level !== 'low';
         for (const e of this.details) e.enabled = level !== 'low';
     }
-    render(ship: Flight, cruise: Cruise, camera: Entity, started: boolean, dt = 0) {
+    render(ship: Flight, _cruise: Cruise, camera: Entity, started: boolean, dt = 0) {
         this.time = (this.time + dt) % 1000;
         this.pulse[1] = this.animated ? 1.2 + Math.sin(this.time * 1.5) * 0.4 : 1.2;
         for (const e of this.signals)
@@ -192,17 +192,11 @@ export class FrontierView {
             : l.base?.destroyed
               ? 'DEFENSES OFFLINE'
               : distance < FRONTIER.interactRange && l.kind !== 'outpost'
-                ? 'V / INVESTIGATE'
+                ? 'SIGNAL IN RANGE'
                 : l.kind === 'outpost'
                   ? 'TARGET POWER TO DISABLE'
-                  : 'APPROACH TO INVESTIGATE';
-        this.cruiseStatus.textContent =
-            cruise.active || cruise.settling
-                ? cruise.reason
-                : cruise.cooldown > 0
-                  ? 'CRUISE COOLDOWN / ' + Math.ceil(cruise.cooldown) + 's'
-                  : cruise.reason;
-        this.cruiseStatus.dataset.active = String(cruise.active);
+                  : 'UNEXPLORED SIGNAL';
+        this.cruiseStatus.textContent = '';
         this.inverse.copy(camera.getRotation()).invert();
         this.inverse.transformVector(this.point.sub2(l.position, camera.getPosition()), this.local);
         const w = window.innerWidth,

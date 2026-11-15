@@ -12,7 +12,9 @@ export default defineConfig({
         '**/frontier.spec.ts',
         '**/guardian.spec.ts',
         '**/models.spec.ts',
-        '**/living.spec.ts'
+        '**/living.spec.ts',
+        '**/thrusters.spec.ts',
+        '**/cinematic.spec.ts'
     ],
     webServer: {
         command: 'node tools/phase4-browser-build.mjs --serve',

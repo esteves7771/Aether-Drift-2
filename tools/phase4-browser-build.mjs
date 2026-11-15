@@ -15,18 +15,18 @@ await build({
                 return code
                     .replace(
                         'const soundOffset = new Vec3();',
-                        'const soundOffset = new Vec3(); const captures:{kind:string,x:number,y:number,z:number,time:number}[]=[];'
+                        'const soundOffset = new Vec3(); const captures:{kind:string,x:number,y:number,z:number,time:number,style?:string}[]=[];'
                     )
                     .replace(
-                        'combatView.event(event, point, size);',
-                        'combatView.event(event, point, size); if(captures.length>=32)captures.shift();captures.push({kind:event,x:point.x,y:point.y,z:point.z,time:combat.duration});'
+                        'combatView.event(event, point, size, blast);',
+                        'combatView.event(event, point, size, blast); if(captures.length>=32)captures.shift();captures.push({kind:event,x:point.x,y:point.y,z:point.z,time:combat.duration,style:blast});'
                     )
                     .replace(
                         "    app.on('update', (dt: number) => {",
                         `
     const pilotAim=new Entity('Test pilot orientation'), pilotPoint=new Vec3(), pilotMove=new Vec3(), pilotDelta=new Vec3();
     let pilotAge=0;
-    const driver={combat,flight,app,rocks,cruise,modelLibrary,hangar,living,events:captures,useAbilities:true,autoUpgrades:true,pilot:false,advance(ticks:number){for(let i=0;i<ticks;i++)app.fire('update',.05);}};
+    const driver={combat,flight,app,rocks,cruise,modelLibrary,hangar,living,thrusters:scene.thrusters,input,chase,settings,pilotCamera,explosions:combatView.explosions,events:captures,useAbilities:true,autoUpgrades:true,pilot:false,advance(ticks:number){for(let i=0;i<ticks;i++)app.fire('update',.05);}};
     Object.assign(globalThis,{__phase4:driver});
     app.on('update',(dt:number)=>{
         if(driver.pilot&&driver.autoUpgrades&&combat.upgrades.pending){chooseUpgrade(combat.upgrades.offers[0]);window.dispatchEvent(new KeyboardEvent('keydown',{code:'Space',bubbles:true}));return;}

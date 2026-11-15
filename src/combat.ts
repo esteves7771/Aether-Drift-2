@@ -11,6 +11,7 @@ import type { CombatTarget } from './combat-target';
 import { Enemy } from './enemy';
 import { EnemyAI } from './enemy-ai';
 import { EVOLUTION } from './evolution-config';
+import type { BlastClass } from './explosion-config';
 import { Fleet } from './fleet';
 import { FLEET } from './fleet-config';
 import type { Flight } from './flight';
@@ -29,7 +30,12 @@ import { Squadron } from './squadron';
 import { Tesser } from './tesser';
 import { WaveChallenge } from './wave-challenge';
 import { WaveDirector } from './wave-director';
-export type EmitCombat = (event: CombatEvent, position: Vec3, size: number) => void;
+export type EmitCombat = (
+    event: CombatEvent,
+    position: Vec3,
+    size: number,
+    blast?: BlastClass
+) => void;
 export class Combat {
     readonly enemies = Array.from({ length: COMBAT.enemyCapacity }, (_, i) => new Enemy(i));
     readonly projectiles = new Projectiles();
@@ -460,7 +466,8 @@ export class Combat {
                           ? 9
                           : stage === 0
                             ? 2
-                            : 3.5
+                            : 3.5,
+                    this.boss instanceof Phantom ? 'phantom' : this.boss instanceof Guardian ? 'tesser' : 'dreadnought'
                 );
                 this.shake = Math.max(this.shake, stage === SPECTACLE.boss.finalBeat ? 0.65 : 0.18);
                 if (stage === SPECTACLE.boss.finalBeat) {
@@ -595,7 +602,7 @@ export class Combat {
         return true;
     }
     private barrelBlast(b: Barrel, credited: boolean) {
-        this.emit('missile-impact', b.position, 2.2);
+        this.emit('missile-impact', b.position, 2.2, 'barrel');
         if (b.position.distance(this.ship.position) < 100) this.shake = Math.max(this.shake, 0.35);
         const amount = (position: Vec3) =>
             LIVING.blastDamage * Math.max(0, 1 - position.distance(b.position) / LIVING.blastRadius);
@@ -607,7 +614,12 @@ export class Combat {
                 e.flash = 0.15;
                 if (e.health <= 0) {
                     e.active = false;
-                    this.emit('explosion', e.position, 1.5);
+                    this.emit(
+                        'explosion',
+                        e.position,
+                        1.5,
+                        e.visual === 'saucer' ? 'saucer' : e.kind === 'heavy' ? 'heavy' : 'fighter'
+                    );
                     if (credited) {
                         this.kills++;
                         this.flow.kill(
@@ -624,7 +636,7 @@ export class Combat {
                 if (damage <= 0) continue;
                 const points = this.frontier.damage(p, damage);
                 if (points > 0) {
-                    this.emit('explosion', p.position, 1.5);
+                    this.emit('explosion', p.position, 1.5, 'turret');
                     if (credited) {
                         this.kills++;
                         this.flow.kill(points, this.ship.boosting, 'ENVIRONMENTAL DEFENSE DOWN');
@@ -717,7 +729,7 @@ export class Combat {
                     if (this.boss instanceof Guardian && victim.id < 28)
                         this.flow.kill(GUARDIAN.componentScore, this.ship.boosting, 'TESSER SYSTEM DOWN');
                     else if (victim.id < 12) this.flow.kill(ARCADE.scoring.turret, this.ship.boosting, 'TURRET DOWN');
-                    this.emit('explosion', victim.position, 2);
+                    this.emit('explosion', victim.position, 2, 'turret');
                     if (!this.boss.active) {
                         this.flow.kill(
                             this.boss instanceof Guardian
@@ -766,7 +778,7 @@ export class Combat {
                         victim.base.destroyed ? 'BASTION DISABLED' : 'DEFENSE DOWN'
                     );
                     this.kills++;
-                    this.emit('explosion', victim.position, victim.base.destroyed ? 2 : 1);
+                    this.emit('explosion', victim.position, victim.base.destroyed ? 2 : 1, 'turret');
                 }
             } else if (victim instanceof Enemy) {
                 victim.health -= p.damage;
@@ -803,7 +815,12 @@ export class Combat {
                                 ? 1.4
                                 : victim.kind === 'drone'
                                   ? 0.6
-                                  : 1
+                                  : 1,
+                        victim.visual === 'saucer'
+                            ? 'saucer'
+                            : victim.kind === 'heavy' || victim.kind === 'bomber' || victim.kind === 'carrier'
+                              ? 'heavy'
+                              : 'fighter'
                     );
                     if (victim.position.distance(this.ship.position) < 150)
                         this.shake = Math.max(this.shake, victim.elite ? 0.45 : 0.25);

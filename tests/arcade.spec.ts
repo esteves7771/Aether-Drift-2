@@ -8,7 +8,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             if (m.type() === 'error') errors.push(m.text());
         });
         await page.goto('http://127.0.0.1:5181/' + (renderer === 'webgl2' ? '?webgl' : ''));
-        await expect(page.locator('#menu-heading')).toHaveText('Find your flow.');
+        await expect(page.locator('.command-logo')).toBeVisible();
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         const turn = await page.evaluate(() => __phase4.app.root.findByName('Ship')!.getRotation().clone());
         await expect

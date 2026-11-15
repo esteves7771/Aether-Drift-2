@@ -7,6 +7,7 @@ import type { Rock } from './collisions';
 import type { GraphicsQuality } from './config';
 import { PERSEID } from './environment';
 import type { EnvironmentDefinition } from './environment';
+import { PlayerThrusters } from './player-thrusters';
 import { hash, spaceTextures, texture } from './procedural-textures';
 import { SpacecraftArt } from './spacecraft-art';
 export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentDefinition = PERSEID) {
@@ -47,16 +48,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     const ship = new Entity('Ship');
     app.root.addChild(ship);
     ship.addChild(art.create('player'));
-    const exhaust = emission('Plasma exhaust', '#62dcff', 3, 0.3),
-        thrusters: Entity[] = [];
-    for (const side of [-1, 1]) {
-        const e = new Entity('Thruster');
-        e.addComponent('render', { type: 'cone', material: exhaust });
-        e.setLocalPosition(side * 1.05, -0.1, 3.3);
-        e.setLocalEulerAngles(-90, 0, 0);
-        ship.addChild(e);
-        thrusters.push(e);
-    }
+    const thrusters = new PlayerThrusters(app, ship);
     const rockMaterials = [
         surface('Nickel iron regolith', '#b8bdc7', 0, 0.22),
         surface('Carbonaceous regolith', '#7c8194', 0, 0.13),
@@ -228,6 +220,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     const setQuality = (level: GraphicsQuality) => {
         if (quality === level) return;
         quality = level;
+        thrusters.setQuality(level);
         rockyMaps.setQuality(level);
         extras[0].enabled = level !== 'low';
         extras[1].enabled = level === 'high';
@@ -246,6 +239,10 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
         thrusters,
         stars,
         environment,
+        planet,
+        planetAtmosphere: atmosphere,
+        rockMeshes: meshes,
+        rockMaterials,
         art,
         textures,
         setQuality,
@@ -255,6 +252,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
             for (const lod of meshes) for (const m of lod) m.destroy();
             for (const m of rockMaterials) m.destroy();
             rockyMaps.destroy();
+            thrusters.destroy();
             art.destroy();
             source.destroy();
             reflection.destroy();

@@ -11,7 +11,7 @@ export class Cruise {
     active = false;
     settling = false;
     cooldown = 0;
-    reason = 'C / CRUISE';
+    reason = 'TRAVEL IDLE';
     private damage = 0;
     private readonly forward = new Vec3();
     private readonly desired = new Vec3();
@@ -19,7 +19,7 @@ export class Cruise {
     reset() {
         this.active = this.settling = false;
         this.cooldown = this.damage = 0;
-        this.reason = 'C / CRUISE';
+        this.reason = 'TRAVEL IDLE';
     }
     toggle(ship: Flight, blocked: boolean) {
         if (this.active) {
@@ -32,7 +32,7 @@ export class Cruise {
         }
         this.active = true;
         this.damage = ship.hull + ship.shield;
-        this.reason = 'CRUISE ENGAGED / C OR X TO EXIT';
+        this.reason = 'TRAVEL ACTIVE / BRAKE TO EXIT';
     }
     cancel(reason: string) {
         if (this.active) {
@@ -53,7 +53,7 @@ export class Cruise {
     ) {
         this.cooldown = Math.max(0, this.cooldown - dt);
         if (!this.active && !this.settling && this.cooldown <= 0)
-            this.reason = blocked ? 'CRUISE LOCKED / HOSTILES NEARBY' : 'C / CRUISE';
+            this.reason = blocked ? 'CRUISE LOCKED / HOSTILES NEARBY' : 'TRAVEL IDLE';
         if (
             this.active &&
             (blocked ||

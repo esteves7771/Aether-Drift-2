@@ -8,7 +8,11 @@ export default defineConfig({
         '**/frontier.spec.ts',
         '**/guardian.spec.ts',
         '**/models.spec.ts',
-        '**/living.spec.ts'
+        '**/living.spec.ts',
+        '**/thrusters.spec.ts',
+        '**/menu.spec.ts',
+        '**/cinematic.spec.ts',
+        '**/cinematic-pages.spec.ts'
     ],
     timeout: 60000,
     use: {

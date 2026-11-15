@@ -40,6 +40,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.screenshot({ path: 'test-results/fleet-' + renderer + '-clean-combat.png' });
         await page.keyboard.press('Escape');
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await page.keyboard.down('Space');
         await page.evaluate(() => {
             __phase4.pilot = true;

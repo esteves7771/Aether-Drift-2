@@ -15,12 +15,11 @@ for (const renderer of ['webgpu', 'webgl2'])
         });
         await page.goto('http://127.0.0.1:5181/' + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
-        expect(requests).toEqual([]);
+        expect(requests.every((u) => /\/(satellite|sci-fi-space-station)\.glb$/.test(u))).toBe(true);
         await expect(page.locator('#ship-classic')).toHaveAttribute('aria-pressed', 'true');
         await page.locator('#ship-surveyor').click();
         await expect(page.locator('#ship-status')).toContainText('SURVEYOR READY');
-        expect(requests).toHaveLength(1);
-        expect(requests[0]).toContain('/spaceship.glb');
+        expect(requests.filter((u) => u.endsWith('/spaceship.glb'))).toHaveLength(1);
         await page.screenshot({ path: 'test-results/models-' + renderer + '-hangar.png' });
         await page.locator('#launch').click();
         await page.evaluate(() => {
@@ -126,7 +125,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                     app.on('frameend', frame);
                 })
         );
-        expect(requests.filter((u) => u.includes('sci-fi-space-station'))).toHaveLength(0);
+        expect(requests.filter((u) => u.includes('sci-fi-space-station'))).toHaveLength(1);
         await page.evaluate(() => {
             const h = __phase4;
             for (const e of h.combat.enemies) e.active = false;
@@ -165,11 +164,19 @@ for (const renderer of ['webgpu', 'webgl2'])
                 h.advance(35);
             }, key);
             await expect
-                .poll(() => page.evaluate((k) => Boolean(__phase4.app.root.findByName('Imported ' + k)), key))
+                .poll(() =>
+                    page.evaluate(
+                        (k) =>
+                            Boolean(
+                                __phase4.app.root.findByName('Imported orbital landmarks')!.findByName('Imported ' + k)
+                            ),
+                        key
+                    )
+                )
                 .toBe(true);
             await page.screenshot({ path: 'test-results/models-' + renderer + '-' + key + '.png' });
             const extent = await page.evaluate((k) => {
-                const root = __phase4.app.root.findByName('Imported ' + k)!;
+                const root = __phase4.app.root.findByName('Imported orbital landmarks')!.findByName('Imported ' + k)!;
                 const min = [Infinity, Infinity, Infinity],
                     max = [-Infinity, -Infinity, -Infinity];
                 for (const r of root.findComponents('render'))
@@ -194,7 +201,10 @@ for (const renderer of ['webgpu', 'webgl2'])
                 h.flight.shield = 10;
                 h.advance(1);
             });
-            await page.keyboard.press('v');
+            await page.evaluate(() => {
+                const h = __phase4;
+                h.combat.ammo = h.combat.frontier.interact(h.flight, h.combat.ammo, h.combat.ammoCapacity);
+            }); // Retained internal service, no player shortcut.
             await page.evaluate(() => __phase4.advance(1));
             expect(
                 await page.evaluate(() => __phase4.combat.frontier.locations[__phase4.combat.frontier.selected].used)
@@ -202,15 +212,18 @@ for (const renderer of ['webgpu', 'webgl2'])
         }
         expect(await page.evaluate(() => __phase4.modelLibrary.failures.size)).toBe(0);
         const loaded = await page.evaluate(() => __phase4.modelLibrary.loaded);
-        expect(loaded).toBe(7);
+        // Flight/exploration models, existing living-space props and the shared menu satellite.
+        expect(loaded).toBe(10);
         const entities = await page.evaluate(() => __phase4.app.root.findComponents('render').length);
         await page.keyboard.press('Escape');
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await page.evaluate(() => __phase4.advance(1));
         expect(await page.evaluate(() => __phase4.hangar.selected)).toBe('surveyor');
         expect(await page.evaluate(() => __phase4.modelLibrary.loaded)).toBe(loaded);
         for (let i = 0; i < 3; i++) {
             await page.keyboard.press('r');
+            await page.locator('#restart-accept').click();
             await page.evaluate(() => __phase4.advance(1));
         }
         expect(await page.evaluate(() => __phase4.app.root.findComponents('render').length)).toBe(entities);

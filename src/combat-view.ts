@@ -9,17 +9,18 @@ import { COMBAT } from './combat-config';
 import type { CombatEvent } from './combat-config';
 import type { GraphicsQuality } from './config';
 import { EVOLUTION } from './evolution-config';
+import type { BlastClass } from './explosion-config';
+import { CinematicExplosions } from './explosions';
 import { PRESETS } from './graphics';
 import type { ImportedFleet } from './imported-fleet';
 import { PhantomView } from './phantom-view';
 import type { SpacecraftArt } from './spacecraft-art';
 import { SPECTACLE } from './spectacle-config';
-type EffectKind = 'ring' | 'flare' | 'core' | 'debris' | 'spark' | 'trail' | 'emp';
+type EffectKind = 'ring' | 'flare' | 'spark' | 'trail' | 'emp';
 class Effect {
     readonly position = new Vec3();
     readonly velocity = new Vec3();
     priority = 0;
-    axis = 0;
     life = 0;
     duration = 0;
     size = 1;
@@ -30,6 +31,7 @@ class Effect {
     }
 }
 export class CombatView {
+    readonly explosions: CinematicExplosions;
     readonly root = new Entity('Combat');
     private readonly enemyRoots: Entity[] = [];
     get enemyVisualRoots(): readonly Entity[] {
@@ -50,7 +52,6 @@ export class CombatView {
     private readonly alien = emission('Alien violet laser core', '#bd8cff', 3.2);
     private readonly orange = emission('Metal sparks', '#ffb77b', 3, 0.8);
     private readonly white = emission('Muzzle plasma', '#c8faff', 4);
-    private readonly steel = surface('Charred debris', '#46516a', 0.65, 0.6);
     private readonly glow = emission('Plasma scattering', '#70caff', 1.2, 0.45);
     private readonly flare = emission('Impact flare', '#ffc8a0', 3, 0.6);
     private readonly ring = emission('Shield shock front', '#5ec5ff', 1.3, 0.45);
@@ -70,7 +71,6 @@ export class CombatView {
     private readonly ringMesh: Mesh;
     private limit = 88;
     private serial = 0;
-    private trailTime = 0;
     private missileTrailTime = 0;
     private warmFrames = 4;
     private readonly warmup: Entity;
@@ -83,6 +83,7 @@ export class CombatView {
         secondarySound?: (point: Vec3, size: number) => void
     ) {
         this.art = art;
+        this.explosions = new CinematicExplosions(app);
         this.secondarySound = secondarySound;
         this.bossView = new BossView(app, boss);
         this.phantomView = new PhantomView(app);
@@ -186,14 +187,14 @@ export class CombatView {
                 new MeshInstance(this.quadMesh, this.glow, this.warmup),
                 new MeshInstance(this.quadMesh, this.flare, this.warmup),
                 new MeshInstance(this.ringMesh, this.ring, this.warmup),
-                new MeshInstance(this.sparkMesh, this.orange, this.warmup),
-                new MeshInstance(this.debrisMesh, this.steel, this.warmup)
+                new MeshInstance(this.sparkMesh, this.orange, this.warmup)
             ]
         });
         this.root.addChild(this.warmup);
         validateRenderAttributes(this.root);
     }
     setQuality(level: GraphicsQuality) {
+        this.explosions.setQuality(level);
         this.warmFrames = 4;
         this.limit = PRESETS[level].effects;
         for (let i = this.limit; i < this.effects.length; i++) {
@@ -202,6 +203,7 @@ export class CombatView {
         }
     }
     reset() {
+        this.explosions.reset();
         for (const e of this.effects) {
             e.life = 0;
             e.entity.enabled = false;
@@ -209,7 +211,6 @@ export class CombatView {
         for (const e of this.enemyRoots) e.enabled = false;
         for (const e of this.bolts) e.enabled = false;
         for (const e of this.muzzles) e.enabled = false;
-        this.trailTime = 0;
         this.missileTrailTime = 0;
         for (const e of this.secondary) e.delay = -1;
     }
@@ -227,7 +228,7 @@ export class CombatView {
                 }
         return undefined;
     }
-    event = (kind: CombatEvent, position: Vec3, size: number) => {
+    event = (kind: CombatEvent, position: Vec3, size: number, blast?: BlastClass) => {
         if (kind === 'laser' || kind === 'hostile' || kind === 'drone') return;
         const capital = kind === 'capital-final',
             elite = kind === 'elite-explosion',
@@ -241,93 +242,52 @@ export class CombatView {
                 q.size = size * 0.6;
             }
         }
-        const count = capital
-            ? SPECTACLE.effects.capital
-            : elite
-              ? SPECTACLE.effects.elite
-              : kind === 'explosion'
-                ? SPECTACLE.effects.normal
-                : burst
-                  ? 18
-                  : kind === 'missile-impact'
-                    ? 16
-                    : kind === 'emp'
-                      ? 3
-                      : kind === 'shield'
-                        ? 4
-                        : kind === 'armor'
-                          ? 4
-                          : 7;
+        if (explosion) {
+            this.explosions.spawn(
+                position,
+                size,
+                blast ?? (capital || burst ? 'dreadnought' : elite ? 'heavy' : 'fighter')
+            );
+            return;
+        }
+        const count = kind === 'emp' ? 3 : kind === 'shield' || kind === 'armor' ? 4 : 7;
         for (let i = 0; i < count; i++) {
-            const e = this.acquire(capital ? 3 : explosion ? 2 : 1);
+            const e = this.acquire(1);
             if (!e) break;
             const n = ++this.serial;
-            e.duration = explosion
-                ? i === 1
-                    ? 0.16
-                    : i > 8
-                      ? 1.15 + (i % 4) * 0.22
-                      : (capital ? 0.9 : 0.55) + (i % 3) * 0.15
-                : kind === 'emp'
-                  ? 0.85
-                  : kind === 'shield'
-                    ? 0.35
-                    : 0.2 + (i % 3) * 0.07;
+            e.duration = kind === 'emp' ? 0.85 : kind === 'shield' ? 0.35 : 0.2 + (i % 3) * 0.07;
             e.life = e.duration;
             e.size = kind === 'shield' ? size * 0.55 : size;
-            e.axis = i % 3;
             e.position.copy(position);
-            e.type =
-                kind === 'emp'
-                    ? 'emp'
-                    : (kind === 'shield' && i === 0) || (explosion && i === 0)
-                      ? 'ring'
-                      : explosion && i > 8
-                        ? 'debris'
-                        : explosion && i === 1
-                          ? 'core'
-                          : i === 1 || (explosion && i === 2)
-                            ? 'flare'
-                            : explosion && i === 3
-                              ? 'trail'
-                              : 'spark';
+            e.type = kind === 'emp' ? 'emp' : kind === 'shield' && i === 0 ? 'ring' : i === 1 ? 'flare' : 'spark';
             e.velocity
                 .set(Math.sin(n * 7.3), Math.cos(n * 2.7), Math.sin(n * 4.9))
                 .normalize()
-                .mulScalar((explosion ? 11 : 7) * Math.sqrt(size));
+                .mulScalar(7 * Math.sqrt(size));
             if (e.type === 'ring' || e.type === 'emp' || e.type === 'flare') e.velocity.set(0, 0, 0);
-            const instance = e.entity.render!.meshInstances[0];
-            instance.mesh =
+            const mi = e.entity.render!.meshInstances[0];
+            mi.mesh =
                 e.type === 'ring' || e.type === 'emp'
                     ? this.ringMesh
-                    : e.type === 'flare' || e.type === 'trail'
+                    : e.type === 'flare'
                       ? this.quadMesh
-                      : e.type === 'debris'
-                        ? this.debrisMesh
-                        : this.sparkMesh;
-            instance.material =
-                e.type === 'core'
-                    ? this.white
-                    : e.type === 'ring' || e.type === 'emp'
-                      ? elite || capital
-                          ? this.orange
-                          : this.ring
-                      : e.type === 'flare'
-                        ? this.flare
-                        : e.type === 'trail' || kind === 'shield'
-                          ? this.glow
-                          : e.type === 'debris'
-                            ? elite
-                                ? this.elite
-                                : this.steel
-                            : this.orange;
-            instance.setParameter('material_opacity', 0.6);
+                      : this.sparkMesh;
+            mi.material =
+                e.type === 'ring' || e.type === 'emp'
+                    ? this.ring
+                    : e.type === 'flare'
+                      ? this.flare
+                      : kind === 'shield'
+                        ? this.glow
+                        : this.orange;
+            mi.setParameter('material_opacity', 0.6);
             e.entity.enabled = true;
             e.entity.setPosition(position);
             if (e.type === 'emp') e.entity.setEulerAngles(i === 1 ? 90 : 0, i === 2 ? 90 : 0, 0);
         }
     };
-    render(combat: Combat, alpha: number, dt: number, camera?: Entity, cruise = false) {
+    render(combat: Combat, alpha: number, dt: number, camera?: Entity) {
+        this.explosions.update(dt, camera);
         for (const q of this.secondary)
             if (q.delay >= 0 && dt > 0) {
                 q.delay -= dt;
@@ -426,68 +386,36 @@ export class CombatView {
                 const f = e.life / e.duration;
                 if (camera && (e.type === 'ring' || e.type === 'flare' || e.type === 'trail'))
                     e.entity.setRotation(camera.getRotation());
-                let scale =
-                    e.type === 'core'
-                        ? e.size * (4 + f * 4)
-                        : e.type === 'ring' || e.type === 'emp'
-                          ? e.size * (6 + (1 - f) * (e.type === 'emp' ? 18 : 36))
-                          : e.type === 'flare'
-                            ? e.size * (3 + Math.sin(f * Math.PI) * 10)
-                            : e.type === 'trail'
-                              ? e.size * f * 1.5
-                              : e.type === 'debris'
-                                ? e.size * (e.life < 0.3 ? e.life / 0.3 : 1) * (0.5 + e.axis * 0.22)
-                                : e.size * (0.08 + f * 0.5);
-                if (e.type === 'core' && camera)
-                    scale = Math.min(
-                        scale,
-                        this.target.sub2(e.position, camera.getPosition()).length() * SPECTACLE.effects.coreAngular
-                    );
+                const scale =
+                    e.type === 'ring' || e.type === 'emp'
+                        ? e.size * (6 + (1 - f) * (e.type === 'emp' ? 18 : 36))
+                        : e.type === 'flare'
+                          ? e.size * (3 + Math.sin(f * Math.PI) * 10)
+                          : e.type === 'trail'
+                            ? e.size * f * 1.5
+                            : e.size * (0.08 + f * 0.5);
                 e.entity.render!.meshInstances[0].setParameter('material_opacity', Math.min(0.65, f * 0.8));
-                if (e.type === 'debris')
-                    e.entity.setEulerAngles((e.duration - e.life) * 95, e.axis * 60, (e.duration - e.life) * 130);
-                e.entity.setLocalScale(
-                    scale,
-                    e.type === 'debris' ? scale * 0.35 : scale,
-                    e.type === 'spark' ? scale * 4 : e.type === 'debris' ? scale * 2 : scale
-                );
+                e.entity.setLocalScale(scale, scale, e.type === 'spark' ? scale * 4 : scale);
             }
         for (const e of this.muzzles) {
             e.enabled = combat.muzzle > 0;
             const size = 0.3 + combat.muzzle * 6;
             e.setLocalScale(size, size, size * 2);
         }
-        this.trailTime += dt;
-        if ((combat.ship.boosting || cruise) && dt > 0 && this.trailTime > 0.05) {
-            this.trailTime = 0;
-            for (const side of [-1, 1]) {
-                const e = this.acquire();
-                if (!e) break;
-                e.type = 'trail';
-                e.life = e.duration = 0.7;
-                e.size = 1.5;
-                combat.ship.rotation
-                    .transformVector(this.position.set(side * 1.05, -0.1, 3), e.position)
-                    .add(combat.ship.position);
-                e.velocity.set(0, 0, 0);
-                e.entity.render!.meshInstances[0].mesh = this.quadMesh;
-                e.entity.render!.meshInstances[0].material = this.glow;
-            }
-        }
     }
     get activeEffects() {
         let n = 0;
         for (const e of this.effects) if (e.life > 0) n++;
-        return n;
+        return n + this.explosions.active;
     }
     destroy() {
+        this.explosions.destroy();
         this.alien.destroy();
         this.bossView.destroy();
         this.phantomView.destroy();
         this.elite.destroy();
         this.root.destroy();
-        for (const m of [this.mint, this.red, this.orange, this.white, this.steel, this.glow, this.flare, this.ring])
-            m.destroy();
+        for (const m of [this.mint, this.red, this.orange, this.white, this.glow, this.flare, this.ring]) m.destroy();
         this.sparkMesh.destroy();
         this.debrisMesh.destroy();
         this.quadMesh.destroy();

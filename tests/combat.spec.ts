@@ -70,6 +70,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         expect(await page.locator('#score').textContent()).toBe(score);
         expect(await page.locator('#shield').getAttribute('value')).toBe(shield);
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await expect(page.locator('#score')).toHaveText('000000');
         await expect(page.locator('#shield')).toHaveAttribute('value', '70');
         await expect

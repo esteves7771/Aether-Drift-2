@@ -4,11 +4,11 @@ A single-player 3D arcade space combat game: fly freely in six degrees of freedo
 
 **[Play Aether Drift 2.0](https://esteves7771.github.io/Aether-Drift-2/)** · [Source](https://github.com/esteves7771/Aether-Drift-2)
 
-First public milestone: **v0.5e-public**, including work through Phase 5E. This is a separate project inspired by [the original Aether Drift](https://github.com/esteves7771/Aether-Drift); its original repository is unchanged.
+Public release: **v0.5f-public**, including Phase 5F-A, Phase 5F-B and the cinematic thruster overhaul. This is a separate project inspired by [the original Aether Drift](https://github.com/esteves7771/Aether-Drift); its original repository is unchanged.
 
 ## Features
 
-- Responsive inertial 6DOF flight, boost, braking, cruise, flight assistance and a smooth third-person chase camera.
+- Responsive inertial 6DOF flight, boost, braking, flight assistance and chase / first-person cockpit cameras.
 - Dual lasers, guided missiles, EMP, shields, coordinated enemy classes and limited alien encounters.
 - Escalating waves with Dreadnought at Wave 5, Phantom at Wave 10 and two-phase Tesser at Wave 15; harder waves continue afterward.
 - Combat Flow scoring, optional challenges, run upgrades, local records and a debrief.
@@ -31,10 +31,8 @@ First public milestone: **v0.5e-public**, including work through Phase 5E. This 
 | Right click        | Soft target selection                 |
 | M                  | Guided missile                        |
 | G                  | EMP                                   |
-| C                  | Toggle cruise                         |
-| N                  | Cycle navigation destination          |
-| V                  | Investigate nearby location           |
-| R                  | Restart patrol                        |
+| C                  | Toggle chase / cockpit camera         |
+| R                  | Confirm restart patrol                |
 | Esc                | Pause / resume, release mouse capture |
 
 Click the viewport for mouse capture; arrow-key steering also works. Audio starts after user interaction. Settings include independent Master/Music/SFX volume, sensitivity, camera distance, flight assistance and graphics presets. Settings and personal records are stored in this browser; clearing site data removes them. Switching tabs pauses gameplay.
@@ -86,10 +84,29 @@ The release build explicitly uses `/Aether-Drift-2/`; normal `npm run build` and
 
 ## Credits and licensing
 
-- [Model/material credits](public/MODEL_CREDITS.md): exact sources, creators, asset-specific terms and modifications; linked from the hangar and distributed with the game.
+- [Model/material credits](public/MODEL_CREDITS.md): exact sources, creators, asset-specific terms and modifications; linked from Credits and distributed with the game.
 - [Music credits](MUSIC_CREDITS.md): creators, original download names, Pixabay source URLs, license and edited death-cue provenance. Music may be used in this game under its listed terms; do not redistribute it as a standalone music collection.
 - [Asset development record](ASSET_CREDITS.md) and [preserved official model metadata](docs/licenses/models/).
 - NASA imagery/models follow NASA's stated usage guidance; no NASA endorsement is implied.
 - Third-party assets retain their respective licenses. This repository does not grant a blanket license over every bundled asset or music track.
 
-Raw asset archives, Blender/FBX conversion inputs, downloaded tool binaries, dependencies, generated builds and local screenshot/report artifacts are intentionally excluded from Git. All ten production GLBs, required textures and supplied soundtrack files are included. Original local asset sources remain untouched. Offline conversion tools require separately obtained original sources and Blender/FFmpeg; they are not needed to build or play the released game.
+Raw asset archives, Blender/FBX conversion inputs, downloaded tool binaries, dependencies, generated builds and local screenshot/report artifacts are intentionally excluded from Git. All eleven production GLBs, required textures and supplied soundtrack files are included. Original local asset sources remain untouched. Offline conversion tools require separately obtained original sources and Blender/FFmpeg; they are not needed to build or play the released game.
+
+## Player propulsion visuals
+
+The thruster overhaul uses a shared native GLSL/WGSL material with tapered 3D plasma shells, soft crossed filaments, hot cores and a High-only nozzle halo. It reacts to actual thrust, boost energy state, cruise, braking, strafe, vertical movement and roll. Coasting alone does not sustain a full plume. The original fighter uses two engines; Surveyor uses its measured central engine plus two smaller outboard nozzles. Existing flight, chase camera, weapons, AI and audio are unchanged. The old hardcoded player wake dots were replaced; missile trails remain.
+
+`npm run test:thrusters` exercises both ships, all states, presets, pause/reset, repeated selection and real combat on WebGPU/WebGL2. Local captures and measurements are written under the ignored `artifacts/thrusters/` directory. Included in v0.5f-public.
+
+## Command deck update (Phase 5F-A)
+
+The approved menu composition uses a live selected-ship preview, five command actions, real-model roster thumbnails and real persisted records/version in the bottom status strip. Four shared satellite instances, Kepler, bounded traffic and PBR asteroids form menu-only scenery. They stop when the patrol launches; the gameplay world and cinematic thrusters are preserved. Settings, Records and Credits remain functional. Included in v0.5f-public.
+
+Run `npm run test:menu` for focused production-subpath browser checks and screenshots at 1920×1080, 1366×768 and 1280×720 (plus layout checks at four additional sizes). Source/licensing limitations for the supplied satellite are recorded in `docs/licenses/models/satellite.md`. The source archive remains untouched.
+
+
+## Cinematic update (Phase 5F-B)
+
+Press **C** or the compact camera HUD button to switch chase/cockpit view. The shared transparent cockpit artwork has live hull/shield, speed/boost, selected target, missiles, EMP and nearby contacts. **R** and in-game restart buttons now pause for confirmation; Cancel/Escape restore the previous active/paused state. The old C-cruise, N-destination and V-investigate shortcuts are removed. Space locations, installations, hazards and internal exploration services remain.
+
+Explosions use bounded layered fire, physical directional sparks and fragments, short warm lighting responses and per-class presets. Boss death sequencing, weapons, flight balance, scoring, audio, the new main menu and plasma thrusters are preserved. Low reduces overdraw/particles; OS reduced-motion preferences reduce intensity/counts. `npm run test:cinematic` runs focused WebGPU/WebGL2 checks. Artwork preparation and prompts are recorded in [docs/art/phase5fb-assets.md](docs/art/phase5fb-assets.md). Included in v0.5f-public.

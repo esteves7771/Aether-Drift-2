@@ -28,6 +28,7 @@ for (const mode of ['webgl', 'auto'])
         await page.locator('#assist').uncheck();
         await page.locator('#menu-back').click();
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await expect(page.locator('#menu')).toBeHidden();
         await expect(page.locator('#speed')).toHaveText('000');
         await page.keyboard.down('ArrowRight');
@@ -58,6 +59,7 @@ for (const mode of ['webgl', 'auto'])
         await expect(page.locator('#menu')).toBeVisible();
         await page.locator('#launch').click();
         await page.keyboard.press('KeyR');
+        await page.locator('#restart-accept').click();
         await page.keyboard.down('KeyW');
         await page.keyboard.down('ShiftLeft');
         await expect

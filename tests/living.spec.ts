@@ -132,10 +132,12 @@ for (const renderer of ['webgpu', 'webgl2'])
         expect(await page.evaluate(() => __phase4.combat.duration)).toBe(paused);
         await page.keyboard.press('Escape');
         await page.keyboard.press('KeyR');
+        await page.locator('#restart-accept').click();
         expect(await page.evaluate(() => __phase4.combat.barrels.items.every((b) => b.active))).toBe(true);
         const warmed = await page.evaluate(() => __phase4.app.root.findComponents('render').length);
         for (let i = 0; i < 2; i++) {
             await page.keyboard.press('KeyR');
+        await page.locator('#restart-accept').click();
             await page.evaluate(() => __phase4.advance(2));
         }
         expect(await page.evaluate(() => __phase4.app.root.findComponents('render').length)).toBe(warmed);

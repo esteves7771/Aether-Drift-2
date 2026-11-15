@@ -10,9 +10,7 @@ export class Input {
     private targetRequested = false;
     private missileRequested = false;
     private empRequested = false;
-    private cruiseRequested = false;
-    private navRequested = false;
-    private interactRequested = false;
+    private cameraRequested = false;
     private readonly events = new AbortController();
     private settings: Settings;
     constructor(canvas: HTMLCanvasElement, settings: Settings, pause: () => void, reset: () => void) {
@@ -22,16 +20,19 @@ export class Input {
             'keydown',
             (e) => {
                 if (e.defaultPrevented) return;
-                if (e.target instanceof Element && e.target.closest('#menu, #upgrade-panel') && e.code !== 'Escape')
+                if (
+                    e.target instanceof Element &&
+                    e.target.closest('#menu, #upgrade-panel') &&
+                    e.code !== 'Escape' &&
+                    !(e.code === 'KeyR' && document.querySelector('#menu[data-screen="pause"]'))
+                )
                     return;
                 if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
                 if (e.code === 'Escape' && !e.repeat) pause();
                 if (e.code === 'KeyR' && !e.repeat) reset();
                 if (!e.repeat && e.code === 'KeyM') this.missileRequested = true;
                 if (!e.repeat && e.code === 'KeyG') this.empRequested = true;
-                if (!e.repeat && e.code === 'KeyC') this.cruiseRequested = true;
-                if (!e.repeat && e.code === 'KeyN') this.navRequested = true;
-                if (!e.repeat && e.code === 'KeyV') this.interactRequested = true;
+                if (!e.repeat && e.code === 'KeyC') this.cameraRequested = true;
                 this.keys.add(e.code);
             },
             options
@@ -82,7 +83,7 @@ export class Input {
     clear() {
         this.keys.clear();
         this.missileRequested = this.empRequested = false;
-        this.cruiseRequested = this.navRequested = this.interactRequested = false;
+        this.cameraRequested = false;
         this.mx = this.my = 0;
         this.mouseFire = this.firing = this.targetRequested = false;
         Object.assign(this.command, neutral());
@@ -110,19 +111,9 @@ export class Input {
         this.missileRequested = false;
         return value;
     }
-    consumeCruise() {
-        const v = this.cruiseRequested;
-        this.cruiseRequested = false;
-        return v;
-    }
-    consumeNavigation() {
-        const v = this.navRequested;
-        this.navRequested = false;
-        return v;
-    }
-    consumeInteract() {
-        const v = this.interactRequested;
-        this.interactRequested = false;
+    consumeCamera() {
+        const v = this.cameraRequested;
+        this.cameraRequested = false;
         return v;
     }
     consumeEMP() {

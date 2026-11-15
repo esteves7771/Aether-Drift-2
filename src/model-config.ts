@@ -1,5 +1,15 @@
+import { PLAYER_ENGINES } from './thruster-state';
+
 /** Offline inspector bounds are decoded vertices. Calibration stays below semantic simulation roots. */
 export const MODEL_TUNING = {
+    satellite: {
+        file: 'satellite.glb',
+        dims: [0.9, 1.7542, 4.0619],
+        center: [0.0321, 0.3683, 0],
+        size: 10,
+        dimension: 2,
+        yaw: 90
+    },
     raider: {
         file: 'spaceship-free-001.glb',
         dims: [6.3621, 1.508, 2.97],
@@ -96,9 +106,6 @@ export const MODEL_MOUNTS = {
     surveyor: {
         radius: 2.4,
         muzzle: [1.35, -0.12, -2.8],
-        engines: [
-            [-1.05, -0.1, 2.7],
-            [1.05, -0.1, 2.7]
-        ]
+        engines: PLAYER_ENGINES.surveyor.map((nozzle) => nozzle.point)
     }
 } as const;

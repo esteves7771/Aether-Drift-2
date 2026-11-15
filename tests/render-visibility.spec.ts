@@ -76,6 +76,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await expect(page.locator('#menu')).toBeVisible();
         expect(await canvasPixels(page)).toBeGreaterThan(3000);
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await page.waitForTimeout(150);
         expect(await canvasPixels(page, 'ship')).toBeGreaterThan(800);
         expect(await canvasPixels(page)).toBeGreaterThan(10000);

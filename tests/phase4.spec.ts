@@ -1,10 +1,16 @@
 import { expect, test } from '@playwright/test';
 import type { AppBase } from 'playcanvas';
 
+import type { ChaseCamera } from '../src/camera';
 import type { Combat } from '../src/combat';
+import type { Settings } from '../src/config';
 import type { Cruise } from '../src/cruise';
+import type { CinematicExplosions } from '../src/explosions';
 import type { Flight } from '../src/flight';
+import type { Input } from '../src/input';
 import type { ModelLibrary } from '../src/model-library';
+import type { PilotCamera } from '../src/pilot-camera';
+import type { PlayerThrusters } from '../src/player-thrusters';
 import type { ShipHangar } from '../src/ship-hangar';
 type Driver = {
     combat: Combat;
@@ -13,10 +19,16 @@ type Driver = {
     hangar: ShipHangar;
     cruise: Cruise;
     app: AppBase;
+    thrusters: PlayerThrusters;
+    input: Input;
+    chase: ChaseCamera;
+    pilotCamera: PilotCamera;
+    explosions: CinematicExplosions;
+    settings: Settings;
     pilot: boolean;
     useAbilities: boolean;
     autoUpgrades: boolean;
-    events: { kind: string; x: number; y: number; z: number; time: number }[];
+    events: { kind: string; x: number; y: number; z: number; time: number; style?: string }[];
     advance(ticks: number): void;
 };
 declare global {
@@ -53,6 +65,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             await page.evaluate(() => ({ emp: __phase4.combat.empCooldown, age: __phase4.combat.enemies[0].age }))
         ).toEqual(before);
         await page.locator('#restart').click();
+        await page.locator('#restart-accept').click();
         await page.keyboard.down('Space');
         await page.evaluate(() => {
             __phase4.pilot = true;

@@ -122,6 +122,7 @@ test('music streams lazily, crossfades, preserves transport, and follows gamepla
         .locator('audio[data-music-state=combat]')
         .evaluate((a: HTMLAudioElement) => a.currentTime);
     await page.keyboard.press('KeyR');
+        await page.locator('#restart-accept').click();
     expect(
         await page.locator('audio[data-music-state=combat]').evaluate((a: HTMLAudioElement) => a.currentTime)
     ).toBeGreaterThanOrEqual(timeBeforeReset);

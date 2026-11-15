@@ -22,6 +22,7 @@ import {
 import { Atmosphere } from './atmosphere';
 import { EngineAudio } from './audio';
 import { ChaseCamera } from './camera';
+import { CockpitHUD } from './cockpit-ui';
 import { Collisions, field } from './collisions';
 import { Combat } from './combat';
 import { CombatHUD } from './combat-ui';
@@ -38,9 +39,12 @@ import { ImportedLandmarks } from './imported-landmarks';
 import { Input } from './input';
 import { LivingView } from './living-view';
 import { Menu } from './menu';
+import { MenuWorld } from './menu-world';
 import { ModelLibrary } from './model-library';
 import { MusicManager, loadMusicAssets } from './music';
+import { PilotCamera } from './pilot-camera';
 import { Records } from './records';
+import { RestartDialog } from './restart-dialog';
 import { buildScene } from './scene';
 import { ShipHangar } from './ship-hangar';
 import { UI } from './ui';
@@ -49,6 +53,8 @@ import './style.css';
 import './menu.css';
 import './frontier.css';
 import './model-ui.css';
+import './command-menu.css';
+import './cockpit.css';
 const canvas = document.getElementById('application-canvas') as HTMLCanvasElement;
 try {
     const device = await createGraphicsDevice(canvas, {
@@ -85,8 +91,8 @@ try {
     const combat = new Combat(
         flight,
         rocks,
-        (event, point, size) => {
-            combatView.event(event, point, size);
+        (event, point, size, blast) => {
+            combatView.event(event, point, size, blast);
             audio.combat(event, 1, soundOffset.sub2(point, flight.position).length());
         },
         (name) => app.fire(name)
@@ -98,6 +104,7 @@ try {
     const cruise = new Cruise();
     const frontierView = new FrontierView(app, combat.frontier);
     const modelLibrary = new ModelLibrary(app);
+    const menuWorld = new MenuWorld(app, modelLibrary, scene);
     const importedFleet = new ImportedFleet(modelLibrary, combatView.enemyVisualRoots, device);
     combatView.importedFleet = importedFleet;
     const landmarks = new ImportedLandmarks(app, modelLibrary, combat.frontier);
@@ -121,14 +128,15 @@ try {
         modelLibrary.setQuality(level);
         landmarks.setQuality(level);
         living.setQuality(level);
+        menuWorld.setQuality(level);
     });
     graphics.apply(settings.graphics);
+    const pilotCamera = new PilotCamera();
     const chase = new ChaseCamera(camera),
         position = new Vec3(),
         rotation = new Quat();
     const records = new Records();
-    let runSaved = false,
-        showcaseTime = 0;
+    let runSaved = false;
     let active = false,
         started = false,
         accumulator = 0,
@@ -153,11 +161,13 @@ try {
     const launch = () => {
         if (combat.upgrades.pending) return;
         if (!started) {
+            pilotCamera.reset();
             chase.reset();
             feel.reset();
         }
         if (flight.hull <= 0) {
             flight.reset();
+            scene.thrusters.reset();
             cruise.reset();
             combat.reset();
             combatView.reset();
@@ -177,6 +187,7 @@ try {
         canvas.focus();
     };
     const reset = () => {
+        pilotCamera.reset();
         if (started && !runSaved && combat.duration > 0) records.save(combat.summary('retired'));
         runSaved = false;
         audio.silence();
@@ -185,6 +196,7 @@ try {
         music.setPaused(document.hidden || !pageFocused);
         music.unlock();
         flight.reset();
+        scene.thrusters.reset();
         cruise.reset();
         feel.reset();
         combat.reset();
@@ -197,7 +209,18 @@ try {
         scene.ship.setRotation(flight.rotation);
         if (started) launch();
     };
-    const ui = new UI(settings, launch, reset, pause);
+    const restartDialog = new RestartDialog();
+    const requestRestart = () => {
+        if (!started || flight.hull <= 0 || combat.upgrades.pending || restartDialog.open) return;
+        const resume = active;
+        pause();
+        input.clear();
+        restartDialog.show(reset, () => {
+            input.clear();
+            if (resume && pageFocused && !document.hidden) launch();
+        });
+    };
+    const ui = new UI(settings, launch, requestRestart, pause);
     const finish = (ended: 'lost' | 'retired') => {
         if (runSaved) return;
         runSaved = true;
@@ -216,6 +239,8 @@ try {
         accumulator = 0;
         input.clear();
         flight.reset();
+        pilotCamera.reset();
+        scene.thrusters.reset();
         cruise.reset();
         combat.reset();
         upgradeUI.reset();
@@ -230,6 +255,11 @@ try {
     const menus = new Menu(settings, records, mainMenu, reset);
     const hangar = new ShipHangar(modelLibrary, scene.ship);
     const combatHUD = new CombatHUD();
+    const cockpitHUD = new CockpitHUD(() => {
+        if (active) {
+            pilotCamera.toggle();
+        }
+    });
     const chooseUpgrade = (index: number) => {
         if (!combat.chooseUpgrade(index)) return;
         upgradeUI.update(combat.upgrades);
@@ -245,7 +275,7 @@ try {
             else if (started && menus.screen === 'pause') launch();
         },
         () => {
-            if (active) reset();
+            requestRestart();
         }
     );
     canvas.tabIndex = 0;
@@ -310,10 +340,7 @@ try {
                     ? input.sample(Math.floor(accumulator / FLIGHT.step) * FLIGHT.step)
                     : input.command;
             if (accumulator >= FLIGHT.step) {
-                if (input.consumeNavigation()) combat.frontier.cycle();
-                if (input.consumeInteract())
-                    combat.ammo = combat.frontier.interact(flight, combat.ammo, combat.ammoCapacity);
-                if (input.consumeCruise()) cruise.toggle(flight, cruiseBlocked());
+                if (input.consumeCamera()) pilotCamera.toggle();
                 if (input.consumeTarget()) combat.selectTarget();
                 if (input.consumeMissile()) {
                     cruise.cancel('WEAPONS / DECELERATING');
@@ -364,17 +391,9 @@ try {
         position.lerp(flight.previous, flight.position, alpha);
         rotation.slerp(flight.previousRotation, flight.rotation, alpha);
         if (!started && menus.homeVisible) {
-            showcaseTime += dt;
-            rotation.setFromEulerAngles(
-                -8,
-                25 + Math.sin(showcaseTime * 0.2) * 18,
-                -7 + Math.sin(showcaseTime * 0.35) * 3
-            );
-            scene.ship.setPosition(0, Math.sin(showcaseTime * 0.6) * 0.22, 0);
-            scene.ship.setRotation(rotation);
-            camera.setPosition(3, 3, 15);
-            camera.lookAt(-5, 0, 0);
+            menuWorld.update(true, dt, camera, hangar.selected);
         } else {
+            menuWorld.update(false, 0, camera);
             scene.ship.setPosition(position);
             scene.ship.setRotation(rotation);
             chase.update(
@@ -386,13 +405,15 @@ try {
                 active && (cruise.active || cruise.settling) ? flight.velocity : undefined
             );
         }
-        combatView.render(
-            combat,
-            alpha,
-            active || menus.screen === 'debrief' ? Math.min(dt, 0.1) : 0,
+        pilotCamera.update(
             camera,
-            cruise.active
+            scene.ship,
+            position,
+            rotation,
+            hangar.selected,
+            started && menus.screen !== 'debrief'
         );
+        combatView.render(combat, alpha, active || menus.screen === 'debrief' ? Math.min(dt, 0.1) : 0, camera);
         frontierView.render(
             flight,
             cruise,
@@ -413,17 +434,17 @@ try {
             flight.boosting || cruise.active,
             settings.cameraEffects
         );
-        for (const t of scene.thrusters) {
-            const length = active
-                ? flight.boosting || cruise.active
-                    ? 5.5 + flight.velocity.length() * 0.012
-                    : 0.7 + flight.velocity.length() * 0.018 + Math.max(0, feel.acceleration) * 0.012
-                : 0.65;
-            t.setLocalScale(flight.boosting ? 0.9 : 0.55, length, flight.boosting ? 0.9 : 0.55);
-            t.setLocalPosition(t.getLocalPosition().x, -0.1, 2.7 + length / 2);
-            if (active)
-                for (const mi of t.render!.meshInstances) mi.setParameter('material_emissive', feel.engineColor);
-        }
+        atmosphere.root.enabled = started;
+        scene.thrusters.update(
+            flight,
+            input.command,
+            cruise.active,
+            active,
+            started,
+            hangar.selected,
+            Math.min(dt, 0.1)
+        );
+        cockpitHUD.present(pilotCamera.cockpit, started && menus.screen !== 'debrief', active);
         audio.update(
             Math.min(230, flight.velocity.length()),
             flight.boosting || cruise.active,
@@ -436,6 +457,7 @@ try {
         if (uiTime > 0.08) {
             ui.update(flight, fps, app.stats.drawCallCount, device.deviceType);
             combatHUD.update(combat, camera, combatView.activeEffects);
+            cockpitHUD.update(combat, combatView.explosions.warmth);
             const musicStatus = document.getElementById('music-status')!;
             musicStatus.dataset.state = music.currentState;
             musicStatus.dataset.status = music.status;
@@ -465,6 +487,10 @@ try {
         menus.destroy();
         upgradeUI.destroy();
         hangar.destroy();
+        pilotCamera.destroy();
+        cockpitHUD.destroy();
+        restartDialog.destroy();
+        menuWorld.destroy();
         living.destroy();
         importedFleet.destroy();
         landmarks.destroy();
