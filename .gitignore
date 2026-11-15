@@ -1,0 +1,50 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+test-results/
+playwright-report/
+
+.local-tools/
+
+# Original third-party archives are preserved locally, never shipped wholesale.
+assets-source/
+
+# Release hygiene: preserve local verification and raw inputs without publishing them.
+artifacts/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.zip
+*.rar
+*.7z
+*.fbx
+*.blend
+*.blend1
+*.obj
+*.dae
+coverage/

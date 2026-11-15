@@ -1,0 +1,845 @@
+:root {
+    font-family:
+        Inter,
+        Segoe UI,
+        sans-serif;
+    color: #e7eef5;
+    background: #050914;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    overflow: hidden;
+}
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    outline: none;
+}
+button,
+input,
+summary {
+    cursor: pointer;
+}
+button {
+    font: inherit;
+    color: inherit;
+    border: 1px solid #ffffff25;
+    background: #122133b0;
+    border-radius: 4px;
+    padding: 12px 18px;
+}
+button:focus-visible,
+summary:focus-visible {
+    outline: 2px solid #42e6a9;
+    outline-offset: 5px;
+}
+header {
+    position: absolute;
+    top: 32px;
+    left: 42px;
+    right: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+}
+.brand {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 7px;
+}
+.brand span {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: #83a4b6;
+    margin-top: 5px;
+}
+.sector {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #c7d7e2;
+}
+.sector small {
+    display: block;
+    font-size: 9px;
+    color: #6a8198;
+    margin-top: 8px;
+}
+.sector i {
+    display: inline-block;
+    background: #42e6a9;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+header button {
+    pointer-events: auto;
+}
+header button span {
+    font-size: 9px;
+    color: #83a4b6;
+    margin-left: 10px;
+}
+.vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 180px #020713aa;
+}
+#impact {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse, transparent 30%, #ff385e);
+    opacity: 0;
+    pointer-events: none;
+}
+.reticle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: #9ed6cf80;
+    pointer-events: none;
+}
+.reticle span {
+    width: 10px;
+    height: 20px;
+    border: 1px solid #9ed6cf66;
+}
+.reticle span:first-child {
+    border-right: 0;
+}
+.reticle span:last-child {
+    border-left: 0;
+}
+.reticle b {
+    font-weight: 200;
+    font-size: 20px;
+}
+.horizon {
+    position: absolute;
+    left: 50%;
+    top: 43%;
+    transform: translateX(-50%);
+    color: #7fa99b40;
+    font-size: 20px;
+    pointer-events: none;
+}
+.telemetry {
+    position: absolute;
+    bottom: 96px;
+    left: 42px;
+}
+.telemetry small {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: #83a4b6;
+}
+.telemetry div {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.telemetry strong {
+    font-weight: 200;
+    font-size: 76px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -4px;
+}
+.telemetry div span {
+    font-size: 9px;
+    line-height: 1.8;
+    letter-spacing: 2px;
+    color: #83a4b6;
+}
+.telemetry p {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #42e6a9;
+}
+.integrity {
+    position: absolute;
+    bottom: 108px;
+    right: 42px;
+    width: 230px;
+}
+.integrity label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 2px;
+    margin-top: 20px;
+    color: #9bb0c2;
+}
+.integrity b {
+    font-weight: 400;
+    color: #e2eff5;
+}
+meter {
+    display: block;
+    width: 100%;
+    height: 5px;
+    margin-top: 12px;
+    background: #1c2b3e;
+    border: 0;
+}
+meter::-webkit-meter-bar {
+    background: #1c2b3e;
+    border: 0;
+    border-radius: 0;
+}
+meter::-webkit-meter-optimum-value {
+    background: #42e6a9;
+}
+#boost::-webkit-meter-optimum-value {
+    background: #a381d8;
+}
+footer {
+    position: absolute;
+    bottom: 30px;
+    left: 42px;
+    right: 42px;
+    border-top: 1px solid #aec6df20;
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #bccbd8;
+}
+footer em {
+    font-style: normal;
+    color: #61788d;
+    font-size: 8px;
+}
+footer small {
+    font-size: 9px;
+    color: #61788d;
+}
+#menu {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #060d1af5 0%, #060d1ac0 35%, #060d1a20 70%);
+    display: flex;
+    align-items: center;
+    padding: 110px 8vw 80px;
+    overflow: auto;
+}
+#menu[hidden] {
+    display: none;
+}
+.menu-card {
+    width: 390px;
+    max-width: 100%;
+}
+.eyebrow {
+    color: #42e6a9;
+    font-size: 9px;
+    letter-spacing: 3px;
+    margin: 0 0 24px;
+}
+h1 {
+    font-size: clamp(40px, 5vw, 68px);
+    line-height: 1.04;
+    letter-spacing: -3px;
+    font-weight: 400;
+    margin: 0;
+}
+h1 span {
+    color: #9fafd0;
+}
+.intro {
+    color: #849bb1;
+    font-size: 13px;
+    line-height: 1.8;
+    margin: 23px 0 28px;
+}
+.primary {
+    background: #42e6a9;
+    color: #071b19;
+    border: 0;
+    width: 100%;
+    text-align: left;
+    letter-spacing: 2px;
+    font-size: 11px;
+    padding: 19px 22px;
+    font-weight: 700;
+}
+.primary span {
+    float: right;
+    font-size: 18px;
+    line-height: 12px;
+}
+.primary:hover {
+    background: #77f9c9;
+}
+.secondary {
+    background: transparent;
+    border: 0;
+    color: #91a7b8;
+    font-size: 11px;
+    padding: 14px 0;
+}
+details {
+    border-top: 1px solid #ffffff18;
+    margin-top: 6px;
+    padding-top: 17px;
+    color: #91a7b8;
+    font-size: 11px;
+}
+summary {
+    letter-spacing: 1px;
+}
+details label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    gap: 20px;
+}
+input[type='range'] {
+    width: 150px;
+    accent-color: #42e6a9;
+}
+input[type='checkbox'] {
+    accent-color: #42e6a9;
+}
+.controls {
+    font-size: 10px;
+    line-height: 1.9;
+    color: #8aa0b2;
+}
+.build {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #536b81;
+    margin-top: 24px;
+}
+.menu-caption {
+    position: absolute;
+    right: 7vw;
+    bottom: 23vh;
+    color: #c2d2e3;
+    letter-spacing: 4px;
+    font-size: 12px;
+    line-height: 2;
+}
+.menu-caption span {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #71849c;
+}
+.error {
+    position: absolute;
+    inset: 20%;
+    padding: 40px;
+    background: #10182b;
+}
+@media (max-width: 700px) {
+    header {
+        top: 20px;
+        left: 20px;
+        right: 20px;
+    }
+    .sector,
+    .menu-caption {
+        display: none;
+    }
+    .brand {
+        font-size: 18px;
+    }
+    .telemetry {
+        left: 20px;
+        bottom: 80px;
+    }
+    .telemetry strong {
+        font-size: 48px;
+    }
+    .integrity {
+        right: 20px;
+        bottom: 90px;
+        width: 150px;
+    }
+    footer {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+    }
+    footer span {
+        display: none;
+    }
+    #menu {
+        padding: 110px 24px 80px;
+    }
+    .menu-card {
+        width: 330px;
+    }
+}
+@media (max-height: 700px) {
+    #menu {
+        align-items: flex-start;
+    }
+    h1 {
+        font-size: 42px;
+    }
+    .intro {
+        margin: 15px 0;
+    }
+    .eyebrow {
+        margin-bottom: 15px;
+    }
+    .build {
+        margin-top: 15px;
+    }
+}
+#combat-stats {
+    position: absolute;
+    left: 42px;
+    top: 132px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    pointer-events: none;
+}
+#combat-stats small {
+    color: #6e8ba0;
+    letter-spacing: 3px;
+    font-size: 9px;
+}
+#score {
+    font-size: 24px;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 3px;
+}
+#wave-status {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #42e6a9;
+}
+#wave-banner {
+    position: absolute;
+    left: 50%;
+    top: 19%;
+    transform: translateX(-50%);
+    color: #a2ffe0;
+    letter-spacing: 3px;
+    font-size: 12px;
+    text-align: center;
+    pointer-events: none;
+}
+#damage-direction {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 220px;
+    height: 220px;
+    border-top: 3px solid currentColor;
+    border-radius: 50%;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transform-origin: center;
+    color: #76cfff;
+}
+#shield-impact {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse, transparent 40%, #328cff);
+    pointer-events: none;
+    opacity: 0;
+}
+.enemy-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    color: #ff668b;
+    pointer-events: none;
+}
+.enemy-marker[hidden] {
+    display: none;
+}
+.enemy-marker i {
+    display: block;
+    position: absolute;
+    left: -17px;
+    top: -17px;
+    width: 34px;
+    height: 34px;
+    text-align: center;
+    line-height: 34px;
+    font-size: 32px;
+    font-weight: 200;
+    font-style: normal;
+}
+.enemy-marker span {
+    position: absolute;
+    left: 23px;
+    top: -12px;
+    white-space: nowrap;
+    font-size: 8px;
+    letter-spacing: 1px;
+}
+.enemy-marker meter {
+    position: absolute;
+    left: 23px;
+    top: 0;
+    width: 70px;
+    height: 3px;
+}
+.enemy-marker meter::-webkit-meter-optimum-value {
+    background: #ff668b;
+}
+.enemy-marker.locked {
+    color: #ffe997;
+}
+.enemy-marker.locked i {
+    border: 1px solid #ffe99780;
+}
+.enemy-marker.locked meter::-webkit-meter-optimum-value {
+    background: #ffe997;
+}
+.enemy-marker.offscreen i {
+    font-size: 0;
+    transform: rotate(var(--angle));
+    border: 0;
+}
+.enemy-marker.offscreen i:after {
+    content: '›';
+    font-size: 34px;
+}
+.enemy-marker.offscreen span {
+    font-size: 7px;
+    left: -35px;
+    top: 22px;
+}
+.enemy-marker.offscreen meter {
+    display: none;
+}
+#shield::-webkit-meter-optimum-value {
+    background: #76cfff;
+}
+#combat-perf {
+    position: absolute;
+    right: 42px;
+    bottom: 54px;
+    color: #61788d;
+    font-size: 8px;
+    letter-spacing: 1px;
+    pointer-events: none;
+}
+body:has(#menu:not([hidden])) #targets,
+body:has(#menu:not([hidden])) #combat-stats,
+body:has(#menu:not([hidden])) #wave-banner {
+    visibility: hidden;
+}
+@media (max-width: 700px) {
+    #combat-stats {
+        top: 100px;
+        left: 20px;
+    }
+    #combat-perf {
+        right: 20px;
+    }
+    .enemy-marker span {
+        font-size: 7px;
+    }
+    #wave-banner {
+        top: 25%;
+        font-size: 9px;
+    }
+}
+/* Phase 3 — optical HUD: fine reticle, readable classifications, quieter wave cards. */
+select {
+    font: inherit;
+    color: #bdd4e5;
+    background: #101d30;
+    border: 1px solid #52688060;
+    border-radius: 3px;
+    padding: 8px;
+    max-width: 215px;
+    accent-color: #73e8ec;
+}
+details label {
+    line-height: 1.5;
+}
+.reticle {
+    color: #bbf5f1c0;
+    gap: 14px;
+    filter: drop-shadow(0 1px 2px #000);
+}
+.reticle span {
+    height: 14px;
+    width: 8px;
+    border-color: #9bebecc0;
+}
+.reticle b {
+    font-size: 0;
+    position: relative;
+    width: 5px;
+    height: 5px;
+    border: 1px solid #d2fff7b0;
+    border-radius: 50%;
+}
+.reticle:after {
+    content: '';
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border: 1px solid transparent;
+    transform: rotate(45deg);
+    transition: border-color 0.16s;
+}
+.reticle.hit:after {
+    border-color: #e1fff7;
+    box-shadow: 0 0 7px #42e6a944;
+}
+.enemy-marker {
+    color: #f39cb5;
+}
+.enemy-marker.heavy {
+    color: #f3b88c;
+}
+.enemy-marker i {
+    font-size: 0;
+    width: 30px;
+    height: 30px;
+    left: -15px;
+    top: -15px;
+    border: 1px solid currentColor;
+    background: linear-gradient(90deg, currentColor 2px, transparent 2px) 0 0/100% 5px no-repeat;
+    clip-path: polygon(
+        0 0,
+        30% 0,
+        30% 5%,
+        70% 5%,
+        70% 0,
+        100% 0,
+        100% 30%,
+        95% 30%,
+        95% 70%,
+        100% 70%,
+        100% 100%,
+        70% 100%,
+        70% 95%,
+        30% 95%,
+        30% 100%,
+        0 100%,
+        0 70%,
+        5% 70%,
+        5% 30%,
+        0 30%
+    );
+    filter: drop-shadow(0 1px 1px #000);
+}
+.enemy-marker.heavy i {
+    width: 40px;
+    height: 34px;
+    left: -20px;
+    top: -17px;
+}
+.enemy-marker span {
+    font-family: Consolas, monospace;
+    left: 25px;
+    top: -11px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    background: #040b17a8;
+    padding: 3px 5px;
+    border-radius: 2px;
+    color: #f1d9e2;
+}
+.enemy-marker.heavy span {
+    color: #f9d9b8;
+}
+.enemy-marker meter {
+    left: 30px;
+    top: 7px;
+    width: 85px;
+    height: 2px;
+    opacity: 0.9;
+}
+.enemy-marker.locked {
+    color: #a9fff0;
+}
+.enemy-marker.locked i {
+    border-color: #a9fff0;
+}
+.enemy-marker.locked span {
+    color: #c2fff4;
+}
+.enemy-marker.locked meter::-webkit-meter-optimum-value {
+    background: #82ffdb;
+}
+.enemy-marker.offscreen i {
+    clip-path: none;
+    background: none;
+    border: 0;
+    filter: drop-shadow(0 1px 2px #000);
+}
+.enemy-marker.offscreen span {
+    max-width: 135px;
+    overflow: hidden;
+    font-size: 8px;
+    left: -45px;
+    top: 23px;
+    white-space: nowrap;
+}
+#wave-banner {
+    font-size: 10px;
+    letter-spacing: 3px;
+    padding: 11px 23px;
+    border-top: 1px solid #8abfc338;
+    border-bottom: 1px solid #8abfc338;
+    background: linear-gradient(90deg, transparent, #09182dcc, transparent);
+    text-shadow: 0 1px 4px #000;
+    min-width: 240px;
+}
+#wave-banner:empty {
+    display: none;
+}
+#wave-banner.complete {
+    color: #9fffe0;
+    border-color: #42e6a960;
+}
+#score {
+    font-family: Consolas, monospace;
+    font-size: 27px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: #e4effa;
+    text-shadow: 0 2px 6px #000;
+}
+#damage-direction {
+    width: 180px;
+    height: 180px;
+    border-top-width: 3px;
+    filter: drop-shadow(0 0 5px currentColor);
+    font-size: 10px;
+}
+#combat-stats {
+    padding-left: 10px;
+    border-left: 1px solid #79d8d344;
+}
+.telemetry strong {
+    font-size: 64px;
+    letter-spacing: -3px;
+}
+.vignette {
+    box-shadow: inset 0 0 140px #02071380;
+}
+.menu-card {
+    backdrop-filter: blur(2px);
+}
+.intro {
+    max-width: 320px;
+}
+.integrity label {
+    font-family: Consolas, monospace;
+    letter-spacing: 1px;
+}
+meter::-webkit-meter-bar {
+    border-radius: 1px;
+}
+footer {
+    font-family: Consolas, monospace;
+}
+body[data-graphics='low'] .menu-card {
+    backdrop-filter: none;
+}
+@media (max-width: 700px) {
+    .enemy-marker span {
+        font-size: 8px;
+        max-width: 130px;
+        overflow: hidden;
+    }
+    .enemy-marker meter {
+        width: 65px;
+    }
+    .telemetry strong {
+        font-size: 44px;
+    }
+    #score {
+        font-size: 21px;
+    }
+    #wave-banner {
+        min-width: 190px;
+        padding: 8px 12px;
+        font-size: 8px;
+    }
+}
+#abilities {
+    position: absolute;
+    left: 50%;
+    bottom: 68px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 28px;
+    color: #a8e8e5;
+    font: 11px monospace;
+    letter-spacing: 1px;
+    pointer-events: none;
+}
+#boss-bar {
+    position: absolute;
+    top: 94px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(520px, 65vw);
+    text-align: center;
+    display: grid;
+    gap: 7px;
+    color: #ffc792;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, #101325bb, transparent);
+    padding: 12px;
+}
+#boss-bar[hidden] {
+    display: none;
+}
+#boss-bar small {
+    font-size: 10px;
+    letter-spacing: 4px;
+}
+#boss-bar strong {
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+#boss-bar meter {
+    width: 100%;
+    height: 6px;
+}
+#boss-attack {
+    font: 11px monospace;
+    letter-spacing: 1px;
+}
+.enemy-marker.armored {
+    opacity: 0.35;
+}
+.enemy-marker[data-elite='true'] {
+    color: #ffd16f;
+}
+.enemy-marker.boss-component:not(.locked) span,
+.enemy-marker.boss-component:not(.locked) meter {
+    display: none;
+}
+.enemy-marker.boss-component.armored {
+    display: none;
+}
+.enemy-marker.boss-component.locked span {
+    background: #101325dd;
+    padding: 4px 6px;
+    color: #ffd7a7;
+}

@@ -1,0 +1,630 @@
+[hidden] {
+    display: none !important;
+}
+#menu {
+    padding: 122px 8vw 72px;
+    align-items: flex-start;
+    background: linear-gradient(90deg, #060b19f5 0%, #070c1ce8 27%, #080d1a6b 57%, #090b190a 84%);
+    isolation: isolate;
+}
+#menu::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 2% 80%, #7c32c71c, transparent 55%);
+}
+.menu-card {
+    width: 480px;
+    max-width: 46vw;
+    margin-block: auto;
+    animation: menu-in 0.16s ease-out;
+}
+.menu-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 38px;
+    font:
+        9px Consolas,
+        monospace;
+    letter-spacing: 2px;
+    color: #819bb9;
+}
+.menu-topline i {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: #72f4df;
+    box-shadow: 0 0 12px #72f4df88;
+    margin-right: 8px;
+}
+.menu-topline button {
+    font-size: 10px;
+    padding: 7px 10px;
+    background: none;
+    border: 0;
+    color: #a0c7d7;
+}
+#menu h1 {
+    font-size: clamp(60px, 6.8vw, 98px);
+    line-height: 0.98;
+    letter-spacing: -5px;
+    font-weight: 600;
+    max-width: 470px;
+    background: linear-gradient(145deg, #f0f6ff 35%, #8b9cc3);
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0;
+}
+#menu .eyebrow {
+    color: #64d6d3;
+    font:
+        10px Consolas,
+        monospace;
+    letter-spacing: 3px;
+    margin-bottom: 19px;
+}
+#menu .intro {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #9caec5;
+    margin: 24px 0 29px;
+}
+.menu-actions {
+    display: grid;
+    gap: 8px;
+}
+.menu-actions .primary,
+.debrief-actions .primary {
+    background: linear-gradient(100deg, #86f5e4, #60c8df);
+    color: #081c27;
+    border: 1px solid #c6fff4;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 20px 23px;
+    box-shadow: 0 5px 35px #36c6cd10;
+    transition:
+        filter 0.14s,
+        transform 0.14s;
+    clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 0 100%);
+}
+.menu-actions .primary:hover,
+.debrief-actions .primary:hover {
+    filter: brightness(1.12);
+    transform: translateX(3px);
+}
+.menu-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 11px;
+}
+.menu-links button {
+    display: flex;
+    justify-content: space-between;
+    background: #12213a73;
+    border: 1px solid #91b8df26;
+    padding: 16px 18px;
+    font:
+        11px Consolas,
+        monospace;
+    letter-spacing: 2px;
+    text-align: left;
+    border-radius: 0;
+    transition:
+        background 0.14s,
+        border-color 0.14s;
+}
+.menu-links button:hover {
+    background: #243654a3;
+    border-color: #76dbdf70;
+}
+.menu-links button span {
+    color: #6b91a8;
+    font-size: 10px;
+}
+.quiet {
+    padding: 13px 0;
+    border: 0;
+    background: none;
+    font:
+        10px Consolas,
+        monospace;
+    color: #9cacc8;
+    letter-spacing: 1px;
+}
+.patrol-brief {
+    margin-top: 32px;
+    border-top: 1px solid #90b4dc28;
+    padding-top: 19px;
+    color: #8095b3;
+}
+.patrol-brief small {
+    font:
+        9px Consolas,
+        monospace;
+    letter-spacing: 2px;
+    color: #b4c4db;
+}
+.patrol-brief p {
+    font-size: 12px;
+    line-height: 1.8;
+    max-width: 360px;
+    margin: 10px 0 17px;
+}
+.patrol-brief div {
+    display: flex;
+    justify-content: space-between;
+    font:
+        9px Consolas,
+        monospace;
+    letter-spacing: 1px;
+    gap: 15px;
+}
+.patrol-brief b {
+    font-weight: 400;
+    color: #69b7bb;
+}
+#menu .build {
+    font:
+        8px Consolas,
+        monospace;
+    letter-spacing: 1px;
+    color: #5c7290;
+    margin-top: 30px;
+}
+.menu-caption {
+    right: 8vw;
+    bottom: 14vh;
+    left: auto;
+    display: grid;
+    gap: 17px;
+    width: 30vw;
+    pointer-events: none;
+    color: #8ca4bb;
+}
+.menu-caption b {
+    font-size: 38px;
+    line-height: 1.06;
+    letter-spacing: 3px;
+    font-weight: 400;
+    color: #b9cfdf99;
+}
+.menu-caption span {
+    font:
+        9px Consolas,
+        monospace;
+    letter-spacing: 2px;
+}
+.menu-caption .ship-index {
+    border-top: 1px solid #77cbd64d;
+    padding-top: 12px;
+    color: #9ed9df;
+}
+#menu[data-screen='records'] h1,
+#menu[data-screen='settings'] h1,
+#menu[data-screen='debrief'] h1,
+#menu[data-screen='pause'] h1 {
+    font-size: 54px;
+    letter-spacing: -2.5px;
+    line-height: 1.08;
+}
+#menu[data-screen='debrief'] .menu-card {
+    width: 640px;
+    max-width: 54vw;
+}
+#menu[data-screen='debrief'] .menu-caption {
+    display: none;
+}
+.stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #7599b526;
+    border: 1px solid #7599b526;
+    margin: 23px 0;
+}
+.stat-grid > div {
+    padding: 17px 18px;
+    background: #0a1424dd;
+    min-width: 0;
+    position: relative;
+}
+.stat-grid small {
+    display: block;
+    color: #829db9;
+    font:
+        9px Consolas,
+        monospace;
+    letter-spacing: 1.5px;
+    margin-bottom: 11px;
+}
+.stat-grid strong {
+    font:
+        25px Consolas,
+        monospace;
+    letter-spacing: -1px;
+    color: #d6f5f8;
+}
+.stat-grid .new-record strong {
+    color: #99fbe4;
+}
+.stat-grid em {
+    display: block;
+    font:
+        8px Consolas,
+        monospace;
+    letter-spacing: 1.5px;
+    color: #fa96d4;
+    margin-top: 8px;
+}
+#debrief-panel .stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+#debrief-panel .stat-grid strong {
+    font-size: 20px;
+}
+#debrief-panel .intro {
+    margin-bottom: 16px;
+}
+#run-records {
+    font:
+        10px Consolas,
+        monospace;
+    letter-spacing: 1px;
+    color: #7ce8d7;
+    line-height: 1.7;
+}
+.debrief-actions {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    align-items: center;
+    gap: 14px;
+    margin-top: 25px;
+}
+.debrief-actions .secondary {
+    margin: 0;
+    padding: 18px;
+    font:
+        11px Consolas,
+        monospace;
+    letter-spacing: 2px;
+}
+.record-note {
+    font:
+        11px Consolas,
+        monospace;
+    line-height: 1.8;
+    color: #a0c1cf;
+    border-left: 2px solid #68d0d0;
+    padding-left: 15px;
+}
+.controls {
+    line-height: 1.8;
+}
+#settings-panel {
+    max-height: 51vh;
+    overflow: auto;
+    padding-right: 16px;
+    margin-top: 22px;
+    scrollbar-color: #415d78 #111a2b;
+    scrollbar-width: thin;
+}
+#settings-panel details {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+#settings-panel summary {
+    font:
+        10px Consolas,
+        monospace;
+    color: #8da6c5;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+#settings-panel label {
+    font-size: 12px;
+    margin: 17px 0;
+    color: #b2c5d7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+#settings-panel input[type='range'] {
+    width: 48%;
+    accent-color: #71e1d8;
+}
+#settings-panel select {
+    background: #111e32;
+    color: #cfdee9;
+    border: 1px solid #637c9860;
+    padding: 7px;
+    font:
+        11px Consolas,
+        monospace;
+    max-width: 60%;
+}
+#settings-panel input[type='checkbox'] {
+    accent-color: #71e1d8;
+}
+#settings-panel .controls {
+    font-size: 11px;
+    color: #8da6bf;
+    line-height: 1.9;
+}
+.menu-open
+    :is(
+        .reticle,
+        .horizon,
+        .telemetry,
+        .integrity,
+        #combat-stats,
+        #wave-banner,
+        #targets,
+        #abilities,
+        #boss-bar,
+        #damage-direction,
+        #shield-impact,
+        #score-feedback
+    ) {
+    visibility: hidden;
+}
+.menu-open header #pause {
+    visibility: hidden;
+}
+.menu-open footer > span {
+    visibility: hidden;
+}
+.menu-open #impact {
+    opacity: 0 !important;
+}
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid #8cf5e6;
+    outline-offset: 4px;
+}
+.enemy-marker:not(.locked) span,
+.enemy-marker:not(.locked) meter {
+    display: none;
+}
+.enemy-marker:not(.locked):not(.offscreen) i {
+    width: 12px;
+    height: 12px;
+    left: -6px;
+    top: -6px;
+    border: 1px solid currentColor;
+    clip-path: none;
+    background: none;
+    transform: rotate(45deg);
+    opacity: 0.85;
+}
+.enemy-marker[data-elite='true']:not(.locked):not(.offscreen) i {
+    width: 16px;
+    height: 16px;
+    left: -8px;
+    top: -8px;
+    border: 3px double #f5cf7c;
+}
+.enemy-marker.offscreen i:after {
+    font-size: 23px;
+}
+.enemy-marker.offscreen i {
+    width: 18px;
+    height: 18px;
+    left: -9px;
+    top: -9px;
+}
+.enemy-marker.label-left:not(.offscreen) span {
+    left: auto;
+    right: 25px;
+}
+.enemy-marker.label-left:not(.offscreen) meter {
+    left: auto;
+    right: 30px;
+}
+.enemy-marker.locked span {
+    font-size: 10px;
+    max-width: 270px;
+}
+.enemy-marker.locked meter {
+    width: 100px;
+}
+#flow {
+    display: flex;
+    gap: 9px;
+    align-items: baseline;
+    margin-top: 10px;
+    font:
+        10px Consolas,
+        monospace;
+    color: #84b5c4;
+    letter-spacing: 1px;
+}
+#flow b {
+    font-size: 19px;
+    color: #9ff3df;
+    font-weight: 400;
+}
+#flow-meter {
+    width: 150px;
+    height: 2px;
+    margin-top: 8px;
+}
+#challenge-status {
+    display: block;
+    max-width: 260px;
+    font:
+        9px Consolas,
+        monospace;
+    letter-spacing: 0.5px;
+    color: #b8a7d7;
+    margin-top: 12px;
+    line-height: 1.5;
+}
+#score-feedback {
+    position: absolute;
+    top: 58%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font:
+        11px Consolas,
+        monospace;
+    letter-spacing: 1px;
+    pointer-events: none;
+    color: #aff9e6;
+    text-shadow: 0 2px 10px #000;
+    transition: opacity 0.12s;
+}
+#score-feedback strong {
+    display: block;
+    font-size: 23px;
+    margin-bottom: 4px;
+    font-weight: 400;
+}
+#score-feedback[hidden] {
+    display: none;
+}
+#combat-stats {
+    top: 122px;
+}
+#wave-status {
+    font-size: 10px;
+    line-height: 1.6;
+}
+.horizon {
+    display: none;
+}
+footer > span {
+    font-size: 9px;
+}
+#abilities {
+    font-size: 11px;
+}
+#boss-bar {
+    background: linear-gradient(90deg, transparent, #0b1026d9, transparent);
+}
+@keyframes menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@media (max-width: 1000px) {
+    #menu {
+        padding: 112px 6vw 65px;
+    }
+    .menu-card {
+        max-width: 55vw;
+    }
+    #menu h1 {
+        font-size: 74px;
+    }
+    .menu-caption {
+        right: 5vw;
+        width: 27vw;
+    }
+    .menu-caption b {
+        font-size: 26px;
+    }
+    .menu-caption span {
+        font-size: 8px;
+    }
+    #menu[data-screen='debrief'] .menu-card {
+        max-width: 70vw;
+    }
+}
+@media (max-width: 700px) {
+    #menu {
+        padding: 90px 6vw 55px;
+        background: linear-gradient(90deg, #060c1af5, #060c1ac7);
+    }
+    .menu-card,
+    #menu[data-screen='debrief'] .menu-card {
+        max-width: 100%;
+        width: 100%;
+    }
+    #menu h1 {
+        font-size: 68px;
+        letter-spacing: -3px;
+    }
+    .menu-topline {
+        margin-bottom: 25px;
+    }
+    .menu-caption,
+    .sector {
+        display: none;
+    }
+    #menu .build {
+        margin-top: 22px;
+    }
+    #menu .intro {
+        font-size: 13px;
+    }
+    #debrief-panel .stat-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .stat-grid > div {
+        padding: 14px;
+    }
+    .debrief-actions {
+        grid-template-columns: 1fr;
+    }
+    .debrief-actions .secondary {
+        padding: 12px;
+    }
+    .patrol-brief {
+        margin-top: 24px;
+    }
+    #settings-panel {
+        max-height: 49vh;
+    }
+    #combat-stats {
+        left: 22px;
+        top: 100px;
+    }
+    #challenge-status {
+        max-width: 170px;
+        font-size: 8px;
+    }
+    #flow {
+        font-size: 8px;
+    }
+    #flow b {
+        font-size: 16px;
+    }
+    #abilities {
+        bottom: 58px;
+        gap: 10px;
+        font-size: 9px;
+    }
+    .enemy-marker.locked span {
+        font-size: 9px;
+        max-width: 160px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .menu-card {
+        animation: none;
+    }
+    button {
+        transition: none !important;
+    }
+}
+header {
+    z-index: 3;
+}
+.menu-open .sector {
+    opacity: 0.65;
+}

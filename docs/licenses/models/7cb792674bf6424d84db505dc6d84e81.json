@@ -1,0 +1,191 @@
+{
+  "animationCount": 0,
+  "categories": [
+    {
+      "uid": "22a2f677efad4d7bbca5ad45f9b5868e",
+      "name": "Cars & Vehicles",
+      "slug": "cars-vehicles",
+      "uri": "https://api.sketchfab.com/v3/categories/22a2f677efad4d7bbca5ad45f9b5868e",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/45dd0cc0860ac57fcd63bde1cc3f2b7c-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/800x450.png"
+        }
+      ]
+    },
+    {
+      "uid": "17d20ca7b35243d4a45171838b50704c",
+      "name": "Science & Technology",
+      "slug": "science-technology",
+      "uri": "https://api.sketchfab.com/v3/categories/17d20ca7b35243d4a45171838b50704c",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/86b1bae49e0ed3f43b2d59b26700234e-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/800x450.png"
+        }
+      ]
+    }
+  ],
+  "commentCount": 0,
+  "createdAt": "2025-09-17T01:17:21.296152",
+  "embedUrl": "https://sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/embed",
+  "faceCount": 1988130,
+  "isAgeRestricted": false,
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "likeCount": 9,
+  "name": "alien flying saucer",
+  "publishedAt": "2025-09-17T01:26:35.627893",
+  "soundCount": 0,
+  "staffpickedAt": null,
+  "tags": [
+    {
+      "name": "starship",
+      "slug": "starship",
+      "uri": "https://api.sketchfab.com/v3/tags/starship"
+    },
+    {
+      "name": "ufo",
+      "slug": "ufo",
+      "uri": "https://api.sketchfab.com/v3/tags/ufo"
+    },
+    {
+      "name": "alien",
+      "slug": "alien",
+      "uri": "https://api.sketchfab.com/v3/tags/alien"
+    },
+    {
+      "name": "ovni",
+      "slug": "ovni",
+      "uri": "https://api.sketchfab.com/v3/tags/ovni"
+    },
+    {
+      "name": "sfi-fi",
+      "slug": "sfi-fi",
+      "uri": "https://api.sketchfab.com/v3/tags/sfi-fi"
+    },
+    {
+      "name": "spaceship",
+      "slug": "spaceship",
+      "uri": "https://api.sketchfab.com/v3/tags/spaceship"
+    }
+  ],
+  "thumbnails": {
+    "images": [
+      {
+        "uid": "4050c0863b994f8798809edb697d0df7",
+        "width": 1920,
+        "height": 1080,
+        "size": 142780,
+        "url": "https://media.sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/thumbnails/d2ed349d6dfe4caeb5b3c62e9b2d81ce/1ad1af76a78a4c6197b8d89a9c51db54.jpeg"
+      },
+      {
+        "uid": "c809016e35fa4cd4b9fc8dfbbfa7545c",
+        "width": 1024,
+        "height": 576,
+        "size": 50897,
+        "url": "https://media.sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/thumbnails/d2ed349d6dfe4caeb5b3c62e9b2d81ce/fd0d4bd0e394438eb423664f3945899e.jpeg"
+      },
+      {
+        "uid": "0efa15684a0344b6944a0053557bfe95",
+        "width": 720,
+        "height": 405,
+        "size": 31057,
+        "url": "https://media.sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/thumbnails/d2ed349d6dfe4caeb5b3c62e9b2d81ce/2a2facb9b5624e038da50020d7365c31.jpeg"
+      },
+      {
+        "uid": "250acab42eb745c4bc3df412cdebe1c0",
+        "width": 256,
+        "height": 144,
+        "size": 7286,
+        "url": "https://media.sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/thumbnails/d2ed349d6dfe4caeb5b3c62e9b2d81ce/da46b531134642f2a137b7be9ca26cd4.jpeg"
+      },
+      {
+        "uid": "80cf7a254e634e04a4a64bbe2c678f2d",
+        "width": 64,
+        "height": 36,
+        "size": 1377,
+        "url": "https://media.sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/thumbnails/d2ed349d6dfe4caeb5b3c62e9b2d81ce/4f45fd03f2ae4499b43a605d9dae039d.jpeg"
+      }
+    ]
+  },
+  "uid": "7cb792674bf6424d84db505dc6d84e81",
+  "uri": "https://api.sketchfab.com/v3/models/7cb792674bf6424d84db505dc6d84e81",
+  "user": {
+    "uid": "97d37e5ccfb6483bba0d0364d146ac3b",
+    "username": "Victor.Alfonso.Ibarra.Ortega",
+    "displayName": "Victor.Alfonso.Ibarra.Ortega",
+    "account": "basic",
+    "profileUrl": "https://sketchfab.com/Victor.Alfonso.Ibarra.Ortega",
+    "avatar": {
+      "uid": "bc288a1a1cc04a12904f236ae30e046f",
+      "uri": "https://api.sketchfab.com/v3/avatars/bc288a1a1cc04a12904f236ae30e046f",
+      "images": [
+        {
+          "width": 32,
+          "height": 32,
+          "size": 919,
+          "url": "https://media.sketchfab.com/avatars/bc288a1a1cc04a12904f236ae30e046f/c4676caca7a147f1abd62e3d7faac55e.jpeg"
+        },
+        {
+          "width": 48,
+          "height": 48,
+          "size": 1235,
+          "url": "https://media.sketchfab.com/avatars/bc288a1a1cc04a12904f236ae30e046f/1c235dff335a4376ab7d43b1cf314d7e.jpeg"
+        },
+        {
+          "width": 90,
+          "height": 90,
+          "size": 2725,
+          "url": "https://media.sketchfab.com/avatars/bc288a1a1cc04a12904f236ae30e046f/de9d8539d1884e348277a2166183d618.jpeg"
+        },
+        {
+          "width": 100,
+          "height": 100,
+          "size": 3229,
+          "url": "https://media.sketchfab.com/avatars/bc288a1a1cc04a12904f236ae30e046f/3bf413c43af34a628c86dcdce8d5fad1.jpeg"
+        }
+      ]
+    },
+    "uri": "https://api.sketchfab.com/v3/users/97d37e5ccfb6483bba0d0364d146ac3b"
+  },
+  "vertexCount": 993065,
+  "viewCount": 1068,
+  "viewerUrl": "https://sketchfab.com/3d-models/alien-flying-saucer-7cb792674bf6424d84db505dc6d84e81",
+  "isDownloadable": true,
+  "isProtected": false,
+  "description": "alien spaceship",
+  "price": null,
+  "downloadCount": 211,
+  "editorUrl": "https://sketchfab.com/models/7cb792674bf6424d84db505dc6d84e81/edit",
+  "status": {
+    "warning": {},
+    "processing": "SUCCEEDED"
+  },
+  "source": "website",
+  "hasCommentsDisabled": false,
+  "updatedAt": "2025-09-17T01:32:11.440079",
+  "pbrType": null,
+  "textureCount": 1,
+  "materialCount": 1
+}

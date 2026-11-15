@@ -1,0 +1,14 @@
+{
+  "source": "death.mp3",
+  "sourceSha256": "77331d46fd1069764c59a39041db94046ba0aa3f48fe54ad4f2a8faa16d0bf89",
+  "output": "death-cue.mp3",
+  "outputSha256": "73e500b8c48293c6d1219ab26c86f032e5544c0ec4fd0d6a781cac1d79be6e82",
+  "startSeconds": 20,
+  "durationSeconds": 8,
+  "fadeInSeconds": 0.08,
+  "fadeOutSeconds": 2.5,
+  "codec": "MP3 / libmp3lame",
+  "generatedAt": "2026-11-14T17:07:22.890Z",
+  "selectionReason": "20.00–28.00 seconds: early dark-pulse entrance around 20.25 s, selected after RMS onset analysis; avoids a long ambient intro.",
+  "tool": "FFmpeg 9.0.2 / gyan.dev essentials build, archive checksum verified"
+}

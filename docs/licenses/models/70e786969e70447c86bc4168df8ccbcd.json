@@ -1,0 +1,226 @@
+{
+  "animationCount": 0,
+  "categories": [
+    {
+      "uid": "22a2f677efad4d7bbca5ad45f9b5868e",
+      "name": "Cars & Vehicles",
+      "slug": "cars-vehicles",
+      "uri": "https://api.sketchfab.com/v3/categories/22a2f677efad4d7bbca5ad45f9b5868e",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/45dd0cc0860ac57fcd63bde1cc3f2b7c-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/800x450.png"
+        }
+      ]
+    },
+    {
+      "uid": "17d20ca7b35243d4a45171838b50704c",
+      "name": "Science & Technology",
+      "slug": "science-technology",
+      "uri": "https://api.sketchfab.com/v3/categories/17d20ca7b35243d4a45171838b50704c",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/86b1bae49e0ed3f43b2d59b26700234e-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/800x450.png"
+        }
+      ]
+    }
+  ],
+  "commentCount": 1,
+  "createdAt": "2018-10-12T04:29:31.495393",
+  "embedUrl": "https://sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/embed",
+  "faceCount": 1736,
+  "isAgeRestricted": false,
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "likeCount": 127,
+  "name": "Spaceship",
+  "publishedAt": "2018-10-12T04:57:46.265932",
+  "soundCount": 0,
+  "staffpickedAt": null,
+  "tags": [
+    {
+      "name": "spacecraft",
+      "slug": "spacecraft",
+      "uri": "https://api.sketchfab.com/v3/tags/spacecraft"
+    },
+    {
+      "name": "downloadable",
+      "slug": "downloadable",
+      "uri": "https://api.sketchfab.com/v3/tags/downloadable"
+    },
+    {
+      "name": "emmisive",
+      "slug": "emmisive",
+      "uri": "https://api.sketchfab.com/v3/tags/emmisive"
+    },
+    {
+      "name": "spaceship-sci-fi",
+      "slug": "spaceship-sci-fi",
+      "uri": "https://api.sketchfab.com/v3/tags/spaceship-sci-fi"
+    },
+    {
+      "name": "substance",
+      "slug": "substance",
+      "uri": "https://api.sketchfab.com/v3/tags/substance"
+    },
+    {
+      "name": "sketchup",
+      "slug": "sketchup",
+      "uri": "https://api.sketchfab.com/v3/tags/sketchup"
+    },
+    {
+      "name": "asset",
+      "slug": "asset",
+      "uri": "https://api.sketchfab.com/v3/tags/asset"
+    },
+    {
+      "name": "game",
+      "slug": "game",
+      "uri": "https://api.sketchfab.com/v3/tags/game"
+    },
+    {
+      "name": "substance-painter",
+      "slug": "substance-painter",
+      "uri": "https://api.sketchfab.com/v3/tags/substance-painter"
+    },
+    {
+      "name": "sci-fi",
+      "slug": "sci-fi",
+      "uri": "https://api.sketchfab.com/v3/tags/sci-fi"
+    },
+    {
+      "name": "free",
+      "slug": "free",
+      "uri": "https://api.sketchfab.com/v3/tags/free"
+    },
+    {
+      "name": "gun",
+      "slug": "gun",
+      "uri": "https://api.sketchfab.com/v3/tags/gun"
+    },
+    {
+      "name": "spaceship",
+      "slug": "spaceship",
+      "uri": "https://api.sketchfab.com/v3/tags/spaceship"
+    }
+  ],
+  "thumbnails": {
+    "images": [
+      {
+        "uid": "cd0cbbaeb85c4ee4b42f2ee07e651149",
+        "width": 1024,
+        "height": 576,
+        "size": 48989,
+        "url": "https://media.sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/thumbnails/b4c706c5ef3d41408e24c8b46e6c05eb/41a024a7cdf14e92b2ecfd5fb35b23f7.jpeg"
+      },
+      {
+        "uid": "ab5fc3ff37fc4c3a80de214aab0d5e30",
+        "width": 1920,
+        "height": 1080,
+        "size": 228704,
+        "url": "https://media.sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/thumbnails/b4c706c5ef3d41408e24c8b46e6c05eb/af1f185c5f6a4524a55da1ed1a20593a.jpeg"
+      },
+      {
+        "uid": "34e0aac004974ca884702b9608917517",
+        "width": 720,
+        "height": 405,
+        "size": 25071,
+        "url": "https://media.sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/thumbnails/b4c706c5ef3d41408e24c8b46e6c05eb/774374ba3cf3496083bc509c8b7e78d4.jpeg"
+      },
+      {
+        "uid": "bd9dd8ca2490460b871e393a0419958f",
+        "width": 256,
+        "height": 144,
+        "size": 4646,
+        "url": "https://media.sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/thumbnails/b4c706c5ef3d41408e24c8b46e6c05eb/27122565fb99468c8399d999b6ecc041.jpeg"
+      },
+      {
+        "uid": "58327ddb212e4657a60c0a7fddaa596f",
+        "width": 64,
+        "height": 36,
+        "size": 849,
+        "url": "https://media.sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/thumbnails/b4c706c5ef3d41408e24c8b46e6c05eb/13544918037749ff9ed9131bd1fd3117.jpeg"
+      }
+    ]
+  },
+  "uid": "70e786969e70447c86bc4168df8ccbcd",
+  "uri": "https://api.sketchfab.com/v3/models/70e786969e70447c86bc4168df8ccbcd",
+  "user": {
+    "uid": "065d162da82843ad976d11a9044abb58",
+    "username": "DarrenMcnerney3D",
+    "displayName": "Darren McNerney 3D",
+    "account": "basic",
+    "profileUrl": "https://sketchfab.com/DarrenMcnerney3D",
+    "avatar": {
+      "uid": "46c21dadcca94bc78d080905acd35ab5",
+      "uri": "https://api.sketchfab.com/v3/avatars/46c21dadcca94bc78d080905acd35ab5",
+      "images": [
+        {
+          "width": 32,
+          "height": 32,
+          "size": 1244,
+          "url": "https://media.sketchfab.com/avatars/46c21dadcca94bc78d080905acd35ab5/a9bd2048db9145ba8c55a985cd4b2ec6.jpeg"
+        },
+        {
+          "width": 48,
+          "height": 48,
+          "size": 1811,
+          "url": "https://media.sketchfab.com/avatars/46c21dadcca94bc78d080905acd35ab5/8cee1fd291bf4a18a1f90b3f92069b67.jpeg"
+        },
+        {
+          "width": 90,
+          "height": 90,
+          "size": 3664,
+          "url": "https://media.sketchfab.com/avatars/46c21dadcca94bc78d080905acd35ab5/38d4a2eba5c0441c9b780342fc47ec3f.jpeg"
+        },
+        {
+          "width": 100,
+          "height": 100,
+          "size": 4209,
+          "url": "https://media.sketchfab.com/avatars/46c21dadcca94bc78d080905acd35ab5/7365bb393da3496b993a6566d3b5c923.jpeg"
+        }
+      ]
+    },
+    "uri": "https://api.sketchfab.com/v3/users/065d162da82843ad976d11a9044abb58"
+  },
+  "vertexCount": 1041,
+  "viewCount": 11282,
+  "viewerUrl": "https://sketchfab.com/3d-models/spaceship-70e786969e70447c86bc4168df8ccbcd",
+  "isDownloadable": true,
+  "isProtected": false,
+  "description": "Spaceship model created using Sketchup and Substance Painter. Can be downloaded and used in game projects.",
+  "price": null,
+  "downloadCount": 3529,
+  "editorUrl": "https://sketchfab.com/models/70e786969e70447c86bc4168df8ccbcd/edit",
+  "status": {
+    "warning": {},
+    "processing": "SUCCEEDED"
+  },
+  "source": "website",
+  "hasCommentsDisabled": false,
+  "updatedAt": "2022-07-19T10:26:09.55489",
+  "pbrType": "metalness",
+  "textureCount": 6,
+  "materialCount": 1
+}

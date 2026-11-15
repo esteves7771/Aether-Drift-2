@@ -1,0 +1,281 @@
+{
+  "animationCount": 0,
+  "categories": [
+    {
+      "uid": "22a2f677efad4d7bbca5ad45f9b5868e",
+      "name": "Cars & Vehicles",
+      "slug": "cars-vehicles",
+      "uri": "https://api.sketchfab.com/v3/categories/22a2f677efad4d7bbca5ad45f9b5868e",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/45dd0cc0860ac57fcd63bde1cc3f2b7c-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/800x450.png"
+        }
+      ]
+    },
+    {
+      "uid": "17d20ca7b35243d4a45171838b50704c",
+      "name": "Science & Technology",
+      "slug": "science-technology",
+      "uri": "https://api.sketchfab.com/v3/categories/17d20ca7b35243d4a45171838b50704c",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/86b1bae49e0ed3f43b2d59b26700234e-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/800x450.png"
+        }
+      ]
+    }
+  ],
+  "commentCount": 1,
+  "createdAt": "2022-10-07T01:35:42.381364",
+  "embedUrl": "https://sketchfab.com/models/9a81a5167c474530881e55127e275c6c/embed",
+  "faceCount": 8628,
+  "isAgeRestricted": false,
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "likeCount": 224,
+  "name": "Spaceship Free 001",
+  "publishedAt": "2022-10-07T01:58:05.979083",
+  "soundCount": 0,
+  "staffpickedAt": null,
+  "tags": [
+    {
+      "name": "fiction",
+      "slug": "fiction",
+      "uri": "https://api.sketchfab.com/v3/tags/fiction"
+    },
+    {
+      "name": "shuttle",
+      "slug": "shuttle",
+      "uri": "https://api.sketchfab.com/v3/tags/shuttle"
+    },
+    {
+      "name": "high",
+      "slug": "high",
+      "uri": "https://api.sketchfab.com/v3/tags/high"
+    },
+    {
+      "name": "future",
+      "slug": "future",
+      "uri": "https://api.sketchfab.com/v3/tags/future"
+    },
+    {
+      "name": "sci",
+      "slug": "sci",
+      "uri": "https://api.sketchfab.com/v3/tags/sci"
+    },
+    {
+      "name": "fi",
+      "slug": "fi",
+      "uri": "https://api.sketchfab.com/v3/tags/fi"
+    },
+    {
+      "name": "starship",
+      "slug": "starship",
+      "uri": "https://api.sketchfab.com/v3/tags/starship"
+    },
+    {
+      "name": "spacecraft",
+      "slug": "spacecraft",
+      "uri": "https://api.sketchfab.com/v3/tags/spacecraft"
+    },
+    {
+      "name": "tech",
+      "slug": "tech",
+      "uri": "https://api.sketchfab.com/v3/tags/tech"
+    },
+    {
+      "name": "cyberpunk",
+      "slug": "cyberpunk",
+      "uri": "https://api.sketchfab.com/v3/tags/cyberpunk"
+    },
+    {
+      "name": "ufo",
+      "slug": "ufo",
+      "uri": "https://api.sketchfab.com/v3/tags/ufo"
+    },
+    {
+      "name": "fantastic",
+      "slug": "fantastic",
+      "uri": "https://api.sketchfab.com/v3/tags/fantastic"
+    },
+    {
+      "name": "interstellar",
+      "slug": "interstellar",
+      "uri": "https://api.sketchfab.com/v3/tags/interstellar"
+    },
+    {
+      "name": "aircraft",
+      "slug": "aircraft",
+      "uri": "https://api.sketchfab.com/v3/tags/aircraft"
+    },
+    {
+      "name": "science",
+      "slug": "science",
+      "uri": "https://api.sketchfab.com/v3/tags/science"
+    },
+    {
+      "name": "alien",
+      "slug": "alien",
+      "uri": "https://api.sketchfab.com/v3/tags/alien"
+    },
+    {
+      "name": "cosmos",
+      "slug": "cosmos",
+      "uri": "https://api.sketchfab.com/v3/tags/cosmos"
+    },
+    {
+      "name": "sci-fi",
+      "slug": "sci-fi",
+      "uri": "https://api.sketchfab.com/v3/tags/sci-fi"
+    },
+    {
+      "name": "futuristic",
+      "slug": "futuristic",
+      "uri": "https://api.sketchfab.com/v3/tags/futuristic"
+    },
+    {
+      "name": "technology",
+      "slug": "technology",
+      "uri": "https://api.sketchfab.com/v3/tags/technology"
+    },
+    {
+      "name": "ship",
+      "slug": "ship",
+      "uri": "https://api.sketchfab.com/v3/tags/ship"
+    },
+    {
+      "name": "space",
+      "slug": "space",
+      "uri": "https://api.sketchfab.com/v3/tags/space"
+    },
+    {
+      "name": "spaceship",
+      "slug": "spaceship",
+      "uri": "https://api.sketchfab.com/v3/tags/spaceship"
+    },
+    {
+      "name": "noai",
+      "slug": "noai",
+      "uri": "https://api.sketchfab.com/v3/tags/noai"
+    }
+  ],
+  "thumbnails": {
+    "images": [
+      {
+        "uid": "46ac29e519cd4771a2e0a042d4ed2bd7",
+        "width": 1920,
+        "height": 1080,
+        "size": 151082,
+        "url": "https://media.sketchfab.com/models/9a81a5167c474530881e55127e275c6c/thumbnails/65dc3dc4e7ba4594ae837db7254ed073/75d25f1a3eb045ba91fb3cbae3b88a57.jpeg"
+      },
+      {
+        "uid": "9c76547d7e504d86b1a50079dbbcd794",
+        "width": 1024,
+        "height": 576,
+        "size": 49380,
+        "url": "https://media.sketchfab.com/models/9a81a5167c474530881e55127e275c6c/thumbnails/65dc3dc4e7ba4594ae837db7254ed073/c598596132d04508a6758d1de2ba8597.jpeg"
+      },
+      {
+        "uid": "2f547a548c9040c5af7fbc845b0138ba",
+        "width": 720,
+        "height": 405,
+        "size": 27828,
+        "url": "https://media.sketchfab.com/models/9a81a5167c474530881e55127e275c6c/thumbnails/65dc3dc4e7ba4594ae837db7254ed073/a4158f48cd6b484783c82521681b6f48.jpeg"
+      },
+      {
+        "uid": "ac93d5bccde74839bef1c33ef4b9a29a",
+        "width": 256,
+        "height": 144,
+        "size": 5549,
+        "url": "https://media.sketchfab.com/models/9a81a5167c474530881e55127e275c6c/thumbnails/65dc3dc4e7ba4594ae837db7254ed073/d1070afa94b04b928c151516e3cf0474.jpeg"
+      },
+      {
+        "uid": "48deb768582b493c8e72d7dc6091be0e",
+        "width": 64,
+        "height": 36,
+        "size": 1221,
+        "url": "https://media.sketchfab.com/models/9a81a5167c474530881e55127e275c6c/thumbnails/65dc3dc4e7ba4594ae837db7254ed073/e9e717d2b64f4614b01bbbeb703d1631.jpeg"
+      }
+    ]
+  },
+  "uid": "9a81a5167c474530881e55127e275c6c",
+  "uri": "https://api.sketchfab.com/v3/models/9a81a5167c474530881e55127e275c6c",
+  "user": {
+    "uid": "f79a9575a62e4b958969af7ca1b0357d",
+    "username": "ritordp",
+    "displayName": "RitorDP",
+    "account": "basic",
+    "profileUrl": "https://sketchfab.com/ritordp",
+    "avatar": {
+      "uid": "6d2c2017acdb483b89aad56c32d9d778",
+      "uri": "https://api.sketchfab.com/v3/avatars/6d2c2017acdb483b89aad56c32d9d778",
+      "images": [
+        {
+          "width": 32,
+          "height": 32,
+          "size": 1754,
+          "url": "https://media.sketchfab.com/avatars/6d2c2017acdb483b89aad56c32d9d778/5816d8a6606d44b787c0193193e8f756.png"
+        },
+        {
+          "width": 48,
+          "height": 48,
+          "size": 3046,
+          "url": "https://media.sketchfab.com/avatars/6d2c2017acdb483b89aad56c32d9d778/0ed8fca8cf2f424580c9861f385f0c68.png"
+        },
+        {
+          "width": 90,
+          "height": 90,
+          "size": 6940,
+          "url": "https://media.sketchfab.com/avatars/6d2c2017acdb483b89aad56c32d9d778/a174437bd26a424c9f4d74da2b8d2266.png"
+        },
+        {
+          "width": 100,
+          "height": 100,
+          "size": 7860,
+          "url": "https://media.sketchfab.com/avatars/6d2c2017acdb483b89aad56c32d9d778/718c027fd31f4d2d8fb577d946a524ee.png"
+        }
+      ]
+    },
+    "uri": "https://api.sketchfab.com/v3/users/f79a9575a62e4b958969af7ca1b0357d"
+  },
+  "vertexCount": 4346,
+  "viewCount": 5945,
+  "viewerUrl": "https://sketchfab.com/3d-models/spaceship-free-001-9a81a5167c474530881e55127e275c6c",
+  "isDownloadable": true,
+  "isProtected": false,
+  "description": "Created from many free libraries. You can use this model as you like without any restrictions.",
+  "price": null,
+  "downloadCount": 1271,
+  "editorUrl": "https://sketchfab.com/models/9a81a5167c474530881e55127e275c6c/edit",
+  "status": {
+    "warning": {},
+    "processing": "SUCCEEDED"
+  },
+  "source": "website",
+  "hasCommentsDisabled": false,
+  "updatedAt": "2023-11-21T18:43:13.948035",
+  "pbrType": "metalness",
+  "textureCount": 6,
+  "materialCount": 1
+}

@@ -1,0 +1,211 @@
+{
+  "animationCount": 0,
+  "categories": [
+    {
+      "uid": "22a2f677efad4d7bbca5ad45f9b5868e",
+      "name": "Cars & Vehicles",
+      "slug": "cars-vehicles",
+      "uri": "https://api.sketchfab.com/v3/categories/22a2f677efad4d7bbca5ad45f9b5868e",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/45dd0cc0860ac57fcd63bde1cc3f2b7c-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/22a2f677efad4d7bbca5ad45f9b5868e/800x450.png"
+        }
+      ]
+    },
+    {
+      "uid": "17d20ca7b35243d4a45171838b50704c",
+      "name": "Science & Technology",
+      "slug": "science-technology",
+      "uri": "https://api.sketchfab.com/v3/categories/17d20ca7b35243d4a45171838b50704c",
+      "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/86b1bae49e0ed3f43b2d59b26700234e-v2.svg",
+      "thumbnails": [
+        {
+          "width": "512",
+          "height": "288",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/512x288.png"
+        },
+        {
+          "width": "800",
+          "height": "450",
+          "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/800x450.png"
+        }
+      ]
+    }
+  ],
+  "commentCount": 3,
+  "createdAt": "2023-10-31T18:04:37.489034",
+  "embedUrl": "https://sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/embed",
+  "faceCount": 84166,
+  "isAgeRestricted": false,
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "likeCount": 168,
+  "name": "futuristic sci-fi spaceship",
+  "publishedAt": "2023-10-31T20:47:03.104171",
+  "soundCount": 0,
+  "staffpickedAt": null,
+  "tags": [
+    {
+      "name": "dirty",
+      "slug": "dirty",
+      "uri": "https://api.sketchfab.com/v3/tags/dirty"
+    },
+    {
+      "name": "metal",
+      "slug": "metal",
+      "uri": "https://api.sketchfab.com/v3/tags/metal"
+    },
+    {
+      "name": "old",
+      "slug": "old",
+      "uri": "https://api.sketchfab.com/v3/tags/old"
+    },
+    {
+      "name": "science-fiction",
+      "slug": "science-fiction",
+      "uri": "https://api.sketchfab.com/v3/tags/science-fiction"
+    },
+    {
+      "name": "spaceship-sci-fi",
+      "slug": "spaceship-sci-fi",
+      "uri": "https://api.sketchfab.com/v3/tags/spaceship-sci-fi"
+    },
+    {
+      "name": "hardsurfacemodeling",
+      "slug": "hardsurfacemodeling",
+      "uri": "https://api.sketchfab.com/v3/tags/hardsurfacemodeling"
+    },
+    {
+      "name": "3d",
+      "slug": "3d",
+      "uri": "https://api.sketchfab.com/v3/tags/3d"
+    },
+    {
+      "name": "blender",
+      "slug": "blender",
+      "uri": "https://api.sketchfab.com/v3/tags/blender"
+    },
+    {
+      "name": "sci-fi",
+      "slug": "sci-fi",
+      "uri": "https://api.sketchfab.com/v3/tags/sci-fi"
+    },
+    {
+      "name": "spaceship",
+      "slug": "spaceship",
+      "uri": "https://api.sketchfab.com/v3/tags/spaceship"
+    }
+  ],
+  "thumbnails": {
+    "images": [
+      {
+        "uid": "6d10d1e114534b7c871980421155515d",
+        "width": 1920,
+        "height": 1080,
+        "size": 188694,
+        "url": "https://media.sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/thumbnails/d29a6a2809ff4a79be34db099348bd9f/f63b1173c6f04c7faa351feccb496065.jpeg"
+      },
+      {
+        "uid": "b032fd3c22444087bc29d2c8fc95bb1a",
+        "width": 1024,
+        "height": 576,
+        "size": 58093,
+        "url": "https://media.sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/thumbnails/d29a6a2809ff4a79be34db099348bd9f/5cb1d4ada4a443cb94014cb67af2cf45.jpeg"
+      },
+      {
+        "uid": "a8b13ae25937458ead3aa73d4f6eaf29",
+        "width": 720,
+        "height": 405,
+        "size": 33294,
+        "url": "https://media.sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/thumbnails/d29a6a2809ff4a79be34db099348bd9f/8828738f6f374f028c5789e8a7e3ac3b.jpeg"
+      },
+      {
+        "uid": "350b56bf08dd424588421fea65b5e44d",
+        "width": 256,
+        "height": 144,
+        "size": 6604,
+        "url": "https://media.sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/thumbnails/d29a6a2809ff4a79be34db099348bd9f/6a47d87e2aca44de9d272ca70bbd3d46.jpeg"
+      },
+      {
+        "uid": "77a2de399cb149ddbc185a333bcba1a0",
+        "width": 64,
+        "height": 36,
+        "size": 1292,
+        "url": "https://media.sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/thumbnails/d29a6a2809ff4a79be34db099348bd9f/9f5ac6c5ef5e4242a67c2dd56c55f853.jpeg"
+      }
+    ]
+  },
+  "uid": "fba55b1beebf494b885caf2dc873edff",
+  "uri": "https://api.sketchfab.com/v3/models/fba55b1beebf494b885caf2dc873edff",
+  "user": {
+    "uid": "f961bcda93904ec48ef10ea7ce74c53e",
+    "username": "Schwaeli",
+    "displayName": "Schwaeli",
+    "account": "basic",
+    "profileUrl": "https://sketchfab.com/Schwaeli",
+    "avatar": {
+      "uid": "3c21a40383074f189fd39e7db356fab1",
+      "uri": "https://api.sketchfab.com/v3/avatars/3c21a40383074f189fd39e7db356fab1",
+      "images": [
+        {
+          "width": 32,
+          "height": 32,
+          "size": 422,
+          "url": "https://media.sketchfab.com/avatars/3c21a40383074f189fd39e7db356fab1/f507747ee0334889997bbc9cab74fe29.png"
+        },
+        {
+          "width": 48,
+          "height": 48,
+          "size": 658,
+          "url": "https://media.sketchfab.com/avatars/3c21a40383074f189fd39e7db356fab1/27a052c8be254d458f8827fccc452c4f.png"
+        },
+        {
+          "width": 90,
+          "height": 90,
+          "size": 1276,
+          "url": "https://media.sketchfab.com/avatars/3c21a40383074f189fd39e7db356fab1/fbe27594be8043299183457eadb65a4d.png"
+        },
+        {
+          "width": 100,
+          "height": 100,
+          "size": 1429,
+          "url": "https://media.sketchfab.com/avatars/3c21a40383074f189fd39e7db356fab1/eb35623cf00946e3ba77c6ff76602eb7.png"
+        }
+      ]
+    },
+    "uri": "https://api.sketchfab.com/v3/users/f961bcda93904ec48ef10ea7ce74c53e"
+  },
+  "vertexCount": 42830,
+  "viewCount": 8106,
+  "viewerUrl": "https://sketchfab.com/3d-models/futuristic-sci-fi-spaceship-fba55b1beebf494b885caf2dc873edff",
+  "isDownloadable": true,
+  "isProtected": false,
+  "description": "This is a futuristic spaceship u have lately created using Blender. I tried going for a very intersting but still known and basic look.\nThis Spaceship is not one mesh.\nit's devided into:\n** the main body\n* the first wing\n* the second wing\n* the guns on the bottom of the spaceship\n* the cockpit\n\nyou can find more of these on [my account](http://https://sketchfab.com/Schwaeli)",
+  "price": null,
+  "downloadCount": 1473,
+  "editorUrl": "https://sketchfab.com/models/fba55b1beebf494b885caf2dc873edff/edit",
+  "status": {
+    "warning": {},
+    "processing": "SUCCEEDED"
+  },
+  "source": "website",
+  "hasCommentsDisabled": false,
+  "updatedAt": "2023-11-05T16:47:38.503178",
+  "pbrType": "metalness",
+  "textureCount": 20,
+  "materialCount": 5
+}

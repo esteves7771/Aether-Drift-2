@@ -1,0 +1,126 @@
+{
+  "observedOn": "2026-11-14",
+  "licenseSummary": "https://pixabay.com/service/license-summary/",
+  "fullTerms": "https://pixabay.com/service/terms/",
+  "evidenceType": "Source-page observations plus user-supplied original download names, local media metadata and SHA-256 hashes; not a download certificate",
+  "sources": [
+    {
+      "role": "menu",
+      "title": "Ambient Space Intro – Warm Pad, Glass Bell & Drone",
+      "creator": "51481937",
+      "url": "https://pixabay.com/music/ambient-ambient-space-intro-warm-pad-glass-bell-amp-drone-434498/",
+      "localFilename": "menu.mp3",
+      "downloadedOriginalFilename": "51481937-ambient-space-intro-warm-pad-glass-bell-amp-drone-434498.mp3",
+      "downloadStatus": "supplied by user from Desktop and copied without modifying original",
+      "directPageRequestStatus": 403,
+      "listedLicense": "Pixabay Content License",
+      "listedAiGenerated": true,
+      "sha256": "3099c8dcef068e2cc88d79064007e735c88656f43cb477ff0b400e41472e4e9a",
+      "bytes": 5710848,
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "178.464000"
+        }
+      }
+    },
+    {
+      "role": "combat",
+      "title": "Synthwave Track for Space Force Missions",
+      "creator": "NickPanek",
+      "url": "https://pixabay.com/music/hard-rock-synthwave-track-for-space-force-missions-253080/",
+      "localFilename": "combat.mp3",
+      "downloadedOriginalFilename": "nickpanek-synthwave-track-for-space-force-missions-253080.mp3",
+      "downloadStatus": "supplied by user from Desktop and copied without modifying original",
+      "directPageRequestStatus": 403,
+      "listedLicense": "Pixabay Content License",
+      "listedAiGenerated": true,
+      "sha256": "6100b40a9e649d146b2ecdc98176f91a16530257a0d1110d87092b1be1b2841d",
+      "bytes": 4766208,
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "148.944000"
+        }
+      }
+    },
+    {
+      "role": "death",
+      "title": "Crime Suspense Underscore (Last Transmission, Dark Pulse)",
+      "creator": "OpenMindAudio",
+      "url": "https://pixabay.com/music/ambient-crime-suspense-underscore-last-transmission-dark-pulse-456493/",
+      "localFilename": "death.mp3",
+      "downloadedOriginalFilename": "openmindaudio-crime-suspense-underscore-last-transmission-dark-pulse-456493.mp3",
+      "downloadStatus": "supplied by user from Desktop and copied without modifying original",
+      "directPageRequestStatus": 403,
+      "listedLicense": "Pixabay Content License",
+      "listedAiGenerated": true,
+      "sha256": "77331d46fd1069764c59a39041db94046ba0aa3f48fe54ad4f2a8faa16d0bf89",
+      "bytes": 5540352,
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "173.136000"
+        }
+      }
+    },
+    {
+      "role": "boss",
+      "title": "Interstellar Showdown",
+      "creator": "Psychronic",
+      "url": "https://pixabay.com/music/upbeat-interstellar-showdown-411369/",
+      "localFilename": "boss.mp3",
+      "downloadedOriginalFilename": "psychronic-interstellar-showdown-411369.mp3",
+      "downloadStatus": "supplied by user from Desktop and copied without modifying original",
+      "directPageRequestStatus": 403,
+      "listedLicense": "Pixabay Content License",
+      "listedAiGenerated": true,
+      "sha256": "41b032677134b08f88a445d0cacd28e06ace9dd66f16d14e263fb574b1564d95",
+      "bytes": 6559488,
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "204.984000"
+        }
+      }
+    }
+  ],
+  "assetsInstalledOn": "2026-11-14",
+  "duplicateCombatDownload": {
+    "filename": "nickpanek-synthwave-track-for-space-force-missions-253080 (1).mp3",
+    "identicalSha256": "6100b40a9e649d146b2ecdc98176f91a16530257a0d1110d87092b1be1b2841d",
+    "action": "Not copied twice; both originals left unchanged"
+  }
+}

@@ -1,0 +1,52 @@
+#ship-hangar {
+    margin: 18px 0 10px;
+    padding: 16px 0;
+    border-top: 1px solid #304557;
+    border-bottom: 1px solid #304557;
+}
+#ship-hangar > small {
+    font: 9px monospace;
+    letter-spacing: 1.4px;
+    color: #8fb7bf;
+}
+#ship-hangar > div {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+#ship-hangar button {
+    flex: 1;
+    display: grid;
+    gap: 8px;
+    text-align: left;
+    background: #111c2c;
+    border: 1px solid #354a60;
+    color: #d6e4ef;
+    padding: 12px;
+    font: 12px monospace;
+    cursor: pointer;
+}
+#ship-hangar button span {
+    font: 8px monospace;
+    letter-spacing: 1px;
+    color: #829eb2;
+}
+#ship-hangar button[aria-pressed='true'] {
+    border-color: #72e4cc;
+    background: #173034;
+}
+#ship-hangar button:focus-visible {
+    outline: 2px solid #72e4cc;
+    outline-offset: 3px;
+}
+#ship-hangar p,
+#ship-hangar a {
+    font: 8px monospace;
+    color: #85b8bd;
+    letter-spacing: 0.5px;
+    margin: 10px 0 0;
+}
+#ship-hangar a {
+    display: inline-block;
+    text-underline-offset: 4px;
+}
