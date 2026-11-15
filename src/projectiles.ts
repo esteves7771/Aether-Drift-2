@@ -9,6 +9,7 @@ export class Projectile {
     plasma = false;
     alien = false;
     guide = 0;
+    pattern = 0;
     get missile() {
         return this.seeker;
     }
@@ -55,7 +56,8 @@ export class Projectiles {
         hostile: boolean,
         seeker = false,
         plasma = false,
-        alien = false
+        alien = false,
+        pattern = 0
     ) {
         const p = this.items.find((item) => !item.active);
         if (!p) {
@@ -67,13 +69,14 @@ export class Projectiles {
         p.seeker = seeker;
         p.plasma = plasma;
         p.alien = alien;
+        p.pattern = pattern;
         p.guide = seeker ? FLEET.missile.guide : 0;
         p.position.copy(position);
         p.previous.copy(position);
         p.velocity.copy(direction).mulScalar(speed).add(inherited);
         p.damage = damage;
         p.life = lifetime;
-        p.radius = hostile ? 1 : COMBAT.player.radius;
+        p.radius = hostile ? (pattern === 1 ? 2.2 : pattern === 4 ? 1.4 : 1) : COMBAT.player.radius;
         this.fired++;
         return true;
     }

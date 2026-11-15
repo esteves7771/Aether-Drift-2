@@ -15,19 +15,20 @@ describe('Run refits and tactical escalation', () => {
         c.director.group = 1;
         c.countdown = 100;
         c.squadron.time = 4;
-        const e = c.enemies[0];
+        const e = c.enemies[2];
         e.spawn('heavy', ship.position.clone().set(0, 60, -180), ship.rotation);
         e.rotation.setFromEulerAngles(0, 180, 0);
         e.state = 'attack';
-        e.age=3;
-        e.cooldown = 0.8;
+        e.age = 3;
+        e.cooldown = 0;
         c.step(0.01, false);
-        expect(e.plasma).toBe(true);
+        expect(e.patternState).toBe('telegraph');
+        expect(e.attackCue).toBe(true);
         const aim = e.lockedAim.clone();
         ship.position.x = 40;
         c.step(0.01, false);
         expect(e.lockedAim.equals(aim)).toBe(true);
-        for (let n = 0; n < 100; n++) c.step(0.01, false);
+        for (let n = 0; n < 200; n++) c.step(0.01, false);
         expect(c.projectiles.items.some((p) => p.plasma)).toBe(true);
         // Locate a real weighted defense template rather than replacing its getter.
         search: for (let wave = 9; wave < 25; wave++)
@@ -110,7 +111,7 @@ describe('Run refits and tactical escalation', () => {
         expect(b.energy).toBeGreaterThan(a.energy);
         expect(b.position.equals(a.position)).toBe(true);
     });
-    it('introduces new tactics gradually without increasing pool capacity or changing early encounters', () => {
+    it('introduces new tactics gradually without increasing pool capacity or introducing late roles early', () => {
         const d = new WaveDirector();
         const seen = new Set<string>();
         d.wave = 1;
@@ -124,7 +125,7 @@ describe('Run refits and tactical escalation', () => {
                 if (d.encounter) {
                     seen.add(d.encounter.name);
                     expect(d.encounter.minWave).toBeLessThanOrEqual(wave);
-                    expect(d.size).toBeLessThanOrEqual(4);
+                    expect(d.size).toBeLessThanOrEqual(7);
                 }
             }
         expect(seen.has('BASTION BOMBER WING')).toBe(true);

@@ -104,9 +104,16 @@ The approved menu composition uses a live selected-ship preview, five command ac
 
 Run `npm run test:menu` for focused production-subpath browser checks and screenshots at 1920×1080, 1366×768 and 1280×720 (plus layout checks at four additional sizes). Source/licensing limitations for the supplied satellite are recorded in `docs/licenses/models/satellite.md`. The source archive remains untouched.
 
-
 ## Cinematic update (Phase 5F-B)
 
 Press **C** or the compact camera HUD button to switch chase/cockpit view. The shared transparent cockpit artwork has live hull/shield, speed/boost, selected target, missiles, EMP and nearby contacts. **R** and in-game restart buttons now pause for confirmation; Cancel/Escape restore the previous active/paused state. The old C-cruise, N-destination and V-investigate shortcuts are removed. Space locations, installations, hazards and internal exploration services remain.
 
 Explosions use bounded layered fire, physical directional sparks and fragments, short warm lighting responses and per-class presets. Boss death sequencing, weapons, flight balance, scoring, audio, the new main menu and plasma thrusters are preserved. Low reduces overdraw/particles; OS reduced-motion preferences reduce intensity/counts. `npm run test:cinematic` runs focused WebGPU/WebGL2 checks. Artwork preparation and prompts are recorded in [docs/art/phase5fb-assets.md](docs/art/phase5fb-assets.md). Included in v0.5f-public.
+
+## v0.5g — Combat evolution
+
+Phase 5G adds proportional cockpit framing and safe menu layering, the imported Wave 5 artillery dreadnought, shared gravitational-rift arrivals, three-phase Phantom and Tesser encounters, telegraphed 3D weapon patterns, tactical enemy roles and a quota-based reinforcement director. Both existing player ships, flight physics, audio, exploration, graphics presets and records remain supported.
+
+Ordinary wave quotas progress through 3 / 5 / 7 / 9 / 12 / 15 / 18+, with bounded active populations and the established boss rotation every fifth wave. Human difficulty tuning remains a first pass. Source asset provenance is retained in public/MODEL_CREDITS.md and docs/licenses/models; the supplied dreadnought archive has no original author or license evidence.
+
+Focused browser suites: `npm run test:boss-foundation` and `npm run test:combat-evolution`. Production Pages verification uses `npm run test:release`; set RELEASE_URL for the deployed URL. Debug encounter instrumentation is never shipped.

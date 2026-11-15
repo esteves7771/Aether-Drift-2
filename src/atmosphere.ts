@@ -1,5 +1,5 @@
-import { Entity, Mesh, MeshInstance, PRIMITIVE_LINES, SphereGeometry, Vec3 } from 'playcanvas';
-import type { AppBase } from 'playcanvas';
+import { Entity, Mesh, MeshInstance, PRIMITIVE_LINES, SphereGeometry } from 'playcanvas';
+import type { AppBase, Vec3 } from 'playcanvas';
 
 import { emission, ModelBuilder, surface, validateRenderAttributes } from './art-kit';
 import type { GraphicsQuality } from './config';
@@ -11,37 +11,17 @@ export class Atmosphere {
     private readonly dustMesh: Mesh;
     private readonly dustPositions = new Float32Array(64 * 6);
     private readonly depth = new Float32Array(64);
-    private readonly traffic: Entity[] = [];
     private readonly wreck: Entity;
     private readonly flash: Entity;
-    private readonly point = new Vec3();
     private time = 0;
     private count = 42;
-    private ships = 3;
     private enabled = true;
     private readonly hull = surface('Distant utility hull', '#62718a', 0.3, 0.2);
     private readonly lamps = emission('Decorative navigation lamps', '#708ab1', 0.7);
     private readonly motes = emission('Peripheral motes', '#87b6dc', 0.65, 0.28);
     private readonly glint = emission('Faraway combat flash', '#ffc9ac', 2, 0.25);
-    private readonly nebula: Entity | null;
     constructor(app: AppBase) {
-        this.nebula = app.root.findByName('Molecular clouds') as Entity | null;
         app.root.addChild(this.root);
-        const b = new ModelBuilder();
-        b.hull(this.hull, [
-            [-4, 1, 0, 0.5],
-            [-1, 2, 0, 1],
-            [4, 1.5, 0, 0.7]
-        ]);
-        b.box(this.hull, [0, 1.4, 1], [1, 2, 2]);
-        b.box(this.lamps, [0, 0, 4], [2, 0.4, 0.4]);
-        const template = b.finish(app.graphicsDevice, 'Distant utility silhouette');
-        for (let i = 0; i < 4; i++) {
-            const e = i === 0 ? template : template.clone();
-            e.setLocalScale(4 + i, 4 + i, 4 + i);
-            this.root.addChild(e);
-            this.traffic.push(e);
-        }
         const wreck = new ModelBuilder();
         for (let i = 0; i < 7; i++)
             wreck.box(
@@ -75,25 +55,16 @@ export class Atmosphere {
     setQuality(quality: GraphicsQuality) {
         const i = quality === 'low' ? 0 : quality === 'medium' ? 1 : 2;
         this.count = SPECTACLE.speed.dust[i];
-        this.ships = SPECTACLE.speed.ambient[i];
         this.wreck.enabled = quality !== 'low';
     }
-    update(dt: number, ship: Vec3, camera: Entity, speed: number, boost: boolean, cues: boolean) {
+    update(dt: number, _ship: Vec3, camera: Entity, speed: number, boost: boolean, cues: boolean) {
         this.time += dt;
-        this.root.setPosition(this.point.copy(ship).mulScalar(0.85));
-        for (let i = 0; i < this.traffic.length; i++) {
-            const e = this.traffic[i];
-            e.enabled = i < this.ships;
-            e.setLocalPosition(Math.sin(i * 3 + this.time * 0.015) * 650, 220 + Math.cos(i * 4) * 180, -1300 - i * 410);
-            e.setLocalEulerAngles(8, 70 + Math.sin(i) * 35, 10);
-        }
         this.wreck.setLocalEulerAngles(this.time * 0.4, this.time * 0.2, 0);
         const phase = this.time % 11;
         this.flash.enabled = phase < 0.16 || this.time < 0.05;
         this.flash.setLocalPosition(-470, 360, -1700);
         const size = 3 + Math.sin((phase / 0.16) * Math.PI) * 12;
         this.flash.setLocalScale(size, size, size);
-        this.nebula?.setLocalEulerAngles(0, this.time * 0.006, Math.sin(this.time * 0.025) * 0.15);
         this.dust.enabled = this.enabled && cues && speed > 18;
         this.dust.setPosition(camera.getPosition());
         this.dust.setRotation(camera.getRotation());

@@ -1,14 +1,37 @@
 import { Mat4, Quat, Vec3 } from 'playcanvas';
 
 import { Boss, BossPart } from './boss';
+import { BossPatterns } from './boss-patterns';
 import type { Rock } from './collisions';
-import { EVOLUTION } from './evolution-config';
+import { EVOLVED_BOSSES } from './evolved-boss-config';
 import { FLEET } from './fleet-config';
 import type { Flight } from './flight';
 import type { Projectiles } from './projectiles';
+import { RiftArrival } from './rift-arrival';
 
 /** A contiguous-flight precision encounter, sharing boss lifecycle and damage interfaces. */
 export class Phantom extends Boss {
+    readonly arrival = new RiftArrival(EVOLVED_BOSSES.phantom.arrival);
+    readonly patterns = new BossPatterns('phantom');
+    avoidance: readonly Rock[] = [];
+    beamCooldown = 0;
+    private readonly sources = {
+        banks: [
+            { position: new Vec3(), active: true },
+            { position: new Vec3(), active: true }
+        ],
+        muzzle: this.position
+    };
+    override get arriving() {
+        return this.active && !this.arrival.complete;
+    }
+    override reset() {
+        super.reset();
+        this.arrival.reset();
+        this.patterns.reset();
+        this.beamCooldown = 0;
+    }
+
     override readonly parts = [new BossPart(15, new Vec3(), FLEET.phantom.radius, 'PHANTOM')];
     override readonly hull = [];
     state: 'intercept' | 'attack' | 'flank' | 'evade' = 'intercept';
@@ -16,25 +39,16 @@ export class Phantom extends Boss {
     private readonly toShip = new Vec3();
     private readonly goal = new Vec3();
     private readonly vector = new Vec3();
-    private readonly right = new Vec3();
-    private readonly up = new Vec3();
-    private readonly zeroVector = new Vec3();
     private readonly matrixP = new Mat4();
     private readonly desiredP = new Quat();
     override get maxHealth() {
-        return FLEET.phantom.health;
+        return EVOLVED_BOSSES.phantom.health;
     }
     override get firingBank() {
         return 0;
     }
     override get attackName() {
-        return this.phase === 1
-            ? 'INTERCEPTION BURST'
-            : this.phase === 2
-              ? 'FLANK CROSSFIRE'
-              : this.attack % 2
-                ? 'LAST STAND / STARBURST'
-                : 'LAST STAND / PRECISION LANCE';
+        return this.patterns.spec.name;
     }
     override spawn(ship: Flight, rocks: Rock[]) {
         this.reset();
@@ -46,15 +60,9 @@ export class Phantom extends Boss {
         this.cooldown = 1.5;
         this.state = 'intercept';
         this.stateTime = 0;
-        for (let i = 0; i < 64; i++) {
-            ship.rotation
-                .transformVector(
-                    this.vector.set(55 + Math.sin(i * 2) * i * 7, 30 + Math.cos(i) * i * 3, -330 - i * 3),
-                    this.position
-                )
-                .add(ship.position);
-            if (rocks.every((r) => r.position.distance(this.position) > r.radius + 32)) break;
-        }
+        this.arrival.begin(ship, rocks);
+        this.arrival.sample(this.position);
+        this.rotation.copy(this.arrival.rotation);
         this.previous.copy(this.position);
         this.velocity.set(0, 0, 0);
         this.matrixP.setLookAt(this.position, ship.position, Vec3.UP);
@@ -83,7 +91,8 @@ export class Phantom extends Boss {
         const phase = p.health > (this.maxHealth * 2) / 3 ? 1 : p.health > this.maxHealth / 3 ? 2 : 3;
         if (phase !== this.phase) {
             this.phase = phase;
-            this.grace = 0.8;
+            this.grace = EVOLVED_BOSSES.phantom.grace;
+            this.patterns.reset(phase);
             this.charge = 0;
             this.cooldown = 1;
             this.state = 'flank';
@@ -94,10 +103,35 @@ export class Phantom extends Boss {
     }
     override step(dt: number, ship: Flight, rocks: Rock[], shots: Projectiles) {
         this.dying = Math.max(0, this.dying - dt);
-        if (!this.active) return;
+        if (!this.active) {
+            if (this.dying > 0) {
+                this.previous.copy(this.position);
+                this.previousRotation.copy(this.rotation);
+                this.velocity.mulScalar(Math.exp(-dt * 0.7));
+                this.position.add(this.vector.copy(this.velocity).mulScalar(dt));
+            }
+            return;
+        }
         this.previous.copy(this.position);
         this.previousRotation.copy(this.rotation);
         this.age += dt;
+        if (this.arriving) {
+            this.arrival.step(dt, ship, rocks);
+            this.arrival.sample(this.position);
+            this.rotation.copy(this.arrival.rotation);
+            const p = this.parts[0];
+            p.previous.copy(p.position);
+            p.position.copy(this.position);
+            p.exposed = false;
+            p.velocity.sub2(this.position, this.previous).mulScalar(1 / Math.max(dt, 0.0001));
+            return;
+        }
+        this.state =
+            this.patterns.state === 'recover'
+                ? 'evade'
+                : this.patterns.kind === 'cross' || this.patterns.kind === 'finale'
+                  ? 'flank'
+                  : 'attack';
         this.stateTime += dt;
         this.grace -= dt;
         this.cooldown -= dt;
@@ -113,16 +147,17 @@ export class Phantom extends Boss {
         this.vector
             .sub2(this.goal, this.position)
             .normalize()
-            .mulScalar(this.state === 'attack' ? 30 : FLEET.phantom.speed[this.phase - 1]);
+            .mulScalar(this.state === 'attack' ? 30 : EVOLVED_BOSSES.phantom.speed[this.phase - 1]);
         if (distance < 65) this.vector.copy(this.toShip).normalize().mulScalar(-70);
-        for (const rock of rocks) {
-            this.toShip.sub2(this.position, rock.position);
-            const d = this.toShip.length(),
-                safe = rock.radius + 35;
-            if (d < safe && d > 0.01) this.vector.add(this.toShip.mulScalar(((safe - d) * 4) / d));
-        }
-        if (this.vector.length() > FLEET.phantom.speed[this.phase - 1])
-            this.vector.normalize().mulScalar(FLEET.phantom.speed[this.phase - 1]);
+        for (const group of [rocks, this.avoidance])
+            for (const rock of group) {
+                this.toShip.sub2(this.position, rock.position);
+                const d = this.toShip.length(),
+                    safe = rock.radius + 35;
+                if (d < safe && d > 0.01) this.vector.add(this.toShip.mulScalar(((safe - d) * 4) / d));
+            }
+        if (this.vector.length() > EVOLVED_BOSSES.phantom.speed[this.phase - 1])
+            this.vector.normalize().mulScalar(EVOLVED_BOSSES.phantom.speed[this.phase - 1]);
         if (this.disrupted > 0) {
             this.disrupted = Math.max(0, this.disrupted - dt);
             this.vector.mulScalar(0.3);
@@ -152,56 +187,25 @@ export class Phantom extends Boss {
         );
         this.desiredP.setFromMat4(this.matrixP);
         this.rotation.slerp(this.rotation, this.desiredP, 1 - Math.exp(-2 * dt));
+        for (let i = 0; i < 2; i++)
+            this.rotation
+                .transformVector(this.vector.set(i ? 10 : -10, 0, -14), this.sources.banks[i].position)
+                .add(this.position);
         const p = this.parts[0];
         p.previous.copy(p.position);
         p.position.copy(this.position);
         p.velocity.copy(this.velocity);
-        p.exposed = !this.arriving && this.grace <= 0;
-        if (this.arriving || this.grace > 0 || this.disrupted > 0) return;
-        if (this.charge > 0) {
-            this.charge -= dt;
-            if (this.charge <= 0) {
-                this.fireBurst(shots);
-                this.attack++;
-                this.cooldown = FLEET.phantom.cooldown[this.phase - 1];
-                this.state = this.phase === 1 ? 'evade' : 'flank';
-                this.stateTime = 0;
-            }
-        } else if ((this.state === 'intercept' || this.state === 'attack') && this.cooldown <= 0 && distance < 450) {
-            this.state = 'attack';
-            this.aim.copy(ship.velocity).mulScalar(0.5).add(ship.position);
-            this.charge = FLEET.phantom.windup[this.phase - 1];
-        } else if ((this.state === 'flank' || this.state === 'evade') && this.stateTime > 2.4) {
-            this.state = 'intercept';
-            this.stateTime = 0;
+        p.exposed = !this.arriving && this.grace <= 0 && (this.patterns.state !== 'fire' || this.disrupted > 0);
+        if (this.grace > 0) return;
+        if (this.disrupted > 0) {
+            this.patterns.interrupt();
+            this.charge = 0;
+            return;
         }
-    }
-    private fireBurst(shots: Projectiles) {
-        let active = 0;
-        for (const p of shots.items) if (p.active && p.hostile) active++;
-        const count = Math.min(
-            EVOLUTION.boss.projectileLimit - active,
-            this.phase === 3 ? 9 : this.phase === 2 ? 7 : 5
-        );
-        this.rotation.transformVector(Vec3.RIGHT, this.right);
-        this.rotation.transformVector(Vec3.UP, this.up);
-        for (let i = 0; i < count; i++) {
-            this.vector.sub2(this.aim, this.position).normalize();
-            if (this.phase === 3 && this.attack % 2 && i > 0) {
-                const a = ((i - 1) * Math.PI) / 4;
-                this.vector.add(this.toShip.copy(this.right).mulScalar(Math.cos(a) * 0.085));
-                this.vector.add(this.toShip.copy(this.up).mulScalar(Math.sin(a) * 0.085));
-            } else this.vector.add(this.toShip.copy(this.right).mulScalar((i - (count - 1) / 2) * 0.024));
-            this.vector.normalize();
-            shots.spawn(
-                this.position,
-                this.vector,
-                this.zeroVector,
-                FLEET.phantom.shotSpeed[this.phase - 1],
-                FLEET.phantom.damage[this.phase - 1],
-                4,
-                true
-            );
-        }
+        const old = this.patterns.index;
+        this.patterns.step(dt, this.phase, ship, this.sources, shots, rocks);
+        this.aim.copy(this.patterns.aim);
+        this.charge = this.patterns.winding;
+        if (old !== this.patterns.index) this.attack++;
     }
 }

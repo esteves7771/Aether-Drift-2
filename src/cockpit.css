@@ -29,9 +29,9 @@
 }
 .cockpit-deck {
     position: absolute;
-    width: min(100vw, 177.78vh);
-    height: min(100vh, 56.25vw);
-    bottom: -2vh;
+    width: max(100vw, 177.6833vh);
+    height: max(100vh, 56.2799vw);
+    bottom: min(0px, calc(45vh - 25.326vw));
     left: 50%;
     transform: translateX(-50%);
     container-type: inline-size;
@@ -46,9 +46,41 @@
     position: absolute;
     inset: 0;
     background-image: var(--cockpit-art);
-    background-size: 100vw auto;
+    background-size: cover;
+    background-position: center top;
     background-repeat: no-repeat;
     clip-path: polygon(0 0, 100% 0, 100% 12vw, 0 12vw);
+}
+.cockpit-view .reticle {
+    top: var(--cockpit-aim-y, 47.2%);
+}
+/* Menus own presentation while simulation/camera state remains frozen beneath them. */
+#menu {
+    z-index: 20;
+}
+:is(.menu-open, .dialog-open)
+    :is(
+        #cockpit,
+        header,
+        .reticle,
+        .horizon,
+        .telemetry,
+        .integrity,
+        footer,
+        #targets,
+        #combat-stats,
+        #boss-bar,
+        #abilities,
+        #navigation,
+        #combat-perf,
+        #wave-banner,
+        #damage-direction,
+        #shield-impact,
+        #score-feedback,
+        #impact,
+        #camera-toggle
+    ) {
+    visibility: hidden !important;
 }
 .cockpit-side {
     position: absolute;

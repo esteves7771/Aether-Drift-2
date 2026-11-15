@@ -48,6 +48,7 @@ import { RestartDialog } from './restart-dialog';
 import { buildScene } from './scene';
 import { ShipHangar } from './ship-hangar';
 import { UI } from './ui';
+import { UniverseView } from './universe-view';
 import { UpgradeUI } from './upgrade-ui';
 import './style.css';
 import './menu.css';
@@ -104,12 +105,14 @@ try {
     const cruise = new Cruise();
     const frontierView = new FrontierView(app, combat.frontier);
     const modelLibrary = new ModelLibrary(app);
+    combatView.setBossLibrary(modelLibrary);
     const menuWorld = new MenuWorld(app, modelLibrary, scene);
     const importedFleet = new ImportedFleet(modelLibrary, combatView.enemyVisualRoots, device);
     combatView.importedFleet = importedFleet;
     const landmarks = new ImportedLandmarks(app, modelLibrary, combat.frontier);
     const living = new LivingView(app, modelLibrary, combat, frontierView);
     const atmosphere = new Atmosphere(app);
+    const universe = new UniverseView(app, modelLibrary, combat, scene.art);
     const camera = new Entity('Chase camera');
     camera.addComponent('camera', {
         clearColor: new Color(0.018, 0.022, 0.055),
@@ -119,7 +122,7 @@ try {
     });
     app.root.addChild(camera);
     // The lighting atlas is for reflections; the procedural nebula owns the background.
-    camera.camera!.layers = camera.camera!.layers.filter((id) => id !== LAYERID_SKYBOX);
+    camera.camera!.layers = [...camera.camera!.layers.filter((id) => id !== LAYERID_SKYBOX), scene.cinematic.layer.id];
     const graphics = new Graphics(app, camera.camera!, (level) => {
         scene.setQuality(level);
         atmosphere.setQuality(level);
@@ -128,6 +131,7 @@ try {
         modelLibrary.setQuality(level);
         landmarks.setQuality(level);
         living.setQuality(level);
+        universe.setQuality(level);
         menuWorld.setQuality(level);
     });
     graphics.apply(settings.graphics);
@@ -170,6 +174,7 @@ try {
             scene.thrusters.reset();
             cruise.reset();
             combat.reset();
+            universe.reset();
             combatView.reset();
             chase.reset();
             soundtrackBoss = false;
@@ -200,6 +205,7 @@ try {
         cruise.reset();
         feel.reset();
         combat.reset();
+        universe.reset();
         upgradeUI.reset();
         combatView.reset();
         chase.reset();
@@ -243,6 +249,7 @@ try {
         scene.thrusters.reset();
         cruise.reset();
         combat.reset();
+        universe.reset();
         upgradeUI.reset();
         combatView.reset();
         chase.reset();
@@ -341,7 +348,7 @@ try {
                     : input.command;
             if (accumulator >= FLIGHT.step) {
                 if (input.consumeCamera()) pilotCamera.toggle();
-                if (input.consumeTarget()) combat.selectTarget();
+                if (input.consumeTarget()) combat.selectTarget(true);
                 if (input.consumeMissile()) {
                     cruise.cancel('WEAPONS / DECELERATING');
                     combat.launchMissile();
@@ -376,17 +383,18 @@ try {
                 music.setPaused(document.hidden || !pageFocused);
             }
         }
+        const presentationDt = active || !started ? Math.min(dt, 0.1) : 0;
         feel.update(
             flight.velocity.length(),
             flight.boosting,
             active,
             settings.cameraEffects,
             settings.graphics,
-            Math.min(dt, 0.1)
+            presentationDt
         );
         camera.camera!.fov +=
             ((cruise.active && settings.cameraEffects ? FRONTIER.cruise.fov : feel.fov) - camera.camera!.fov) *
-            (1 - Math.exp(-3 * Math.min(dt, 0.1)));
+            (1 - Math.exp(-3 * presentationDt));
         const alpha = active ? accumulator / FLIGHT.step : 1;
         position.lerp(flight.previous, flight.position, alpha);
         rotation.slerp(flight.previousRotation, flight.rotation, alpha);
@@ -400,7 +408,7 @@ try {
                 position,
                 rotation,
                 settings.distance + feel.pullback,
-                dt,
+                presentationDt,
                 active ? combat.shake : 0,
                 active && (cruise.active || cruise.settling) ? flight.velocity : undefined
             );
@@ -423,9 +431,10 @@ try {
         );
         landmarks.render(flight, started);
         living.render(started, active ? Math.min(dt, 0.1) : 0, alpha);
+        universe.render(started, active ? Math.min(dt, 0.1) : 0, position, camera);
         scene.asteroidField.update(position, Math.min(dt, 0.1));
-        scene.stars.setPosition(position);
-        scene.environment.setPosition(position);
+        scene.stars.setPosition(camera.getPosition());
+        scene.environment.setPosition(camera.getPosition());
         atmosphere.update(
             active || !started ? Math.min(dt, 0.1) : 0,
             position,
@@ -491,6 +500,7 @@ try {
         cockpitHUD.destroy();
         restartDialog.destroy();
         menuWorld.destroy();
+        universe.destroy();
         living.destroy();
         importedFleet.destroy();
         landmarks.destroy();

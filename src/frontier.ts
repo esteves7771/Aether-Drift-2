@@ -9,6 +9,7 @@ import type { Projectiles } from './projectiles';
 import { sweptHit } from './projectiles';
 
 export class InstallationPart implements CombatTarget {
+    readonly targetRole = 'defense' as const;
     active = true;
     health = 0;
     maxHealth = 0;

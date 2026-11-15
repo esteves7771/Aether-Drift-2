@@ -14,6 +14,7 @@ export default defineConfig({
         '**/models.spec.ts',
         '**/living.spec.ts',
         '**/thrusters.spec.ts',
+        '**/evolution-space.spec.ts',
         '**/cinematic.spec.ts'
     ],
     webServer: {

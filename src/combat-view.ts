@@ -2,8 +2,8 @@ import { BoxGeometry, Entity, Mesh, MeshInstance, Quat, SphereGeometry, Vec3 } f
 import type { AppBase, Texture } from 'playcanvas';
 
 import { emission, surface, validateRenderAttributes } from './art-kit';
-import type { Boss } from './boss';
-import { BossView } from './boss-view';
+import type { Artillery } from './artillery';
+import { ArtilleryView } from './artillery-view';
 import type { Combat } from './combat';
 import { COMBAT } from './combat-config';
 import type { CombatEvent } from './combat-config';
@@ -13,6 +13,7 @@ import type { BlastClass } from './explosion-config';
 import { CinematicExplosions } from './explosions';
 import { PRESETS } from './graphics';
 import type { ImportedFleet } from './imported-fleet';
+import type { ModelLibrary } from './model-library';
 import { PhantomView } from './phantom-view';
 import type { SpacecraftArt } from './spacecraft-art';
 import { SPECTACLE } from './spectacle-config';
@@ -42,13 +43,17 @@ export class CombatView {
     private readonly armor: MeshInstance[][] = [];
     private readonly bolts: Entity[] = [];
     private readonly missiles: Entity[] = [];
-    private readonly bossView: BossView;
+    private readonly bossView: ArtilleryView;
+    setBossLibrary(library: ModelLibrary) {
+        this.bossView.library = library;
+    }
     private readonly phantomView: PhantomView;
     private readonly elite = surface('Elite gold armor', '#a98a48', 0.75, 0.7);
     private readonly effects: Effect[] = [];
     private readonly muzzles: Entity[] = [];
     private readonly mint = emission('Friendly laser core', '#89fff0', 3.5);
     private readonly red = emission('Hostile laser core', '#ff567e', 3.2);
+    private readonly ion = emission('Artillery ion helix', '#9b9cff', 3);
     private readonly alien = emission('Alien violet laser core', '#bd8cff', 3.2);
     private readonly orange = emission('Metal sparks', '#ffb77b', 3, 0.8);
     private readonly white = emission('Muzzle plasma', '#c8faff', 4);
@@ -79,13 +84,13 @@ export class CombatView {
         ship: Entity,
         art: SpacecraftArt,
         glowTexture: Texture,
-        boss: Boss,
+        boss: Artillery,
         secondarySound?: (point: Vec3, size: number) => void
     ) {
         this.art = art;
         this.explosions = new CinematicExplosions(app);
         this.secondarySound = secondarySound;
-        this.bossView = new BossView(app, boss);
+        this.bossView = new ArtilleryView(app, boss);
         this.phantomView = new PhantomView(app);
         const device = app.graphicsDevice;
         app.root.addChild(this.root);
@@ -298,7 +303,7 @@ export class CombatView {
                 }
             }
         this.warmup.enabled = this.warmFrames-- > 0;
-        this.bossView.render(combat.dreadnought, alpha);
+        this.bossView.render(combat.dreadnought, alpha, combat.wave);
         this.phantomView.render(combat.phantom, alpha);
         this.missileTrailTime += dt;
         const leaveTrail = this.missileTrailTime > 0.05 && dt > 0;
@@ -364,15 +369,30 @@ export class CombatView {
             e.setPosition(this.position);
             this.target.copy(this.position).add(p.velocity);
             e.lookAt(this.target);
-            e.render!.meshInstances[0].material = p.alien
-                ? this.alien
-                : p.seeker || p.plasma
-                  ? this.orange
-                  : p.hostile
-                    ? this.red
-                    : this.mint;
+            e.render!.meshInstances[0].material =
+                p.pattern === 4 || p.pattern === 5
+                    ? this.ion
+                    : p.pattern === 2
+                      ? this.mint
+                      : p.alien
+                        ? this.alien
+                        : p.seeker || p.plasma
+                          ? this.orange
+                          : p.hostile
+                            ? this.red
+                            : this.mint;
             e.setLocalScale(
-                p.plasma ? 1.4 : p.seeker ? 0.7 : p.hostile ? 0.32 : 0.16,
+                p.plasma
+                    ? 1.7
+                    : p.seeker
+                      ? 0.7
+                      : p.pattern === 4
+                        ? 0.65
+                        : p.pattern === 2
+                          ? 0.6
+                          : p.hostile
+                            ? 0.32
+                            : 0.16,
                 p.plasma ? 1.4 : p.seeker ? 0.7 : p.hostile ? 0.32 : 0.16,
                 p.plasma ? 3 : p.seeker ? 5 : p.hostile ? 8 : 15
             );
@@ -410,6 +430,7 @@ export class CombatView {
     }
     destroy() {
         this.explosions.destroy();
+        this.ion.destroy();
         this.alien.destroy();
         this.bossView.destroy();
         this.phantomView.destroy();

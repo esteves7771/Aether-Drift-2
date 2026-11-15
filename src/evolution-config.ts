@@ -47,9 +47,3 @@ export const EVOLUTION = {
         score: ARCADE.scoring.elite
     }
 } as const;
-export const ENCOUNTERS = [
-    { groups: 2, size: 2, heavy: false, elite: false, name: 'SCOUT ELEMENTS' },
-    { groups: 2, size: 3, heavy: true, elite: false, name: 'MIXED PATROL' },
-    { groups: 3, size: 3, heavy: true, elite: true, name: 'ELITE FLANKERS' },
-    { groups: 3, size: 4, heavy: true, elite: true, name: 'ASSAULT WINGS' }
-] as const;

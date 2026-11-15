@@ -1,14 +1,29 @@
 import { Mat4, Quat, Vec3 } from 'playcanvas';
 
 import { BossPart } from './boss';
+import { BossPatterns } from './boss-patterns';
 import type { Rock } from './collisions';
+import { EVOLVED_BOSSES } from './evolved-boss-config';
 import type { Flight } from './flight';
 import { Guardian } from './guardian';
 import { LIVING } from './living-config';
 import type { Projectiles } from './projectiles';
+import { RiftArrival } from './rift-arrival';
 
 /** Wave-15 replacement, retaining the third-boss record/lifecycle contract. */
 export class Tesser extends Guardian {
+    readonly arrival = new RiftArrival(EVOLVED_BOSSES.tesser.arrival);
+    readonly patterns = new BossPatterns('tesser');
+    avoidance: readonly Rock[] = [];
+    beamCooldown = 0;
+    private readonly sources = { banks: [] as BossPart[], muzzle: this.position };
+    override reset() {
+        super.reset();
+        this.arrival.reset();
+        this.patterns.reset();
+        this.beamCooldown = 0;
+    }
+
     override readonly parts = [
         [-65, 7, -25],
         [65, 7, -25],
@@ -35,23 +50,16 @@ export class Tesser extends Guardian {
     private readonly vectorT = new Vec3();
     private readonly goalT = new Vec3();
     private readonly sideT = new Vec3();
-    private readonly upT = new Vec3();
-    private readonly directionT = new Vec3();
     private readonly matrixT = new Mat4();
     private readonly desiredT = new Quat();
-    private readonly zeroT = new Vec3();
     override get maxHealth() {
-        return LIVING.tesser.health;
+        return EVOLVED_BOSSES.tesser.health.reduce((a, b) => a + b, 0);
     }
     override get arriving() {
-        return this.active && this.age < LIVING.tesser.arrival;
+        return this.active && !this.arrival.complete;
     }
     override get attackName() {
-        return this.attack % 3 === 2
-            ? 'OVERLOAD FAN / DODGE OUTWARD'
-            : this.attack % 3 === 1
-              ? 'CHARGED PLASMA / BREAK LOCK'
-              : 'ALTERNATING LASER BANKS';
+        return this.patterns.spec.name;
     }
     override spawn(ship: Flight, rocks: Rock[]) {
         this.reset();
@@ -62,27 +70,22 @@ export class Tesser extends Guardian {
         this.cooldown = 1.5;
         this.disrupted = 0;
         this.collisionCooldown = 0;
-        for (let i = 0; i < 100; i++) {
-            ship.rotation
-                .transformVector(
-                    this.vectorT.set(Math.sin(i * 2.4) * i * 12, 60 + Math.cos(i) * i * 8, -1100 - i * 8),
-                    this.position
-                )
-                .add(ship.position);
-            if (rocks.every((r) => r.position.distance(this.position) > r.radius + 110)) break;
-        }
+        this.arrival.begin(ship, rocks);
+        this.arrival.sample(this.position);
         this.previous.copy(this.position);
         this.matrixT.setLookAt(this.position, ship.position, Vec3.UP);
-        this.rotation.setFromMat4(this.matrixT);
+        this.rotation.copy(this.arrival.rotation);
         this.previousRotation.copy(this.rotation);
         this.velocity.set(0, 0, 0);
-        const hp = LIVING.tesser.partHealth;
+        const hp = EVOLVED_BOSSES.tesser.health;
         for (let i = 0; i < 7; i++) {
             const p = this.parts[i];
             p.active = true;
             p.health = p.maxHealth = hp[i];
             p.exposed = false;
         }
+        this.sources.banks = this.parts.slice(0, 6);
+        this.sources.muzzle = this.parts[6].position;
         this.syncT(0);
     }
     private syncT(dt: number) {
@@ -95,7 +98,14 @@ export class Tesser extends Guardian {
                 p.previous.copy(p.position);
                 p.velocity.set(0, 0, 0);
             }
-            p.exposed = p.active && !this.arriving && this.grace <= 0 && (i < 4 || i === 6 || this.phase === 2);
+            p.exposed =
+                p.active &&
+                !this.arriving &&
+                this.grace <= 0 &&
+                (this.phase === 1 ? i < 4 : this.phase === 2 ? i === 4 || i === 5 : i === 6) &&
+                (this.patterns.state === 'recover' ||
+                    this.disrupted > 0 ||
+                    (this.phase === 1 && this.patterns.state === 'telegraph'));
         }
         for (const h of this.hull) {
             h.previous.copy(h.position);
@@ -107,21 +117,26 @@ export class Tesser extends Guardian {
     override damage(p: BossPart, amount: number) {
         if (!this.active || !p.targetable) return false;
         p.health = Math.max(0, p.health - amount);
-        if (this.phase === 1 && this.health <= this.maxHealth * 0.5) {
-            this.phase = 2;
-            this.grace = 1.2;
-            this.charge = 0;
-            this.cooldown = 1.2;
-        }
+
         const destroyed = p.health === 0;
         if (destroyed) p.active = false;
+        const next = this.parts.slice(0, 4).some((p) => p.active)
+            ? 1
+            : this.parts.slice(4, 6).some((p) => p.active)
+              ? 2
+              : 3;
+        if (next !== this.phase) {
+            this.phase = next;
+            this.patterns.reset(next);
+            this.grace = EVOLVED_BOSSES.tesser.grace;
+            this.charge = 0;
+        }
         if (this.health <= 0) {
             this.active = false;
             this.dying = 6.4;
             this.deathStage = -1;
             this.charge = 0;
         }
-        this.syncT(0);
         return destroyed;
     }
     override step(dt: number, ship: Flight, rocks: Rock[], shots: Projectiles) {
@@ -130,9 +145,17 @@ export class Tesser extends Guardian {
         this.previous.copy(this.position);
         this.previousRotation.copy(this.rotation);
         this.age += dt;
+        this.beamCooldown = Math.max(0, this.beamCooldown - dt);
+        if (this.arriving) {
+            this.arrival.step(dt, ship, rocks);
+            this.arrival.sample(this.position);
+            this.rotation.copy(this.arrival.rotation);
+            this.syncT(dt);
+            return;
+        }
         this.grace = Math.max(0, this.grace - dt);
         this.collisionCooldown -= dt;
-        const over = this.phase === 2;
+        const over = this.phase >= 2;
         ship.rotation
             .transformVector(
                 this.vectorT.set(
@@ -147,12 +170,13 @@ export class Tesser extends Guardian {
             .sub2(this.goalT, this.position)
             .normalize()
             .mulScalar(this.arriving ? 110 : over ? LIVING.tesser.overdriveSpeed : LIVING.tesser.speed);
-        for (const rock of rocks) {
-            this.sideT.sub2(this.position, rock.position);
-            const d = this.sideT.length(),
-                safe = rock.radius + 100;
-            if (d < safe && d > 0.01) this.vectorT.add(this.sideT.mulScalar(((safe - d) * 3) / d));
-        }
+        for (const group of [rocks, this.avoidance])
+            for (const rock of group) {
+                this.sideT.sub2(this.position, rock.position);
+                const d = this.sideT.length(),
+                    safe = rock.radius + 100;
+                if (d < safe && d > 0.01) this.vectorT.add(this.sideT.mulScalar(((safe - d) * 3) / d));
+            }
         if (this.disrupted > 0) {
             this.disrupted = Math.max(0, this.disrupted - dt);
             this.vectorT.mulScalar(0.3);
@@ -165,52 +189,16 @@ export class Tesser extends Guardian {
         this.desiredT.setFromMat4(this.matrixT);
         this.rotation.slerp(this.rotation, this.desiredT, 1 - Math.exp(-dt * 0.7));
         this.syncT(dt);
-        if (this.arriving || this.grace > 0 || this.disrupted > 0) return;
-        this.cooldown -= dt;
-        if (this.charge > 0) {
-            this.charge -= dt;
-            if (this.charge <= 0) {
-                this.fireT(shots, over);
-                this.attack++;
-                this.cooldown = over ? LIVING.tesser.overdriveCooldown : LIVING.tesser.cooldown;
-            }
-        } else if (this.cooldown <= 0) {
-            this.charge = over ? LIVING.tesser.overdriveWindup : LIVING.tesser.windup;
-            this.aim.copy(ship.velocity).mulScalar(0.45).add(ship.position);
+        if (this.grace > 0) return;
+        if (this.disrupted > 0) {
+            this.patterns.interrupt();
+            this.charge = 0;
+            return;
         }
-    }
-    private fireT(shots: Projectiles, over: boolean) {
-        let count = 0;
-        for (const p of shots.items) if (p.active && p.hostile) count++;
-        this.rotation.transformVector(Vec3.RIGHT, this.sideT);
-        this.rotation.transformVector(Vec3.UP, this.upT);
-        const plasma = this.attack % 3 === 1,
-            fan = this.attack % 3 === 2;
-        const bank = this.parts[(this.attack % 2) + (this.attack % 3 === 2 ? 2 : 0)];
-        const origin = bank.active ? bank.position : this.position;
-        const n = plasma ? (over ? 3 : 1) : over ? 9 : 5;
-        for (let i = 0; i < n && count < LIVING.tesser.projectileLimit; i++) {
-            this.directionT.sub2(this.aim, origin).normalize();
-            // A fan has gaps; warnings lock before launch rather than following the player's dodge.
-            const spread = (i - (n - 1) / 2) * (plasma ? 0.065 : fan ? 0.065 : 0.025);
-            this.directionT.add(this.vectorT.copy(this.sideT).mulScalar(spread));
-            if (over) this.directionT.add(this.vectorT.copy(this.upT).mulScalar(Math.sin(i * 2.4) * 0.07));
-            this.directionT.normalize();
-            this.vectorT.copy(this.directionT).mulScalar(12).add(origin);
-            if (
-                shots.spawn(
-                    this.vectorT,
-                    this.directionT,
-                    this.zeroT,
-                    plasma ? LIVING.tesser.plasmaSpeed : 210,
-                    plasma ? LIVING.tesser.plasmaDamage : LIVING.tesser.damage,
-                    5,
-                    true,
-                    false,
-                    plasma
-                )
-            )
-                count++;
-        }
+        const old = this.patterns.index;
+        this.patterns.step(dt, this.phase, ship, this.sources, shots, rocks);
+        this.aim.copy(this.patterns.aim);
+        this.charge = this.patterns.winding;
+        if (old !== this.patterns.index) this.attack++;
     }
 }

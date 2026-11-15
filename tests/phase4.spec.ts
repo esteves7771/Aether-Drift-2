@@ -12,7 +12,9 @@ import type { ModelLibrary } from '../src/model-library';
 import type { PilotCamera } from '../src/pilot-camera';
 import type { PlayerThrusters } from '../src/player-thrusters';
 import type { ShipHangar } from '../src/ship-hangar';
+import type { UniverseView } from '../src/universe-view';
 type Driver = {
+    universe: UniverseView;
     combat: Combat;
     flight: Flight;
     modelLibrary: ModelLibrary;

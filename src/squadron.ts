@@ -9,7 +9,7 @@ export class Squadron {
     reset() {
         this.time = 0;
     }
-    step(dt: number, enemies: Enemy[], ship: Flight) {
+    step(dt: number, enemies: Enemy[], ship: Flight, attackers: number = EVOLUTION.director.attackers, pressure = 0) {
         this.time += dt;
         const cycle = this.time % EVOLUTION.coordination.cycle,
             shift = Math.floor(this.time / 3);
@@ -24,7 +24,7 @@ export class Squadron {
                 if (this.time < EVOLUTION.coordination.formation) {
                     e.order = 'formation';
                     this.offset.set(side * (25 + index * 14), Math.sin(index * 2) * 24, -190 - index * 20);
-                } else if (cycle >= EVOLUTION.coordination.regroupAt) {
+                } else if (cycle >= EVOLUTION.coordination.regroupAt + Math.min(2, pressure * 0.16)) {
                     e.order = 'regroup';
                     this.offset.set(side * (90 + index * 20), 35 * Math.sin(index + 1), -230);
                 } else if (cycle < EVOLUTION.coordination.flankUntil && e.id % 3 === 1) {
@@ -33,9 +33,7 @@ export class Squadron {
                 }
                 ship.rotation.transformVector(this.offset, e.goal).add(ship.position);
                 e.canFire =
-                    e.order === 'engage' &&
-                    e.disrupted <= 0 &&
-                    (index + shift) % Math.max(1, alive) < EVOLUTION.director.attackers;
+                    e.order === 'engage' && e.disrupted <= 0 && (index + shift) % Math.max(1, alive) < attackers;
                 if (e.kind === 'bomber' || e.kind === 'carrier') e.order = 'engage';
                 if (e.kind === 'drone') {
                     const owner = enemies[e.owner];

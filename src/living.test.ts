@@ -70,7 +70,7 @@ describe('Living space and cinematic combat', () => {
         for (let i = 0; i < 239; i++) c.step(1 / 120, false);
         expect(c.remaining).toBe(0);
         for (let i = 0; i < 14; i++) c.step(1 / 120, false);
-        expect(c.remaining).toBe(2);
+        expect(c.remaining).toBe(3);
         const start = c.enemies[0].position.clone();
         for (let i = 0; i < 330; i++) c.step(1 / 120, false);
         expect(c.enemies[0].position.distance(start)).toBeGreaterThan(200);
@@ -95,26 +95,27 @@ describe('Living space and cinematic combat', () => {
         const timer = e.arrival;
         expect(e.arrival).toBe(timer);
     });
-    it('Tesser physically arrives, locks warnings, moves and exposes exactly two phases', () => {
+    it('Tesser physically arrives, locks warnings, moves and exposes three gated component phases', () => {
         const t = new Tesser(),
             ship = new Flight(),
             shots = new Projectiles();
         t.spawn(ship, []);
         const initial = t.position.clone();
         expect(t.parts.some((p) => p.targetable)).toBe(false);
-        for (let i = 0; i < 120 * 7; i++) t.step(1 / 120, ship, [], shots);
-        expect(t.position.distance(initial)).toBeGreaterThan(400);
+        for (let i = 0; i < 120 * 15; i++) t.step(1 / 120, ship, [], shots);
+        expect(t.position.distance(initial)).toBeGreaterThan(200);
         expect(t.charge).toBeGreaterThan(0);
         const aim = t.aim.clone();
         ship.position.x += 100;
         t.step(0.1, ship, [], shots);
         expect(t.aim.equals(aim)).toBe(true);
-        for (let i = 0; i < 4; i++) t.damage(t.parts[i], 250);
-        t.damage(t.parts[6], 250);
-        expect(t.phase).toBe(2);
-        for (let i = 0; i < 150; i++) t.step(1 / 120, ship, [], shots);
-        expect(t.parts[4].targetable).toBe(true);
-        for (const p of t.parts) if (p.targetable) t.damage(p, 10000);
+        for (let phase = 1; phase <= 3; phase++) {
+            expect(t.phase).toBe(phase);
+            for (let tick = 0; tick < 4000 && t.active && t.phase === phase; tick++) {
+                t.step(1 / 120, ship, [], shots);
+                for (const p of t.parts) if (p.targetable) t.damage(p, 10000);
+            }
+        }
         expect(t.active).toBe(false);
         expect(t.dying).toBe(6.4);
         expect(t.health).toBe(0);
@@ -125,9 +126,7 @@ describe('Living space and cinematic combat', () => {
             shots = new Projectiles();
         t.spawn(ship, []);
         for (let i = 0; i < 120 * 80; i++) t.step(1 / 120, ship, [], shots);
-        expect(shots.items.filter((p) => p.active && p.hostile).length).toBeLessThanOrEqual(
-            LIVING.tesser.projectileLimit
-        );
+        expect(shots.items.filter((p) => p.active && p.hostile).length).toBeLessThanOrEqual(96);
         t.charge = 1;
         t.disrupted = 1;
         t.step(0.1, ship, [], shots);

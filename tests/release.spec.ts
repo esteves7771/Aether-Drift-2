@@ -184,7 +184,7 @@ for (const renderer of ['webgpu', 'webgl2'])
     });
 
 for (const renderer of ['webgpu', 'webgl2'])
-    test('Phase 5F public presentation / ' + renderer, async ({ page, baseURL }) => {
+    test('Phase 5G public presentation / ' + renderer, async ({ page, baseURL }) => {
         const errors: string[] = [],
             bad: string[] = [],
             requests: string[] = [];
@@ -211,7 +211,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         await expect(page.locator('.command-logo')).toBeVisible();
-        await expect(page.locator('.command-status')).toContainText('v0.5.0-f');
+        await expect(page.locator('.command-status')).toContainText('v0.5g');
         await page.waitForFunction(
             () =>
                 [

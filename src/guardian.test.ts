@@ -86,7 +86,7 @@ describe('Fortress Guardian', () => {
             c.projectiles.spawn(ship.position, normal.mulScalar(-1), Vec3.ZERO, 500, 100, 1, false);
             c.flow.shots++;
         }
-        expect([...phases]).toEqual([1, 2]);
+        expect([...phases]).toEqual([1, 2, 3]);
         expect(g.active).toBe(false);
         expect(c.guardianBosses).toBe(1);
         const score = c.score;

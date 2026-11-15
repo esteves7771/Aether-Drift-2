@@ -2,8 +2,10 @@ import { Entity, Quat, Vec3 } from 'playcanvas';
 import type { AppBase, RenderComponent } from 'playcanvas';
 
 import { emission, ModelBuilder, surface, validateRenderAttributes } from './art-kit';
+import { EncounterView } from './encounter-view';
 import type { Phantom } from './phantom';
 export class PhantomView {
+    private readonly encounter: EncounterView;
     readonly root = new Entity('Phantom boss');
     private readonly wings: Entity[] = [];
     private readonly engines: Entity[] = [];
@@ -17,6 +19,7 @@ export class PhantomView {
     private readonly position = new Vec3();
     private readonly rotation = new Quat();
     constructor(app: AppBase) {
+        this.encounter = new EncounterView(app);
         app.root.addChild(this.root);
         this.armor.emissive.fromString('#242033');
         this.armor.emissiveIntensity = 0.35;
@@ -85,6 +88,7 @@ export class PhantomView {
     }
     render(p: Phantom, alpha: number) {
         this.root.enabled = p.active || p.dying > 0;
+        this.encounter.render(this.root, p);
         if (!this.root.enabled) return;
         this.position.lerp(p.previous, p.position, alpha);
         this.rotation.slerp(p.previousRotation, p.rotation, alpha);
@@ -115,6 +119,7 @@ export class PhantomView {
         }
     }
     destroy() {
+        this.encounter.destroy();
         for (const r of this.root.findComponents('render'))
             for (const m of (r as RenderComponent).meshInstances) m.mesh?.destroy();
         this.root.destroy();

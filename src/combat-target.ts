@@ -1,5 +1,7 @@
 import type { Vec3 } from 'playcanvas';
 export interface CombatTarget {
+    readonly targetRole?: 'craft' | 'boss' | 'defense' | 'environment';
+    readonly generation?: number;
     readonly id: number;
     active: boolean;
     health: number;

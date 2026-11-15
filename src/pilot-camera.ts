@@ -1,5 +1,7 @@
-import { Vec3 } from 'playcanvas';
-import type { Entity, MeshInstance, RenderComponent , Quat } from 'playcanvas';
+import { Vec2, Vec3 } from 'playcanvas';
+import type { CameraComponent, Entity, MeshInstance, RenderComponent, Quat } from 'playcanvas';
+
+import { COCKPIT_FRAMING } from './view-framing';
 /** Presentation only; camera shares the interpolated simulation attitude, including roll. */
 export class PilotCamera {
     cockpit = false;
@@ -7,6 +9,9 @@ export class PilotCamera {
     private readonly cached = new Map<MeshInstance, boolean>();
     private shipKey = '';
     private hidden = false;
+    private camera?: CameraComponent;
+    private readonly projectionShift = new Vec2(0, -2 * COCKPIT_FRAMING.aimLift);
+    private readonly centered = new Vec2();
     toggle() {
         this.cockpit = !this.cockpit;
     }
@@ -15,6 +20,9 @@ export class PilotCamera {
     }
     update(camera: Entity, ship: Entity, position: Vec3, rotation: Quat, selected: string, inFlight: boolean) {
         const show = this.cockpit && inFlight;
+        this.camera = camera.camera!;
+        const offset = show ? this.projectionShift : this.centered;
+        if (this.camera.projectionOffset.y !== offset.y) this.camera.projectionOffset = offset;
         if (this.shipKey !== selected || show !== this.hidden) {
             for (const [mi, visible] of this.cached) mi.visible = visible;
             this.cached.clear();
@@ -41,6 +49,7 @@ export class PilotCamera {
         camera.camera!.nearClip = 0.1;
     }
     destroy() {
+        if (this.camera) this.camera.projectionOffset = this.centered;
         for (const [mi, visible] of this.cached) mi.visible = visible;
         this.cached.clear();
     }

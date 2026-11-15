@@ -8,6 +8,7 @@ export class Missile {
     readonly hostile = false;
     readonly missile = true;
     targetId = -1;
+    targetGeneration = 0;
     damage = EVOLUTION.missile.damage;
     radius = EVOLUTION.missile.radius;
     life = 0;
@@ -32,6 +33,7 @@ export class Missiles {
         if (!m) return false;
         m.active = true;
         m.targetId = target.id;
+        m.targetGeneration = target.generation ?? 0;
         m.life = EVOLUTION.missile.lifetime;
         m.speed = EVOLUTION.missile.launchSpeed;
         ship.rotation.transformVector(this.delta.set(0, -0.65, -2.8), m.position).add(ship.position);
@@ -50,7 +52,7 @@ export class Missiles {
                     continue;
                 }
                 const t = target(m.targetId);
-                if (t?.active && t.targetable) {
+                if (t?.active && t.targetable && (t.generation ?? 0) === m.targetGeneration) {
                     const distance = this.delta.sub2(t.position, m.position).length();
                     this.desired
                         .copy(t.velocity)

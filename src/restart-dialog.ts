@@ -42,17 +42,20 @@ export class RestartDialog {
         this.cancel = cancel;
         this.previous = document.activeElement as HTMLElement;
         this.root.hidden = false;
+        document.body.classList.add('dialog-open');
         document.getElementById('restart-cancel')!.focus();
     }
     private close(confirmed: boolean) {
         if (!this.open) return;
         this.root.hidden = true;
+        document.body.classList.remove('dialog-open');
         const callback = confirmed ? this.confirm : this.cancel;
         this.confirm = this.cancel = undefined;
         this.previous?.focus();
         callback?.();
     }
     destroy() {
+        document.body.classList.remove('dialog-open');
         this.events.abort();
         this.root.remove();
     }

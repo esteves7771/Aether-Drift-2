@@ -6,6 +6,13 @@ import { Flight } from './flight';
 import { MODEL_MOUNTS, MODEL_TUNING } from './model-config';
 
 describe('Curated imported models', () => {
+    it('calibrates the capital hunter independently from player/enemy simulation roots', () => {
+        const t = MODEL_TUNING.artillery;
+        expect((t.size / t.dims[t.dimension]) * t.dims[2]).toBeCloseTo(240);
+        expect(t.yaw).toBe(0);
+        expect(t.center).toHaveLength(3);
+        expect(t.file).toBe('artillery-dreadnought.glb');
+    });
     it('keeps player muzzle, exhaust and collision calibration compatible with the original flight root', () => {
         const t = MODEL_TUNING.surveyor,
             s = t.size / t.dims[t.dimension];

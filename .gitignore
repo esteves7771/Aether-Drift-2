@@ -49,3 +49,8 @@ artifacts/
 *.dae
 coverage/
 design-reference/
+
+# Local implementation/verification reports (retained in workspace).
+docs/PHASE5FC.md
+docs/PHASE5G.md
+docs/PHASE5G-EH.md

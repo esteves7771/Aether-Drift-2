@@ -89,16 +89,18 @@ describe('combat simulation', () => {
         const ship = new Flight(),
             c = new Combat(ship, [{ position: new Vec3(28, 0, -190), radius: 40 }], quiet);
         advance(c, 2.1);
-        expect(c.remaining).toBe(2);
+        expect(c.remaining).toBe(3);
         for (const e of c.enemies)
             if (e.active) expect(e.position.distance(c.rocks[0].position)).toBeGreaterThan(40 + e.tuning.radius);
         for (const e of c.enemies) e.active = false;
         advance(c, 4);
-        expect(c.director.group).toBe(2);
+        expect(c.director.group).toBe(1);
+        expect(c.director.stage).toBe('clear');
+        expect(c.director.deployed).toBe(3);
         for (const e of c.enemies) e.active = false;
         advance(c, 8);
         expect(c.wave).toBe(2);
-        expect(c.enemies.some((e) => e.active && e.kind === 'heavy')).toBe(true);
+        expect(c.enemies.filter(e=>e.active).every(e=>e.kind==='interceptor')).toBe(true);
         c.reset();
         expect(c.wave).toBe(0);
         expect(c.remaining).toBe(0);

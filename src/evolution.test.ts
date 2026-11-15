@@ -58,12 +58,12 @@ describe('Phase 4 abilities and capital encounter', () => {
         const e = c.enemies[0];
         e.spawn('heavy', new Vec3(0, 0, -90), new Quat());
         c.selected = 0;
-        c.launchMissile();
+        c.missiles.launch(ship, e);
         advance(c, 0.4);
         expect(c.rockHits).toBeGreaterThan(0);
         expect(e.health).toBe(e.maxHealth);
         c.missileCooldown = 0;
-        c.launchMissile();
+        c.missiles.launch(ship, e);
         e.active = false;
         advance(c, 7);
         expect(c.missiles.items.some((m) => m.active)).toBe(false);

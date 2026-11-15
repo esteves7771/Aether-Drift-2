@@ -2,6 +2,7 @@ import { Quat, Vec3 } from 'playcanvas';
 import type { Entity } from 'playcanvas';
 
 import { ARCADE } from './arcade-config';
+import { Artillery } from './artillery';
 import type { Combat } from './combat';
 import { COMBAT } from './combat-config';
 import { BLASTS } from './explosion-config';
@@ -24,7 +25,7 @@ export class CombatHUD {
     constructor() {
         document.body.insertAdjacentHTML(
             'beforeend',
-            `<aside id="combat-stats"><small>COMBAT LINK</small><strong id="score">000000</strong><div id="flow"><b id="flow-multiplier">×1.0</b><span id="flow-chain">COMBAT FLOW</span></div><meter id="flow-meter" min="0" max="${ARCADE.flow.window}"></meter><span id="challenge-status"></span><span id="wave-status">WAVE 01 / INBOUND</span></aside><div id="wave-banner"></div><div id="damage-direction">▼</div><div id="shield-impact"></div><small id="combat-perf"></small><div id="targets"></div><div id="score-feedback" hidden><strong></strong><span></span></div><aside id="abilities"><span id="missile-ammo"></span><span id="emp-status"></span></aside><aside id="boss-bar" hidden><small id="boss-name">CAPITAL SHIP / DREADNOUGHT</small><strong id="boss-phase"></strong><meter id="boss-health" min="0" max="1"></meter><span id="boss-attack"></span></aside>`
+            `<aside id="combat-stats"><small>COMBAT LINK</small><strong id="score">000000</strong><div id="flow"><b id="flow-multiplier">×1.0</b><span id="flow-chain">COMBAT FLOW</span></div><meter id="flow-meter" min="0" max="${ARCADE.flow.window}"></meter><span id="challenge-status"></span><span id="wave-status">WAVE 01 / INBOUND</span></aside><div id="wave-banner"></div><div id="damage-direction">▼</div><div id="shield-impact"></div><small id="combat-perf"></small><div id="targets"></div><div id="score-feedback" hidden><strong></strong><span></span></div><aside id="abilities"><span id="missile-ammo"></span><span id="emp-status"></span><span id="target-status" role="status"></span></aside><aside id="boss-bar" hidden><small id="boss-name">CAPITAL SHIP / DREADNOUGHT</small><strong id="boss-phase"></strong><meter id="boss-health" min="0" max="1"></meter><span id="boss-attack"></span></aside>`
         );
         const integrity = document.querySelector('.integrity')!;
         integrity.insertAdjacentHTML(
@@ -62,6 +63,7 @@ export class CombatHUD {
             const marker = this.markers[e.id];
             marker.hidden =
                 !e.active ||
+                (e.targetRole === 'boss' && combat.boss.arriving) ||
                 (e.id >= 40 && combat.selected !== e.id) ||
                 (((e.id >= 16 && e.id < 22) || (e.id >= 30 && e.id < 40)) &&
                     e.position.distance(combat.ship.position) > 450);
@@ -69,7 +71,9 @@ export class CombatHUD {
             this.point.sub2(e.position, camera.getPosition());
             this.inverse.transformVector(this.point, this.local);
             let x = w / 2 + (this.local.x / Math.max(0.01, -this.local.z)) * focal,
-                y = h / 2 - (this.local.y / Math.max(0.01, -this.local.z)) * focal;
+                y =
+                    (h / 2) * (1 + camera.camera!.projectionMatrix.data[9]) -
+                    (this.local.y / Math.max(0.01, -this.local.z)) * focal;
             const off = this.local.z >= 0 || x < 65 || x > w - 65 || y < minY || y > maxY;
             if (off) {
                 const dx = this.local.x,
@@ -85,7 +89,14 @@ export class CombatHUD {
             }
             if (cockpit && off) y = Math.max(minY, Math.min(maxY, y));
             marker.style.transform = `translate(${x}px,${y}px)`;
+            marker.dataset.capital = String(
+                e.targetRole === 'boss' && e.id === combat.boss.parts[combat.boss.parts.length - 1].id
+            );
             marker.classList.toggle('offscreen', off);
+            marker.classList.toggle(
+                'charging-threat',
+                'attackCue' in e ? Boolean(e.attackCue) : combat.boss.charge > 0
+            );
             marker.classList.toggle('label-left', x > w * 0.65);
             marker.classList.toggle('locked', combat.selected === e.id);
             marker.classList.toggle('heavy', e.label.includes('HEAVY') || e.label.includes('ELITE'));
@@ -127,7 +138,7 @@ export class CombatHUD {
         feedback.querySelector('strong')!.textContent = '+' + combat.flow.lastReward;
         feedback.querySelector('span')!.textContent = combat.flow.rewardText;
         document.getElementById('abilities')!.dataset.deployed = String(combat.fleet.deployed);
-        this.stats.textContent = `WAVE ${String(Math.max(1, combat.wave)).padStart(2, '0')} / ${combat.boss.active ? 'CAPITAL CONTACT' : combat.boss.dying > 0 ? (combat.victory > 0 ? 'SECTOR SECURED' : 'CAPITAL CRITICAL') : `SQUAD ${Math.max(1, combat.director.group)}/${combat.director.groupCount} · ${combat.remaining} HOSTILES`}`;
+        this.stats.textContent = `WAVE ${String(Math.max(1, combat.wave)).padStart(2, '0')} / ${combat.boss.active ? 'CAPITAL CONTACT' : combat.boss.dying > 0 ? (combat.victory > 0 ? 'SECTOR SECURED' : 'CAPITAL CRITICAL') : `SQUAD ${Math.max(1, combat.director.group)}/${combat.director.groupCount} · ${combat.remaining} HOSTILES${combat.director.reserves > 0 ? ' · ' + combat.director.reserves + ' INBOUND' : ''}`}`;
         document.getElementById('missile-ammo')!.textContent = 'M / MISSILES ' + combat.ammo + ' · RMB LOCK';
         document.getElementById('emp-status')!.textContent =
             (combat.fleet.threat > 0
@@ -135,6 +146,8 @@ export class CombatHUD {
                     ? 'SALVO / STRAFE OR EMP · '
                     : 'SALVO / EVADE · '
                 : 'G / EMP ') + (combat.empCooldown > 0 ? Math.ceil(combat.empCooldown) + 's' : 'READY · 180m');
+        document.getElementById('target-status')!.textContent =
+            combat.targeting.messageTime > 0 ? combat.targeting.message : '';
         document.getElementById('abilities')!.dataset.ammo = String(combat.ammo);
         document.getElementById('abilities')!.dataset.emp = String(combat.empCooldown);
         const boss = combat.boss,
@@ -142,10 +155,10 @@ export class CombatHUD {
         bar.hidden = !boss.active;
         document.getElementById('boss-name')!.textContent =
             boss instanceof Guardian
-                ? 'TESSER / OVERDRIVE WARSHIP'
+                ? 'TESSER / THE GRAVITATIONAL ARCHITECT'
                 : boss instanceof Phantom
-                  ? 'PHANTOM / PRECISION INTERCEPTOR'
-                  : 'CAPITAL SHIP / DREADNOUGHT';
+                  ? 'PHANTOM / THE RELENTLESS HUNTER'
+                  : 'ARTILLERY DREADNOUGHT / HEAVY ASSAULT';
         bar.dataset.phase = String(boss.phase);
         bar.dataset.turrets = String(boss.parts.slice(0, 4).filter((p) => p.active).length);
         document.getElementById('boss-phase')!.textContent = boss.arriving
@@ -159,21 +172,32 @@ export class CombatHUD {
             document.getElementById('boss-phase')!.textContent = boss.arriving
                 ? 'PHANTOM SIGNATURE / APPROACH'
                 : boss.phase === 1
-                  ? 'I / INTERCEPTION'
+                  ? 'I / HUNTER'
                   : boss.phase === 2
-                    ? 'II / PHANTOM MANEUVERS'
-                    : 'III / LAST STAND';
+                    ? 'II / EVASIVE PREDATOR'
+                    : 'III / RELENTLESS ASSAULT';
         if (boss instanceof Guardian)
             document.getElementById('boss-phase')!.textContent = boss.arriving
                 ? 'TESSER INBOUND / ENGINE FLARE'
                 : boss.phase === 1
-                  ? 'I / SUPPRESSION'
+                  ? 'I / GEOMETRIC CONTROL'
                   : boss.phase === 2
-                    ? 'II / OVERDRIVE'
-                    : 'III / CORE OVERLOAD';
+                    ? 'II / SPATIAL COMPRESSION'
+                    : 'III / SINGULARITY OVERDRIVE';
+        if (boss instanceof Artillery) {
+            document.getElementById('boss-phase')!.textContent = boss.arriving
+                ? 'GRAVITATIONAL ARRIVAL'
+                : boss.phase === 1
+                  ? 'I / ARMAMENT — FOUR BATTERIES'
+                  : boss.phase === 2
+                    ? 'II / VENTING — COOLANT MANIFOLDS'
+                    : 'III / REACTOR OVERLOAD';
+        }
         (document.getElementById('boss-health') as HTMLMeterElement).value = boss.health / boss.maxHealth;
         document.getElementById('boss-attack')!.textContent = boss.arriving
-            ? 'CAPITAL SIGNATURE / WEAPONS ARMING'
+            ? boss instanceof Artillery
+                ? 'GRAVITATIONAL RIFT / ' + boss.arrival.stage.toUpperCase() + ' — KEEP CLEAR'
+                : 'CAPITAL SIGNATURE / WEAPONS ARMING'
             : boss.disrupted > 0
               ? 'SYSTEMS DISRUPTED'
               : boss.charge > 0
@@ -191,6 +215,15 @@ export class CombatHUD {
                           ? 'EXPOSED CORE / PRESS THE ATTACK'
                           : 'TRACK THE HULL / WATCH FOR CHARGE'
                       : 'AMBER COMPONENTS ARE VULNERABLE';
+        if (!boss.arriving && boss.grace <= 0 && boss.disrupted <= 0) {
+            document.getElementById('boss-attack')!.textContent =
+                boss.patterns.state === 'recover'
+                    ? 'RECOVERY / EXPOSED SYSTEMS — ATTACK'
+                    : (boss.patterns.state === 'telegraph' ? '⚠ ' : '') +
+                      boss.attackName +
+                      ' / ' +
+                      boss.patterns.spec.hint;
+        }
         this.banner.textContent =
             combat.remaining === 0
                 ? combat.wave > 0

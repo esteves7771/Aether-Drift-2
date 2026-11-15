@@ -8,6 +8,7 @@ import type { Projectiles } from './projectiles';
 import { SPECTACLE } from './spectacle-config';
 
 export class BossPart implements CombatTarget {
+    readonly targetRole = 'boss' as const;
     active = false;
     health = 0;
     maxHealth = 0;
@@ -157,7 +158,7 @@ export class Boss {
         for (const p of this.parts) p.previous.copy(p.position);
         for (const h of this.hull) h.previous.copy(h.position);
     }
-    private updateParts(dt: number) {
+    protected updateParts(dt: number) {
         for (let i = 0; i < this.parts.length; i++) {
             const p = this.parts[i];
             p.previous.copy(p.position);

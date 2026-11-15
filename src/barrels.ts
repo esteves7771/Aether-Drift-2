@@ -5,6 +5,7 @@ import type { Frontier } from './frontier';
 import { LIVING } from './living-config';
 
 export class Barrel implements CombatTarget {
+    readonly targetRole = 'environment' as const;
     active = true;
     health: number = LIVING.barrelHealth;
     readonly maxHealth = LIVING.barrelHealth;

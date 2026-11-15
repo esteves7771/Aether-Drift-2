@@ -5,6 +5,23 @@ import type { AIState, EnemyKind } from './combat-config';
 import { EVOLUTION } from './evolution-config';
 import { FLEET } from './fleet-config';
 export class Enemy {
+    readonly targetRole = 'craft' as const;
+    sniper = false;
+    tier: 'standard' | 'veteran' | 'elite' = 'standard';
+    patternState: 'idle' | 'telegraph' | 'fire' = 'idle';
+    patternTime = 0;
+    patternShots = 0;
+    get role(): 'standard' | 'veteran' | 'elite' | 'heavy' | 'sniper' {
+        return this.elite
+            ? 'elite'
+            : this.kind === 'heavy'
+              ? this.sniper
+                  ? 'sniper'
+                  : 'heavy'
+              : this.tier === 'veteran'
+                ? 'veteran'
+                : 'standard';
+    }
     active = false;
     generation = 0;
     owner = -1;
@@ -51,8 +68,12 @@ export class Enemy {
                 : this.kind === 'drone'
                   ? 'COMBAT DRONE'
                   : this.kind === 'heavy'
-                    ? 'HEAVY'
-                    : 'INTERCEPTOR';
+                    ? this.role === 'sniper'
+                        ? 'ARTILLERY SNIPER'
+                        : 'HEAVY GUNSHIP'
+                    : this.tier === 'veteran'
+                      ? 'VETERAN HUNTER'
+                      : 'INTERCEPTOR';
     }
     get targetable() {
         return this.active && this.arrival <= 0;
@@ -70,6 +91,10 @@ export class Enemy {
               : COMBAT[this.kind];
     }
     spawn(kind: EnemyKind, position: Vec3, rotation: Quat, elite = false) {
+        this.sniper = false;
+        this.tier = elite ? 'elite' : 'standard';
+        this.patternState = 'idle';
+        this.patternTime = this.patternShots = 0;
         this.visual = 'standard';
         this.arrival = 0;
         this.volley = 0;

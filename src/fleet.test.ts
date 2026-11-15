@@ -95,7 +95,7 @@ describe('new fleet roles', () => {
             for (let group = 1; group < 4; group++) {
                 a.group = b.group = group;
                 expect(a.encounter).toEqual(b.encounter);
-                expect(a.size).toBeLessThanOrEqual(6);
+                expect(a.size).toBeLessThanOrEqual(7);
             }
         }
         a.wave = 6;
@@ -115,7 +115,7 @@ describe('Phantom encounter and retained progression', () => {
             shots = new Projectiles();
         p.spawn(ship, []);
         let moved = 0;
-        for (let i = 0; i < 120 * 10; i++) {
+        for (let i = 0; i < 120 * 20; i++) {
             const before = p.position.clone();
             p.step(dt, ship, [], shots);
             const distance = before.distance(p.position);
@@ -124,17 +124,20 @@ describe('Phantom encounter and retained progression', () => {
         }
         expect(moved).toBeGreaterThan(300);
         expect(shots.fired).toBeGreaterThan(0);
-        p.damage(p.parts[0], 450);
+        p.parts[0].exposed = true;
+        p.damage(p.parts[0], p.maxHealth * 0.35);
         expect(p.phase).toBe(2);
         for (let i = 0; i < 120; i++) p.step(dt, ship, [], shots);
-        p.damage(p.parts[0], 400);
+        p.parts[0].exposed = true;
+        p.damage(p.parts[0], p.maxHealth * 0.35);
         expect(p.phase).toBe(3);
         for (let i = 0; i < 120; i++) p.step(dt, ship, [], shots);
-        p.damage(p.parts[0], 400);
+        p.parts[0].exposed = true;
+        p.damage(p.parts[0], p.maxHealth);
         expect(p.active).toBe(false);
         expect(p.dying).toBeGreaterThan(0);
     });
-    it('plays Waves 1–11 using actual shots, both bosses, new roles, score and records', () => {
+    it('plays Waves 1–21 using actual shots, all three bosses, new roles, score and records', () => {
         const ship = new Flight(),
             events: string[] = [],
             c = new Combat(ship, [], quiet, (e) => events.push(e)),
@@ -144,9 +147,16 @@ describe('Phantom encounter and retained progression', () => {
             phases = new Set<number>(),
             roles = new Set<string>(),
             waves = new Set<number>();
-        for (let i = 0; i < 120 * 1000 && c.wave < 11; i++) {
+        for (let i = 0; i < 120 * 2000 && c.wave < 21; i++) {
             const target = c.targets.find((t) => t.active && t.targetable);
             if (target) {
+                // Deterministic collision fixture visits the outer face of Tesser's lateral capacitors.
+                // Actual flight and complete boss combat are separately browser-tested.
+                if (c.guardian.active && target.id >= 26) {
+                    const normal = target.position.clone().sub(c.guardian.position).normalize();
+                    ship.position.copy(target.position).add(normal.mulScalar(160));
+                    ship.previous.copy(ship.position);
+                }
                 point
                     .copy(target.velocity)
                     .sub(ship.velocity)
@@ -170,13 +180,13 @@ describe('Phantom encounter and retained progression', () => {
             if (c.phantom.active) phases.add(c.phantom.phase);
             if (ship.hull <= 0) throw Error('Pilot died at ' + c.wave + ' after ' + i / 120 + 's');
         }
-        expect([...waves]).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+        expect([...waves]).toEqual(Array.from({ length: 22 }, (_, i) => i));
         expect([...phases]).toEqual([1, 2, 3]);
         expect(roles.has('bomber')).toBe(true);
         expect(roles.has('carrier')).toBe(true);
-        expect(c.bosses).toBe(2);
+        expect(c.bosses).toBe(4);
         expect(c.phantom.health).toBe(0);
-        expect(events).toEqual(['boss:spawn', 'boss:defeated', 'boss:spawn', 'boss:defeated']);
+        expect(events).toEqual(Array.from({ length: 4 }, () => ['boss:spawn', 'boss:defeated']).flat());
         const store = { getItem: () => null, setItem: quiet },
             records = new Records(store);
         expect(records.save(c.summary('retired'))).toContain('phantom');

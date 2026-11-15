@@ -44,10 +44,6 @@ export class Menu {
         );
         el('show-records').innerHTML = `${menuIcon('records')}<span>RECORDS</span>`;
         el('show-settings').innerHTML = `${menuIcon('settings')}<span>SETTINGS</span>`;
-        el('action-slot').insertAdjacentHTML(
-            'afterend',
-            `<button id="show-ships" class="command-secondary">${menuIcon('ship')}<span>SHIP SELECT</span></button>`
-        );
         this.panel
             .querySelector('.menu-links')!
             .insertAdjacentHTML(
@@ -61,12 +57,8 @@ export class Menu {
         );
         this.panel.insertAdjacentHTML(
             'beforeend',
-            `<div class="command-status"><div>${menuIcon('ship')}<span><small>SELECTED SHIP</small><b class="ship-index">AE-01 / INTERCEPTOR</b></span></div><div>${menuIcon('records')}<span><small>PERSONAL BEST</small><b id="status-best">0</b></span></div><div>${menuIcon('records')}<span><small>LONGEST WAVE</small><b id="status-wave">WAVE 0</b></span></div><div>${menuIcon('planet')}<span><small>SECTOR</small><b>PERSEID EXPANSE</b></span></div><div>${menuIcon('code')}<span><small>BUILD</small><b>v${version}</b></span></div></div>`
+            `<div class="command-status"><div>${menuIcon('ship')}<span><small>SELECTED SHIP</small><b class="ship-index">AE-01 / INTERCEPTOR</b></span></div><div>${menuIcon('records')}<span><small>PERSONAL BEST</small><b id="status-best">0</b></span></div><div>${menuIcon('records')}<span><small>LONGEST WAVE</small><b id="status-wave">WAVE 0</b></span></div><div>${menuIcon('planet')}<span><small>SECTOR</small><b>PERSEID EXPANSE</b></span></div><div>${menuIcon('code')}<span><small>BUILD</small><b>v${version.replace('.0-g', 'g')}</b></span></div></div>`
         );
-        el('show-ships').onclick = () => {
-            el('ship-classic').focus();
-            el('ship-hangar').animate([{ filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], { duration: 250 });
-        };
         el('show-credits').onclick = () => {
             this.parent = this.screen;
             this.show('credits');

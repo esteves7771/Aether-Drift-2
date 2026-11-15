@@ -93,7 +93,11 @@ export class ImportedFleet {
                   ? ImportedFleet.emp
                   : e.attackCue
                     ? ImportedFleet.charge
-                    : undefined;
+                    : e.elite
+                      ? ImportedFleet.elite
+                      : e.tier === 'veteran'
+                        ? ImportedFleet.veteran
+                        : undefined;
         for (const mi of model.instances) {
             if (color) mi.setParameter('material_emissive', color);
             else mi.deleteParameter('material_emissive');
@@ -103,6 +107,8 @@ export class ImportedFleet {
             jet.setLocalScale(0.28, (e.arrival > 0 ? 4 : 0.8) + Math.min(2, e.velocity.length() * 0.025), 0.28);
         return true;
     }
+    private static readonly veteran = new Float32Array([0.025, 0.12, 0.2]);
+    private static readonly elite = new Float32Array([0.2, 0.025, 0.16]);
     private static readonly hit = new Float32Array([3, 5, 6]);
     private static readonly emp = new Float32Array([0.05, 0.8, 2]);
     private static readonly charge = new Float32Array([3, 0.65, 0.03]);

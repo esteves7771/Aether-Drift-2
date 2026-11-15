@@ -1,8 +1,20 @@
-import { BLEND_NORMAL, Color, Entity, EnvLighting, Mesh, MeshInstance, SphereGeometry, Vec3 } from 'playcanvas';
+import {
+    BLEND_ADDITIVEALPHA,
+    BLEND_NORMAL,
+    Color,
+    Entity,
+    EnvLighting,
+    Mesh,
+    MeshInstance,
+    SphereGeometry,
+    Vec3
+} from 'playcanvas';
 import type { AppBase } from 'playcanvas';
 
 import { emission, surface, validateRenderAttributes } from './art-kit';
 import { AsteroidField, asteroidGeometry, loadRockMaps } from './asteroid-art';
+import { CINEMATIC } from './cinematic-config';
+import { cinematicSpace } from './cinematic-space';
 import type { Rock } from './collisions';
 import type { GraphicsQuality } from './config';
 import { PERSEID } from './environment';
@@ -74,47 +86,66 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     app.root.addChild(stars);
     const starMaterial = emission('Stellar light', '#ffffff', 1.4);
     starMaterial.emissiveVertexColor = true;
+    starMaterial.opacityMap = textures.glow;
+    starMaterial.opacityMapChannel = 'a';
+    starMaterial.blendType = BLEND_ADDITIVEALPHA;
+    starMaterial.depthWrite = false;
+    starMaterial.depthTest = false;
     starMaterial.update();
     const extras: Entity[] = [];
     for (let layer = 0; layer < 3; layer++) {
         const positions: number[] = [],
+            uvs: number[] = [],
+            indices: number[] = [],
             colors: number[] = [],
-            count = layer === 0 ? 1200 : layer === 1 ? 1100 : 1500;
+            count = CINEMATIC.starCounts[layer];
         for (let i = 0; i < count; i++) {
-            const n = i + layer * 2000,
+            const n = i + layer * 3000,
                 angle = hash(n, 4) * Math.PI * 2;
             let y = hash(n, 5) * 2 - 1;
-            if (i % 3 === 0) y = (hash(n, 6) - 0.5) * 0.35 + Math.sin(angle * 2) * 0.2;
+            // Curved galactic belt, several broad clusters, and deliberately sparse polar zones.
+            if (i % 5 < 3) y = (hash(n, 6) - 0.5) * (0.12 + 0.22 * hash(n, 9)) + Math.sin(angle * 2 + 0.6) * 0.24;
+            if (i % 11 === 0) {
+                y = (hash(n, 6) - 0.5) * 0.1 + 0.28;
+            }
+            y = Math.max(-0.98, Math.min(0.98, y));
             const r = Math.sqrt(1 - y * y),
                 distance = 2800 + layer * 1200,
                 dx = r * Math.cos(angle),
                 dy = y,
                 dz = r * Math.sin(angle),
-                size = (0.8 + Math.pow(hash(n, 7), 5) * 4) * (distance / 4200);
+                size = (1.4 + Math.pow(hash(n, 7), 7) * 7) * (distance / 3500);
             const tangent = new Vec3(dz, 0, -dx).normalize(),
                 up = new Vec3().cross(new Vec3(dx, dy, dz), tangent).normalize();
             for (const [a, b] of [
-                [-1, -0.65],
-                [1, -0.65],
-                [0, 1]
+                [-1, -1],
+                [1, -1],
+                [-1, 1],
+                [1, 1]
             ])
                 positions.push(
                     dx * distance + (tangent.x * a + up.x * b) * size,
                     dy * distance + up.y * b * size,
                     dz * distance + (tangent.z * a + up.z * b) * size
                 );
-            const warm = hash(n, 11) > 0.86;
-            for (let j = 0; j < 3; j++)
+            const base = i * 4;
+            indices.push(base, base + 1, base + 2, base + 2, base + 1, base + 3);
+            uvs.push(0, 0, 1, 0, 0, 1, 1, 1);
+            const warm = hash(n, 11) > 0.8,
+                brightness = 0.32 + Math.pow(hash(n, 14), 2) * 1.1;
+            for (let j = 0; j < 4; j++)
                 colors.push(
-                    warm ? 1 : 0.65 + hash(n, 12) * 0.25,
-                    warm ? 0.8 : 0.75 + hash(n, 13) * 0.2,
-                    warm ? 0.62 : 1,
+                    brightness * (warm ? 1 : 0.62 + hash(n, 12) * 0.24),
+                    brightness * (warm ? 0.68 : 0.77 + hash(n, 13) * 0.18),
+                    brightness * (warm ? 0.4 : 1),
                     1
                 );
         }
         const mesh = new Mesh(device);
         mesh.setPositions(positions);
         mesh.setColors(colors);
+        mesh.setUvs(0, uvs);
+        mesh.setIndices(indices);
         mesh.update();
         const e = layer === 0 ? stars : new Entity(`Star depth ${layer}`);
         e.addComponent('render', { meshInstances: [new MeshInstance(mesh, starMaterial, e)] });
@@ -128,6 +159,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     const nebulaMaterial = emission(definition.name + ' nebula', '#ffffff', 0.9);
     nebulaMaterial.emissiveMap = textures.nebula;
     nebulaMaterial.depthWrite = false;
+    nebulaMaterial.depthTest = false;
     nebulaMaterial.update();
     const nebula = new Entity('Molecular clouds');
     nebula.addComponent('render', {
@@ -141,6 +173,8 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     });
     nebula.setLocalScale(8200, 8200, 8200);
     environment.addChild(nebula);
+    const cinematic = cinematicSpace(app, stars, environment, textures.nebula, textures.rock);
+    cinematic.setQuality('medium');
     const planetMat = surface('Banded gas giant', '#d6cbdc', 0, 0.14);
     planetMat.useSkybox = false;
     planetMat.useMetalness = false;
@@ -220,6 +254,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     const setQuality = (level: GraphicsQuality) => {
         if (quality === level) return;
         quality = level;
+        cinematic.setQuality(level);
         thrusters.setQuality(level);
         rockyMaps.setQuality(level);
         extras[0].enabled = level !== 'low';
@@ -236,6 +271,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
     // Materials and geometry are generated only during boot or preset changes.
     return {
         ship,
+        cinematic,
         thrusters,
         stars,
         environment,
@@ -248,6 +284,7 @@ export function buildScene(app: AppBase, rocks: Rock[], definition: EnvironmentD
         setQuality,
         asteroidField,
         destroy: () => {
+            cinematic.destroy();
             asteroidField.destroy();
             for (const lod of meshes) for (const m of lod) m.destroy();
             for (const m of rockMaterials) m.destroy();

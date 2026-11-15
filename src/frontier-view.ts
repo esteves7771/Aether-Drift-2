@@ -203,7 +203,9 @@ export class FrontierView {
             h = window.innerHeight,
             f = h / (2 * Math.tan((camera.camera!.fov * Math.PI) / 360));
         let x = w / 2 + (this.local.x / Math.max(1, -this.local.z)) * f,
-            y = h / 2 - (this.local.y / Math.max(1, -this.local.z)) * f;
+            y =
+                (h / 2) * (1 + camera.camera!.projectionMatrix.data[9]) -
+                (this.local.y / Math.max(1, -this.local.z)) * f;
         if (this.local.z >= 0) {
             x = this.local.x >= 0 ? w - 45 : 45;
             y = h / 2;

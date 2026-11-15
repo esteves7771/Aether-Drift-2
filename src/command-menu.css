@@ -451,3 +451,34 @@
 .menu-open #combat-perf {
     visibility: hidden;
 }
+/* Two visible roster cards; paging never changes the selected spacecraft. */
+#menu #ship-hangar {
+    position: relative;
+    margin-top: 3.4vh;
+}
+#menu #ship-hangar button[hidden] {
+    display: none;
+}
+#menu #ship-hangar .roster-arrow {
+    position: absolute;
+    top: 55%;
+    width: 26px;
+    height: 38px;
+    min-height: 0;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+}
+#menu #ship-hangar .roster-arrow:first-of-type {
+    left: -30px;
+}
+#menu #ship-hangar .roster-arrow:last-of-type {
+    right: -30px;
+}
+#menu #ship-hangar .roster-arrow:disabled {
+    opacity: 0.3;
+}
+#target-status {
+    color: #a0f0ed;
+}

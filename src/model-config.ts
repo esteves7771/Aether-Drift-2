@@ -1,7 +1,16 @@
+import { ARTILLERY } from './artillery-config';
 import { PLAYER_ENGINES } from './thruster-state';
 
 /** Offline inspector bounds are decoded vertices. Calibration stays below semantic simulation roots. */
 export const MODEL_TUNING = {
+    artillery: {
+        file: 'artillery-dreadnought.glb',
+        dims: [2.0362, 1.36, 4.2294],
+        center: [-0.0028, -0.0991, -0.0547],
+        size: ARTILLERY.length,
+        dimension: 2,
+        yaw: 0
+    },
     satellite: {
         file: 'satellite.glb',
         dims: [0.9, 1.7542, 4.0619],

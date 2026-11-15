@@ -2,6 +2,7 @@ import { Quat, Vec3 } from 'playcanvas';
 
 import type { Combat } from './combat';
 import { COMBAT } from './combat-config';
+import { COCKPIT_FRAMING } from './view-framing';
 /** Fixed raster cockpit with a small live instrument layer. Asset is requested only on first use. */
 export class CockpitHUD {
     readonly root: HTMLElement;
@@ -12,6 +13,7 @@ export class CockpitHUD {
     private readonly local = new Vec3();
     private loaded = false;
     constructor(toggle: () => void) {
+        document.body.style.setProperty('--cockpit-aim-y', `${(0.5 - COCKPIT_FRAMING.aimLift) * 100}%`);
         document.body.insertAdjacentHTML(
             'beforeend',
             `<button id="camera-toggle" title="C — Chase / Cockpit Camera" aria-pressed="false">◉ <span>CAMERA: CHASE</span> <kbd>C</kbd></button><div id="cockpit" hidden aria-label="Pilot cockpit"><div class="cockpit-canopy"></div><div class="cockpit-side"></div><div class="cockpit-deck"><img alt="" id="cockpit-art"><div id="cockpit-warmth"></div><div class="cockpit-left instrument"><small>SHIP / SYSTEMS</small><label>HULL <b id="cp-hull"></b></label><label>SHIELD <b id="cp-shield"></b></label><p id="cp-alert"></p></div><div class="cockpit-speed instrument"><b id="cp-speed"></b><span id="cp-boost"></span></div><div class="cockpit-warning instrument" id="cp-warning"></div><svg id="cockpit-radar" viewBox="0 0 240 110" aria-label="Nearby contacts"><ellipse cx="120" cy="55" rx="100" ry="40"/><ellipse cx="120" cy="55" rx="55" ry="22"/><path d="M20 55h200M120 15v80M50 27l140 56M50 83l140-56"/><path class="pilot-symbol" d="m120 46-5 15 5-3 5 3z"/></svg><div class="cockpit-right instrument"><small id="cp-target"></small><p id="cp-distance"></p><p id="cp-lock"></p><label>MISSILES <b id="cp-ammo"></b></label><label>EMP <b id="cp-emp"></b></label></div></div></div>`
@@ -51,7 +53,7 @@ export class CockpitHUD {
             this.root.style.setProperty('--cockpit-art', `url("${url}")`);
             this.loaded = true;
         }
-        this.root.hidden = !(cockpit && flight);
+        this.root.hidden = !(cockpit && flight && visible);
         document.body.classList.toggle('cockpit-view', cockpit && flight);
         this.button.disabled = !visible;
     }
@@ -68,7 +70,13 @@ export class CockpitHUD {
             locked = target?.active && target.targetable;
         set(
             'warning',
-            combat.damageFlash > 0 ? 'INCOMING DAMAGE' : locked ? 'TARGET ACQUIRED' : 'FLIGHT LINK / SIX AXES'
+            combat.damageFlash > 0
+                ? 'INCOMING DAMAGE'
+                : combat.targeting.messageTime > 0
+                  ? combat.targeting.message
+                  : locked
+                    ? 'TARGET ACQUIRED'
+                    : 'FLIGHT LINK / SIX AXES'
         );
         set('target', locked ? target.label.toUpperCase() : 'NO TARGET');
         set('distance', locked ? Math.round(target.position.distance(ship.position)) + ' m' : 'RMB / SELECT TARGET');

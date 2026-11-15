@@ -18,7 +18,7 @@ export class EnemyAI {
         e.state = state;
         e.stateTime = 0;
     }
-    step(e: Enemy, ship: Flight, enemies: Enemy[], rocks: Rock[], dt: number) {
+    step(e: Enemy, ship: Flight, enemies: Enemy[], rocks: Rock[], dt: number, obstacles: readonly Rock[] = []) {
         if (e.arrival > 0) {
             e.previous.copy(e.position);
             e.previousRotation.copy(e.rotation);
@@ -26,12 +26,13 @@ export class EnemyAI {
             e.attackCue = false;
             e.arrival = Math.max(0, e.arrival - dt);
             this.desired.sub2(e.arrivalGoal, e.position).normalize().mulScalar(LIVING.arrivalSpeed);
-            for (const rock of rocks) {
-                this.delta.sub2(e.position, rock.position);
-                const d = this.delta.length(),
-                    safe = rock.radius + e.radius + 28;
-                if (d < safe && d > 0.01) this.desired.add(this.delta.mulScalar(((safe - d) * 5) / d));
-            }
+            for (let group = 0; group < 2; group++)
+                for (const rock of group ? obstacles : rocks) {
+                    this.delta.sub2(e.position, rock.position);
+                    const d = this.delta.length(),
+                        safe = rock.radius + e.radius + 28;
+                    if (d < safe && d > 0.01) this.desired.add(this.delta.mulScalar(((safe - d) * 5) / d));
+                }
             e.velocity.lerp(e.velocity, this.desired, 1 - Math.exp(-dt * 4));
             e.position.add(this.delta.copy(e.velocity).mulScalar(dt));
             this.target.copy(e.position).add(e.velocity);
@@ -50,9 +51,13 @@ export class EnemyAI {
         this.toPlayer.sub2(ship.position, e.position);
         const distance = this.toPlayer.length();
         this.toPlayer.normalize();
-        const support = e.kind === 'bomber' || e.kind === 'carrier';
-        if (e.state === 'pursue' && distance < (support ? 550 : 340)) this.transition(e, 'approach');
-        else if (e.state === 'approach' && distance < (support ? 390 : e.kind === 'heavy' ? 270 : 230))
+        const support = e.kind === 'bomber' || e.kind === 'carrier' || e.role === 'sniper';
+        if (e.state === 'pursue' && distance < (e.role === 'sniper' ? 750 : support ? 550 : 340))
+            this.transition(e, 'approach');
+        else if (
+            e.state === 'approach' &&
+            distance < (e.role === 'sniper' ? 650 : support ? 390 : e.kind === 'heavy' ? 270 : 230)
+        )
             this.transition(e, 'attack');
         else if (e.state === 'attack' && (distance < (support ? 180 : 55) || e.stateTime > (support ? 7 : 4.5))) {
             this.transition(e, 'evade');
@@ -62,9 +67,13 @@ export class EnemyAI {
             e.escape.normalize();
         } else if (e.state === 'evade' && e.stateTime > 2.4) this.transition(e, 'reposition');
         else if (e.state === 'reposition' && e.stateTime > 1.8) this.transition(e, 'pursue');
-        if (distance > 600 && e.state !== 'pursue') this.transition(e, 'pursue');
+        if (distance > (e.role === 'sniper' ? 900 : 600) && e.state !== 'pursue') this.transition(e, 'pursue');
         this.desired.copy(this.toPlayer);
-        let speed = e.tuning.speed;
+        let speed = e.tuning.speed * (e.tier === 'veteran' ? 1.12 : 1);
+        if (e.role === 'sniper' && distance < 480) {
+            this.desired.mulScalar(-1);
+            speed *= 0.65;
+        }
         if (e.state === 'attack') {
             speed *= distance > 170 ? 0.6 : 0.15;
             this.desired.x += Math.sin(e.age * 1.2 + e.id * 2) * 0.3;
@@ -77,7 +86,7 @@ export class EnemyAI {
             speed *= 0.8;
         }
         if (e.order !== 'engage') this.desired.sub2(e.goal, e.position).normalize();
-        if (e.elite && e.state === 'attack') {
+        if ((e.elite || e.tier === 'veteran') && e.state === 'attack') {
             this.desired.x += Math.sin(e.age * 2.7 + e.id) * 0.55;
             this.desired.y += Math.cos(e.age * 2.3 + e.id) * 0.35;
         }
@@ -91,16 +100,17 @@ export class EnemyAI {
         if (e.disrupted > 0) speed *= EVOLUTION.emp.slow;
         this.avoid.set(0, 0, 0);
         this.target.copy(e.velocity).mulScalar(0.8).add(e.position);
-        for (const rock of rocks) {
-            this.delta.sub2(this.target, rock.position);
-            const d = this.delta.length(),
-                safe = rock.radius + e.tuning.radius + 22;
-            if (d < safe) {
-                if (d < 0.01) this.delta.set(1, 1, 0);
-                else this.delta.mulScalar(1 / d);
-                this.avoid.add(this.delta.mulScalar(((safe - d) / safe) * 4));
+        for (let group = 0; group < 2; group++)
+            for (const rock of group ? obstacles : rocks) {
+                this.delta.sub2(this.target, rock.position);
+                const d = this.delta.length(),
+                    safe = rock.radius + e.tuning.radius + 22;
+                if (d < safe) {
+                    if (d < 0.01) this.delta.set(1, 1, 0);
+                    else this.delta.mulScalar(1 / d);
+                    this.avoid.add(this.delta.mulScalar(((safe - d) / safe) * 4));
+                }
             }
-        }
         for (const other of enemies)
             if (other !== e && other.active) {
                 this.delta.sub2(e.position, other.position);
@@ -112,19 +122,20 @@ export class EnemyAI {
         e.velocity.lerp(e.velocity, this.desired, 1 - Math.exp(-e.tuning.turn * dt));
         e.position.add(this.delta.copy(e.velocity).mulScalar(dt));
         // Conservative separation also protects against an avoidance overshoot.
-        for (const rock of rocks) {
-            this.delta.sub2(e.position, rock.position);
-            const safe = rock.radius + e.tuning.radius,
-                d = this.delta.length();
-            if (d < safe) {
-                if (d < 0.01) this.delta.set(1, 0, 0);
-                else this.delta.mulScalar(1 / d);
-                e.position
-                    .copy(this.delta)
-                    .mulScalar(safe + 0.1)
-                    .add(rock.position);
+        for (let group = 0; group < 2; group++)
+            for (const rock of group ? obstacles : rocks) {
+                this.delta.sub2(e.position, rock.position);
+                const safe = rock.radius + e.tuning.radius,
+                    d = this.delta.length();
+                if (d < safe) {
+                    if (d < 0.01) this.delta.set(1, 0, 0);
+                    else this.delta.mulScalar(1 / d);
+                    e.position
+                        .copy(this.delta)
+                        .mulScalar(safe + 0.1)
+                        .add(rock.position);
+                }
             }
-        }
         this.target.copy(
             e.order !== 'engage'
                 ? e.goal

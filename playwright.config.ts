@@ -3,6 +3,8 @@ export default defineConfig({
     testDir: './tests',
     testIgnore: [
         '**/phase4.spec.ts',
+        '**/boss-foundation.spec.ts',
+        '**/combat-evolution.spec.ts',
         '**/arcade.spec.ts',
         '**/fleet.spec.ts',
         '**/frontier.spec.ts',
@@ -11,6 +13,8 @@ export default defineConfig({
         '**/living.spec.ts',
         '**/thrusters.spec.ts',
         '**/menu.spec.ts',
+        '**/evolution-space.spec.ts',
+        '**/evolution-benchmark.spec.ts',
         '**/cinematic.spec.ts',
         '**/cinematic-pages.spec.ts'
     ],

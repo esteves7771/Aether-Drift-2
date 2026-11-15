@@ -1,8 +1,10 @@
 import { Vec3 } from 'playcanvas';
 
 import { ARCADE } from './arcade-config';
+import { Artillery } from './artillery';
 import { Barrel, Barrels } from './barrels';
-import { Boss, BossPart } from './boss';
+import { BossPart } from './boss';
+import { BOSS_PATTERNS } from './boss-pattern-config';
 import type { Rock } from './collisions';
 import { COMBAT } from './combat-config';
 import type { CombatEvent } from './combat-config';
@@ -10,13 +12,13 @@ import { CombatFlow } from './combat-flow';
 import type { CombatTarget } from './combat-target';
 import { Enemy } from './enemy';
 import { EnemyAI } from './enemy-ai';
+import { EnemyPatterns } from './enemy-patterns';
 import { EVOLUTION } from './evolution-config';
 import type { BlastClass } from './explosion-config';
 import { Fleet } from './fleet';
 import { FLEET } from './fleet-config';
 import type { Flight } from './flight';
 import { Frontier, InstallationPart } from './frontier';
-import { FRONTIER } from './frontier-config';
 import { Guardian } from './guardian';
 import { bossForWave, GUARDIAN } from './guardian-config';
 import { LIVING } from './living-config';
@@ -27,23 +29,22 @@ import type { RunSummary } from './records';
 import { RunUpgrades } from './run-upgrades';
 import { SPECTACLE } from './spectacle-config';
 import { Squadron } from './squadron';
+import { Targeting } from './targeting';
+import { TARGETING } from './targeting-config';
 import { Tesser } from './tesser';
+import { waveHealth, waveTier } from './threat-config';
 import { WaveChallenge } from './wave-challenge';
 import { WaveDirector } from './wave-director';
-export type EmitCombat = (
-    event: CombatEvent,
-    position: Vec3,
-    size: number,
-    blast?: BlastClass
-) => void;
+export type EmitCombat = (event: CombatEvent, position: Vec3, size: number, blast?: BlastClass) => void;
 export class Combat {
     readonly enemies = Array.from({ length: COMBAT.enemyCapacity }, (_, i) => new Enemy(i));
     readonly projectiles = new Projectiles();
     readonly damageSource = new Vec3();
-    readonly dreadnought = new Boss();
+    readonly dreadnought = new Artillery();
+    readonly enemyPatterns = new EnemyPatterns();
     readonly phantom = new Phantom();
     readonly guardian = new Tesser();
-    get boss(): Boss {
+    get boss(): Artillery | Phantom | Tesser {
         const kind = bossForWave(this.wave);
         return kind === 'guardian' ? this.guardian : kind === 'phantom' ? this.phantom : this.dreadnought;
     }
@@ -135,13 +136,15 @@ export class Combat {
     enemyHits = 0;
     rockHits = 0;
     private shieldDelay = 0;
+    spawnObstacles: readonly Rock[] = [];
     private readonly ai = new EnemyAI();
     private readonly forward = new Vec3();
     private readonly delta = new Vec3();
     private readonly muzzlePosition = new Vec3();
     private readonly direction = new Vec3();
     private readonly target = new Vec3();
-    private readonly zero = new Vec3();
+    readonly targeting: Targeting;
+    private targetingWave = 0;
     readonly ship: Flight;
     readonly rocks: Rock[];
     private readonly emit: EmitCombat;
@@ -149,6 +152,7 @@ export class Combat {
     constructor(ship: Flight, rocks: Rock[], emit: EmitCombat, event: (name: string) => void = () => undefined) {
         this.ship = ship;
         this.rocks = rocks;
+        this.targeting = new Targeting(ship, rocks);
         this.emit = emit;
         this.event = event;
         this.frontier = new Frontier(rocks);
@@ -163,6 +167,8 @@ export class Combat {
         return n;
     }
     reset() {
+        this.targeting.reset();
+        this.targetingWave = 0;
         for (const e of this.enemies) {
             e.active = false;
             e.arrival = 0;
@@ -177,6 +183,7 @@ export class Combat {
         this.director.reset();
         this.dreadnought.reset();
         this.phantom.reset();
+        this.enemyPatterns.reset();
         this.guardian.reset();
         this.bestGuardianTime = null;
         this.guardianBosses = 0;
@@ -204,25 +211,16 @@ export class Combat {
         this.countdown = LIVING.arrival - LIVING.approach;
         this.selected = -1;
     }
-    selectTarget() {
-        this.ship.rotation.transformVector(Vec3.FORWARD, this.forward);
-        let best = 0.7;
-        this.selected = -1;
-        for (const e of this.targets)
-            if (e.active && e.targetable) {
-                this.delta.sub2(e.position, this.ship.position).normalize();
-                const dot = this.delta.dot(this.forward);
-                if (dot > best) {
-                    best = dot;
-                    this.selected = e.id;
-                }
-            }
+    selectTarget(manual = false) {
+        this.selected = this.targeting.select(this.targets, manual);
     }
     private spawnWave() {
-        this.squadron.reset();
+        if (this.director.group === 1) this.squadron.reset();
         const count = this.director.size;
+        let spawned = 0;
         for (let i = 0; i < count; i++) {
-            const e = this.enemies[i];
+            const e = this.enemies.find((e) => !e.active);
+            if (!e) break;
             let safe = false;
             for (let attempt = 0; attempt < 64; attempt++) {
                 const angle = i * 2.4 + attempt * 1.7,
@@ -246,6 +244,12 @@ export class Combat {
                         break;
                     }
                 if (safe)
+                    for (const r of this.spawnObstacles)
+                        if (this.target.distance(r.position) < r.radius + 16) {
+                            safe = false;
+                            break;
+                        }
+                if (safe)
                     for (const other of this.enemies)
                         if (other.active && this.delta.sub2(this.target, other.position).length() < 36) {
                             safe = false;
@@ -254,18 +258,23 @@ export class Combat {
                 if (safe) break;
             }
             if (safe) {
-                const kind =
-                    this.director.encounter?.roles[i] ??
+                let kind =
+                    this.director.encounter?.roles[i % this.director.encounter.roles.length] ??
                     (this.director.plan.heavy && i % 3 === 2 ? 'heavy' : 'interceptor');
-                e.spawn(
-                    kind,
-                    this.target,
-                    this.ship.rotation,
-                    kind === 'interceptor' &&
-                        (this.director.encounter?.name === 'ELITE HUNT' ||
-                            this.director.encounter?.name === 'ELITE VECTOR AMBUSH' ||
-                            (this.director.plan.elite && i % 3 === 0))
-                );
+                if (kind === 'carrier' && this.enemies.some((e) => e.active && e.kind === 'carrier')) kind = 'heavy';
+                if (kind === 'bomber' && this.enemies.filter((e) => e.active && e.kind === 'bomber').length >= 2)
+                    kind = 'heavy';
+                const tier = waveTier(this.wave, this.director.deployed + i);
+                e.spawn(kind, this.target, this.ship.rotation, kind === 'interceptor' && tier === 'elite');
+                e.sniper = kind === 'heavy' && this.wave >= 8 && (this.director.deployed + i) % 3 === 0;
+                if (!e.elite && e.kind === 'interceptor' && tier === 'veteran') {
+                    e.tier = 'veteran';
+                    e.health *= 1.3;
+                    e.maxHealth = e.health;
+                }
+                const durability = waveHealth(this.wave, e.kind, e.elite);
+                e.health = e.maxHealth = Math.round(e.maxHealth * durability);
+                spawned++;
                 e.arrival = LIVING.approach;
                 this.ship.rotation
                     .transformVector(
@@ -277,7 +286,7 @@ export class Combat {
                 if (this.director.encounter?.name === 'ELITE VECTOR AMBUSH' && i === 0) e.visual = 'saucer';
             }
         }
-        this.countdown = 0;
+        this.director.commitSpawn(spawned);
     }
     hurtPlayer(damage: number, source: Vec3) {
         if (this.ship.hull <= 0) return;
@@ -299,7 +308,7 @@ export class Combat {
         this.ship.rotation.transformVector(Vec3.FORWARD, this.forward);
         const target = this.getTarget(this.selected);
         this.direction.copy(this.forward);
-        if (target?.active && target.targetable) {
+        if (target && this.targeting.assist(target)) {
             const distance = this.delta.sub2(target.position, this.ship.position).length();
             this.target
                 .copy(target.velocity)
@@ -307,7 +316,8 @@ export class Combat {
                 .mulScalar(distance / (COMBAT.player.speed * (1 + this.upgrades.get('velocity'))))
                 .add(target.position);
             this.delta.sub2(this.target, this.ship.position).normalize();
-            if (this.delta.dot(this.forward) > COMBAT.player.aimCone) this.direction.copy(this.delta);
+            if (this.delta.dot(this.forward) > TARGETING.laserCos)
+                this.direction.lerp(this.forward, this.delta, TARGETING.laserBlend).normalize();
         }
         for (const side of [-1, 1]) {
             this.ship.rotation
@@ -327,56 +337,6 @@ export class Combat {
         this.muzzle = 0.06;
         this.emit('laser', this.ship.position, 1);
     }
-    private fireEnemy(e: Enemy) {
-        const distance = this.delta.sub2(this.ship.position, e.position).length();
-        this.target
-            .copy(this.ship.velocity)
-            .mulScalar(Math.min(1.5, distance / e.tuning.projectileSpeed) * (e.elite ? 0.85 : 0.65))
-            .add(this.ship.position);
-        this.direction.sub2(this.target, e.position).normalize();
-        if (e.plasma) this.direction.sub2(e.lockedAim, e.position).normalize();
-        e.rotation.transformVector(Vec3.FORWARD, this.forward);
-        if (this.direction.dot(this.forward) < 0.9) return;
-        // Deterministic angular spread gives thrust and evasive movement room to work.
-        this.direction.x += Math.sin(e.age * 2.1 + e.id) * 0.014;
-        this.direction.y += Math.cos(e.age * 1.7 + e.id) * 0.014;
-        this.direction.normalize();
-        this.muzzlePosition
-            .copy(this.forward)
-            .mulScalar(e.tuning.radius + 1)
-            .add(e.position);
-        this.projectiles.spawn(
-            this.muzzlePosition,
-            this.direction,
-            this.zero,
-            e.plasma ? FRONTIER.plasma.speed : e.tuning.projectileSpeed,
-            e.plasma ? FRONTIER.plasma.damage : e.tuning.damage,
-            3.5,
-            true,
-            false,
-            e.plasma,
-            e.visual === 'saucer'
-        );
-        if (e.kind === 'heavy' && !e.plasma) {
-            e.rotation.transformVector(this.delta.set(e.volley % 2 ? -2 : 2, 0, 0), this.delta);
-            this.muzzlePosition.add(this.delta);
-            this.projectiles.spawn(
-                this.muzzlePosition,
-                this.direction,
-                this.zero,
-                e.tuning.projectileSpeed,
-                e.tuning.damage,
-                3.5,
-                true
-            );
-        }
-        e.cooldown = e.plasma
-            ? FRONTIER.plasma.cooldown
-            : 1 / (e.tuning.fireRate * Math.min(1.8, 1 + this.wave * 0.05));
-        e.plasma = false;
-        e.volley++;
-        this.emit(e.kind === 'drone' ? 'drone' : 'hostile', e.position, 1);
-    }
     step(dt: number, firing: boolean) {
         if (this.upgrades.pending) return;
         this.observeHull();
@@ -386,7 +346,8 @@ export class Combat {
             dt,
             this.boss.dying <= 0 &&
                 this.remaining > 0 &&
-                (!this.boss.active || (!this.boss.arriving && this.boss.grace <= 0))
+                (!this.boss.active ||
+                    (!this.boss.arriving && this.boss.grace <= 0 && this.boss.parts.some((p) => p.targetable)))
         );
         this.cooldown -= dt;
         this.damageFlash = Math.max(0, this.damageFlash - dt * 1.8);
@@ -419,7 +380,42 @@ export class Combat {
             this.emit('charge', this.boss.position, 2);
         } else if (spawn === 'squad') this.spawnWave();
         const attacks = this.guardian.attack;
+        const tells = this.boss.patterns.tells,
+            salvos = this.boss.patterns.salvos;
         this.boss.step(dt, this.ship, this.rocks, this.projectiles);
+        if (this.boss.active) {
+            const b = this.boss,
+                p = b.patterns;
+            if (p.tells !== tells) this.emit('charge', b.position, 0.7);
+            if (p.salvos !== salvos) this.emit('salvo', b.position, 1.2);
+            if (
+                p.beamActive &&
+                b.beamCooldown <= 0 &&
+                (Number.isFinite(
+                    sweptHit(
+                        p.beamOrigin,
+                        p.beamEnd,
+                        this.ship.previous,
+                        this.ship.position,
+                        BOSS_PATTERNS.beam.radius + 3
+                    )
+                ) ||
+                    (p.profile === 'tesser' &&
+                        p.kind === 'cross' &&
+                        Number.isFinite(
+                            sweptHit(
+                                p.secondOrigin,
+                                p.secondEnd,
+                                this.ship.previous,
+                                this.ship.position,
+                                BOSS_PATTERNS.beam.radius + 3
+                            )
+                        )))
+            ) {
+                this.hurtPlayer(BOSS_PATTERNS.beam.damage, p.beamOrigin);
+                b.beamCooldown = BOSS_PATTERNS.beam.hitInterval;
+            }
+        }
         if (this.guardian.active && this.guardian.attack !== attacks)
             this.emit('salvo', this.guardian.warningOrigin, 2);
         if (this.guardian.active && this.guardian.escortsPending) {
@@ -435,9 +431,15 @@ export class Combat {
             }
         }
         if (this.boss.dying > 0) {
+            const deathBeats =
+                this.boss instanceof Phantom
+                    ? [0, 0.35, 0.85, 1.6, 2.7, 3.8, 4.8]
+                    : this.boss instanceof Tesser
+                      ? [0, 0.8, 1.8, 2.8, 3.7, 4.3, 5.2]
+                      : SPECTACLE.boss.beats;
             while (
                 this.boss.deathStage + 1 < SPECTACLE.boss.beats.length &&
-                this.boss.deathAge >= SPECTACLE.boss.beats[this.boss.deathStage + 1]
+                this.boss.deathAge >= deathBeats[this.boss.deathStage + 1]
             ) {
                 const stage = ++this.boss.deathStage;
                 this.boss.rotation
@@ -498,30 +500,18 @@ export class Combat {
         this.barrels.step(dt, this.ship.position);
         this.frontier.step(dt, this.ship, this.projectiles, this.boss.active || this.boss.dying > 0);
         this.frontier.dispatchAmbush(this.enemies, this.ship, this.boss.active || this.boss.dying > 0);
-        this.squadron.step(dt, this.enemies, this.ship);
+        let hostilePressure = 0;
+        for (const p of this.projectiles.items) if (p.active && p.hostile) hostilePressure++;
+        const attackBudget = this.boss.active
+            ? this.boss.patterns.state === 'recover'
+                ? 1
+                : 0
+            : hostilePressure >= 48
+              ? 1
+              : this.director.attackers;
+        this.squadron.step(dt, this.enemies, this.ship, attackBudget, Math.max(0, this.wave - 5));
         for (const e of this.enemies)
             if (e.active) {
-                if (
-                    this.wave >= 8 &&
-                    e.kind === 'heavy' &&
-                    e.canFire &&
-                    e.arrival <= 0 &&
-                    e.state === 'attack' &&
-                    e.disrupted <= 0 &&
-                    e.volley % 2 === 0 &&
-                    e.cooldown <= FRONTIER.plasma.warning &&
-                    e.cooldown > 0 &&
-                    !e.plasma
-                ) {
-                    e.plasma = true;
-                    e.lockedAim.copy(this.ship.velocity).mulScalar(0.35).add(this.ship.position);
-                    this.emit('charge', e.position, 0.5);
-                }
-                if (e.plasma) e.attackCue = true;
-                if (e.disrupted > 0) {
-                    e.plasma = false;
-                    e.cooldown = Math.max(e.cooldown, FRONTIER.plasma.warning);
-                }
                 if (
                     this.director.encounter?.name === 'BASTION BOMBER WING' ||
                     this.director.encounter?.name === 'CARRIER STRONGPOINT'
@@ -540,19 +530,15 @@ export class Combat {
                         e.canFire = e.disrupted <= 0;
                     }
                 }
-                this.ai.step(e, this.ship, this.enemies, this.rocks, dt);
-                if (
-                    e.kind !== 'bomber' &&
-                    e.kind !== 'carrier' &&
-                    e.canFire &&
-                    e.state === 'attack' &&
-                    e.cooldown <= 0 &&
-                    e.age > 2
-                )
-                    this.fireEnemy(e);
+                this.ai.step(e, this.ship, this.enemies, this.rocks, dt, this.spawnObstacles);
+                this.enemyPatterns.step(dt, e, this.ship, this.projectiles, this.enemies, this.emit);
             }
         this.fleet.step(dt, this.ship, this.enemies, this.rocks, this.projectiles, this.emit);
-        if (this.selected >= 0 && !this.getTarget(this.selected)?.active) this.selected = -1;
+        if (this.wave !== this.targetingWave) {
+            this.targetingWave = this.wave;
+            if (this.selected >= 0) this.selected = this.targeting.clear();
+        }
+        this.selected = this.targeting.update(this.selected, this.targets, dt);
         if (firing && this.cooldown <= 0) {
             this.firePlayer();
             this.cooldown = 1 / COMBAT.player.fireRate;
@@ -571,12 +557,9 @@ export class Combat {
     }
     launchMissile() {
         if (this.ship.hull <= 0 || this.ammo <= 0 || this.missileCooldown > 0) return false;
-        let target = this.getTarget(this.selected);
-        if (!target?.targetable) {
-            this.selectTarget();
-            target = this.getTarget(this.selected);
-        }
-        if (!target?.targetable || !this.missiles.launch(this.ship, target)) return false;
+        const target = this.targeting.missile(this.getTarget(this.selected), this.targets);
+        if (!target || !this.missiles.launch(this.ship, target)) return false;
+        this.selected = target.id;
         this.flow.shots++;
         this.ammo--;
         this.missileCooldown = EVOLUTION.missile.cooldown;
@@ -725,7 +708,12 @@ export class Combat {
             if (victim instanceof Barrel) {
                 this.barrels.damage(victim, p.damage, (b) => this.barrelBlast(b, !p.hostile));
             } else if (victim instanceof BossPart) {
+                const phaseBefore = this.boss.phase;
                 if (this.boss.damage(victim, p.damage)) {
+                    if (this.boss instanceof Artillery && this.boss.phase !== phaseBefore) {
+                        this.emit('emp', this.boss.position, 3);
+                        this.shake = Math.max(this.shake, 0.22);
+                    }
                     if (this.boss instanceof Guardian && victim.id < 28)
                         this.flow.kill(GUARDIAN.componentScore, this.ship.boosting, 'TESSER SYSTEM DOWN');
                     else if (victim.id < 12) this.flow.kill(ARCADE.scoring.turret, this.ship.boosting, 'TURRET DOWN');
@@ -745,13 +733,7 @@ export class Combat {
                                   : 'CAPITAL VICTORY'
                         );
                         this.bosses++;
-                        const time =
-                            this.boss.age -
-                            (this.boss instanceof Tesser
-                                ? LIVING.tesser.arrival
-                                : this.boss instanceof Guardian
-                                  ? GUARDIAN.arrival
-                                  : EVOLUTION.boss.arrival);
+                        const time = this.boss.age - this.boss.arrival.duration;
                         if (this.boss instanceof Guardian) {
                             this.guardianBosses++;
                             this.bestGuardianTime =
@@ -826,7 +808,7 @@ export class Combat {
                         this.shake = Math.max(this.shake, victim.elite ? 0.45 : 0.25);
                 }
             }
-            if (!victim.active && this.selected === victim.id) this.selected = -1;
+            if (!victim.active && this.selected === victim.id) this.selected = this.targeting.clear();
         } else {
             this.rockHits++;
             this.emit(p.missile ? 'missile-impact' : 'armor', p.position, p.missile ? 1.7 : 0.6);

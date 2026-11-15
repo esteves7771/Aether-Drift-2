@@ -5,9 +5,11 @@ import type { EmitCombat } from './combat';
 import type { Enemy } from './enemy';
 import { FLEET } from './fleet-config';
 import type { Flight } from './flight';
+import { PatternGeometry } from './pattern-geometry';
 import type { Projectile, Projectiles } from './projectiles';
 /** New support roles reuse the eight ship slots and the existing projectile pool. */
 export class Fleet {
+    private readonly geometry = new PatternGeometry();
     threat = 0;
     deployed = 0;
     salvos = 0;
@@ -40,6 +42,14 @@ export class Fleet {
                     e.warmup = 0;
                     e.cooldown = Math.max(e.cooldown, 2);
                     e.attackCue = false;
+                    continue;
+                }
+                let pressure = 0;
+                for (const p of shots.items) if (p.active && p.hostile) pressure++;
+                if (pressure >= 60) {
+                    e.warmup = 0;
+                    e.attackCue = false;
+                    e.cooldown = Math.max(0.5, e.cooldown);
                     continue;
                 }
                 if (e.warmup > 0) {
@@ -79,15 +89,50 @@ export class Fleet {
                             e.stateTime = 0;
                         } else {
                             this.deploy(e, ship, enemies, rocks, emit);
+                            this.desired.copy(ship.position);
+                            for (let i = 0; i < Math.min(3, 60 - pressure); i++) {
+                                const angle = e.deployments + (i * Math.PI * 2) / 3;
+                                this.geometry.ray(
+                                    e.position,
+                                    this.desired,
+                                    Math.cos(angle) * 0.08,
+                                    Math.sin(angle) * 0.08,
+                                    this.direction
+                                );
+                                shots.spawn(
+                                    e.position,
+                                    this.direction,
+                                    this.zero,
+                                    140,
+                                    6,
+                                    4,
+                                    true,
+                                    false,
+                                    false,
+                                    false,
+                                    2
+                                );
+                            }
                             e.cooldown = FLEET.deployment.cooldown;
                         }
                     }
-                } else if (e.cooldown <= 0 && e.age > 3 && e.position.distance(ship.position) < FLEET.missile.range) {
+                } else if (
+                    !enemies.some(
+                        (o) =>
+                            o !== e &&
+                            o.active &&
+                            (o.warmup > 0 || (o.role !== 'standard' && o.patternState !== 'idle'))
+                    ) &&
+                    e.cooldown <= 0 &&
+                    e.age > 3 &&
+                    e.position.distance(ship.position) < FLEET.missile.range
+                ) {
                     let drones = 0;
                     for (const other of enemies) if (other.active && other.kind === 'drone') drones++;
                     if (
                         (e.kind === 'bomber' && e.canFire && e.state === 'attack') ||
                         (e.kind === 'carrier' &&
+                            e.canFire &&
                             e.deployments < FLEET.deployment.total &&
                             drones < FLEET.deployment.active)
                     ) {

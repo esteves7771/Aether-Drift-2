@@ -1,6 +1,6 @@
 {
     "name": "aether-drift-2",
-    "version": "0.5.0-f",
+    "version": "0.5.0-g",
     "private": true,
     "description": "Aether Drift 2.0 — six-degree-of-freedom arcade space combat",
     "type": "module",
@@ -27,7 +27,9 @@
         "release:verify": "node tools/verify-release.mjs",
         "test:thrusters": "playwright test --config playwright.phase4.config.ts tests/thrusters.spec.ts --workers=1",
         "test:menu": "npm run build:pages && playwright test --config playwright.menu.config.ts",
-        "test:cinematic": "playwright test --config playwright.phase4.config.ts tests/cinematic.spec.ts --workers=1"
+        "test:cinematic": "playwright test --config playwright.phase4.config.ts tests/cinematic.spec.ts --workers=1",
+        "test:combat-evolution": "playwright test --config playwright.combat-evolution.config.ts",
+        "test:boss-foundation": "playwright test --config playwright.boss-foundation.config.ts"
     },
     "dependencies": {
         "playcanvas": "^2.24.0"

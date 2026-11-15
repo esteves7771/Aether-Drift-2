@@ -33,3 +33,8 @@ Source records checked 2026-11-14. The user supplied the archives and confirmed 
 
 ## Menu satellite
 User-supplied space-satellite.zip / Satellite2.obj and Satellite2 PBR maps. Creator, source URL and license evidence were not included in the archive. User confirmed free-use status; independent verification is pending. See docs/licenses/models/satellite.md in the source project. No blanket license is applied.
+## Artillery Dreadnought (Phase 5G)
+
+User-supplied `assets-source/spaceship boss.zip`, containing `SpaceShip.fbx`, a high-poly OBJ, and five DefaultMaterial PBR maps. Creator, original download URL, and license evidence were not included; no author or license is inferred. Integration and public release were authorized by the user. Original source attribution and redistribution evidence remain unverified. No blanket license is applied.
+
+Prepared asset: `artillery-dreadnought.glb`. Modifications: static FBX-to-GLB conversion, geometry reduced from 361,794 to 140,000 triangles, supplied PBR maps relinked, unused color attributes removed, base color reduced to 2048², normal/metallic/roughness/emission to 1024², 8-bit PNG/JPEG re-encoding, embedded resources, calibrated 240 m extent and attached game-local battery apertures/exhaust. See `docs/licenses/models/artillery-dreadnought.md` in the development project.

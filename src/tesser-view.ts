@@ -3,10 +3,12 @@ import type { AppBase, MeshInstance, RenderComponent } from 'playcanvas';
 
 import { emission, ModelBuilder } from './art-kit';
 import type { Combat } from './combat';
+import { EncounterView } from './encounter-view';
 import type { ModelLibrary } from './model-library';
 import { Tesser } from './tesser';
 
 export class TesserView {
+    private readonly encounter: EncounterView;
     readonly root = new Entity('Tesser warship');
     private readonly systems: Entity[] = [];
     private readonly engines: Entity[] = [];
@@ -17,16 +19,12 @@ export class TesserView {
     private meshes: MeshInstance[] = [];
     private requested = false;
     private closed = false;
-    private readonly beam: Entity;
     constructor(app: AppBase, privateLibrary: ModelLibrary) {
+        this.encounter = new EncounterView(app);
         this.library = privateLibrary;
         this.root.enabled = false;
         app.root.addChild(this.root);
-        const b = new ModelBuilder();
-        b.box(this.exhaust, [0, 0, 0], [0.8, 0.8, 1]);
-        this.beam = b.finish(app.graphicsDevice, 'Tesser locked attack warning');
-        this.beam.enabled = false;
-        app.root.addChild(this.beam);
+
         const boss = new Tesser();
         for (const p of boss.parts) {
             const b = new ModelBuilder();
@@ -48,7 +46,7 @@ export class TesserView {
     private readonly library: ModelLibrary;
     render(c: Combat, alpha: number, started = true) {
         if (!started) {
-            this.root.enabled = this.beam.enabled = false;
+            this.root.enabled = false;
             return;
         }
         const boss = c.guardian;
@@ -62,7 +60,7 @@ export class TesserView {
             });
         }
         this.root.enabled = boss.active || boss.dying > 0;
-        this.beam.enabled = boss.active && boss.charge > 0 && !boss.arriving;
+        this.encounter.render(this.root, boss);
         if (!this.root.enabled) return;
         this.root.setPosition(this.point.lerp(boss.previous, boss.position, alpha));
         this.root.setRotation(this.rotation.slerp(boss.previousRotation, boss.rotation, alpha));
@@ -70,25 +68,17 @@ export class TesserView {
             this.systems[i].enabled = boss.parts[i].active && (boss.parts[i].targetable || boss.arriving);
         for (const e of this.engines) {
             e.enabled = boss.dying <= 0 || boss.deathAge < 1.5;
-            e.setLocalScale(1, 1, boss.arriving ? 15 : boss.phase === 2 ? 8 : 4);
+            e.setLocalScale(1, 1, boss.arriving ? 15 : boss.phase >= 2 ? 8 : 4);
         }
         for (const mi of this.meshes)
             if (boss.phase === 2) mi.setParameter('material_emissive', TesserView.unstable);
             else mi.deleteParameter('material_emissive');
-        if (this.beam.enabled) {
-            this.point.sub2(boss.aim, boss.position);
-            const distance = this.point.length();
-            this.beam.setPosition(boss.position);
-            this.beam.lookAt(boss.aim);
-            this.beam.setLocalScale(0.4, 0.4, distance);
-            this.beam.translateLocal(0, 0, -distance / 2);
-        }
     }
     private static readonly unstable = new Float32Array([0.24, 0.035, 0.015]);
     destroy() {
+        this.encounter.destroy();
         this.closed = true;
         this.root.destroy();
-        this.beam.destroy();
         this.aperture.destroy();
         this.exhaust.destroy();
     }

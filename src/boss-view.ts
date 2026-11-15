@@ -262,6 +262,10 @@ export class BossView {
                 if (boss.phase !== 2 && i === 1) this.beams[i].enabled = false;
             }
     }
+    hide() {
+        this.root.enabled = false;
+        for (const e of this.beams) e.enabled = false;
+    }
     destroy() {
         for (const e of this.beams) e.destroy();
         for (const render of this.root.findComponents('render'))

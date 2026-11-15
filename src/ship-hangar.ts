@@ -1,6 +1,7 @@
 import type { Entity } from 'playcanvas';
 
 import type { ModelLibrary } from './model-library';
+import { ShipRoster } from './ship-roster';
 /** Two visual choices, identical simulation/muzzle/camera roots. Original fighter stays default. */
 export class ShipHangar {
     selected: 'classic' | 'surveyor' = 'classic';
@@ -15,6 +16,7 @@ export class ShipHangar {
     private readonly status: HTMLElement;
     private readonly originalButton: HTMLButtonElement;
     private readonly alternateButton: HTMLButtonElement;
+    readonly roster: ShipRoster;
     private readonly events = new AbortController();
     constructor(library: ModelLibrary, ship: Entity) {
         this.library = library;
@@ -28,6 +30,7 @@ export class ShipHangar {
             );
         this.panel = document.getElementById('ship-hangar')!;
         this.status = document.getElementById('ship-status')!;
+        this.roster = new ShipRoster(this.panel.querySelector('div')!);
         this.originalButton = document.getElementById('ship-classic') as HTMLButtonElement;
         this.alternateButton = document.getElementById('ship-surveyor') as HTMLButtonElement;
         this.originalButton.addEventListener('click', () => this.chooseClassic(), { signal: this.events.signal });
@@ -81,6 +84,7 @@ export class ShipHangar {
     destroy() {
         this.closed = true;
         this.events.abort();
+        this.roster.destroy();
         this.alternate?.destroy();
         this.panel.remove();
     }
