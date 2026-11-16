@@ -102,9 +102,9 @@ for (const renderer of ['webgpu', 'webgl2'])
         await expect(page.locator('#restart-confirm')).toBeVisible();
         await page.screenshot({ path: `artifacts/phase5fb/${renderer}-restart.png` });
         await page.keyboard.press('r');
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => __phase4.advance(5));
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(
             await page.evaluate(() => ({
                 duration: __phase4.combat.duration,
@@ -146,7 +146,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             h.advance(1);
             h.combat.enemies[0].spawn('interceptor', h.flight.position.clone().set(0, 0, -45), h.flight.rotation);
         });
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => __phase4.advance(1));
         await page.screenshot({ path: `artifacts/phase5fb/${renderer}-cockpit-lasers.png` });
         for (let i = 0; i < 30; i++) {
@@ -156,7 +156,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             });
             if (!alive) break;
         }
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(await page.evaluate(() => __phase4.combat.enemies[0].active)).toBe(false);
         expect(await page.evaluate(() => __phase4.combat.kills)).toBeGreaterThan(0);
         await page.screenshot({ path: `artifacts/phase5fb/${renderer}-fighter-destruction.png` });
@@ -296,7 +296,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 h.events.length = 0;
                 h.advance(1);
             }, kind);
-            await page.keyboard.down('Space');
+            await page.keyboard.down('KeyZ');
             for (let i = 0; i < 40; i++) {
                 if (
                     !(await page.evaluate(() => {
@@ -306,7 +306,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 )
                     break;
             }
-            await page.keyboard.up('Space');
+            await page.keyboard.up('KeyZ');
             expect(await page.evaluate(() => __phase4.combat.enemies[0].active)).toBe(false);
             expect(
                 await page.evaluate(() =>
@@ -332,9 +332,9 @@ for (const renderer of ['webgpu', 'webgl2'])
             h.events.length = 0;
             h.advance(1);
         });
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => __phase4.advance(10));
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(
             await page.evaluate(() => __phase4.combat.barrels.items.slice(0, 3).filter((b) => !b.active).length)
         ).toBe(3);
@@ -359,7 +359,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             h.events.length = 0;
             h.advance(1);
         });
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         for (let i = 0; i < 40; i++) {
             if (
                 !(await page.evaluate(() => {
@@ -369,7 +369,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             )
                 break;
         }
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(await page.evaluate(() => __phase4.combat.frontier.bases[0].parts[1].active)).toBe(false);
         expect(await page.evaluate(() => __phase4.events.some((e) => e.style === 'turret'))).toBe(true);
         await page.screenshot({ path: `artifacts/phase5fb/${renderer}-turret-actual.png` });

@@ -1,11 +1,12 @@
 import { Entity, Vec3 } from 'playcanvas';
-import type { AppBase, Quat, RenderComponent } from 'playcanvas';
+import type { AppBase, Quat, RenderComponent, AnimComponent } from 'playcanvas';
 
 import { ModelBuilder } from './art-kit';
 import { AsteroidField } from './asteroid-art';
 import type { GraphicsQuality } from './config';
 import type { ModelLibrary } from './model-library';
 import type { buildScene } from './scene';
+import { ShipInspection } from './ship-inspection';
 
 const SATELLITES = [
     [-6, 9, -35],
@@ -16,6 +17,7 @@ const SATELLITES = [
 
 /** Cinematic decoration only: no colliders, targets, AI or changes to world locations. */
 export class MenuWorld {
+    readonly inspection = new ShipInspection();
     readonly root = new Entity('Command deck scenery');
     private readonly field: AsteroidField;
     private readonly satellites: Entity[] = [];
@@ -33,6 +35,8 @@ export class MenuWorld {
     private readonly beacon: Entity;
     private readonly beacons: Entity[] = [];
     private viewDistance = 11.8;
+    private astronaut?: Entity;
+    private astronautAnimations: AnimComponent[] = [];
     constructor(app: AppBase, library: ModelLibrary, scene: ReturnType<typeof buildScene>) {
         this.scene = scene;
         this.planetPosition = scene.planet.getPosition().clone();
@@ -88,6 +92,17 @@ export class MenuWorld {
             station.setLocalEulerAngles(65, -12, 10);
             this.root.addChild(station);
         });
+        void library.load('astronaut').then((ok) => {
+            if (!ok || this.closed) return;
+            const e = library.create('astronaut')!;
+            e.name = 'Menu floating astronaut';
+            e.setLocalPosition(10, -2, -12);
+            e.setLocalEulerAngles(12, -25, -15);
+            this.root.addChild(e);
+            library.animate(e, 'astronaut');
+            this.astronaut = e;
+            this.astronautAnimations = e.findComponents('anim') as AnimComponent[];
+        });
         this.root.enabled = false;
     }
     setQuality(q: GraphicsQuality) {
@@ -96,8 +111,10 @@ export class MenuWorld {
         this.satellites.forEach((e, i) => (e.enabled = q !== 'low' || i < 3));
         this.traffic.forEach((e, i) => (e.enabled = q !== 'low' || i < 2));
     }
-    update(show: boolean, dt: number, camera: Entity, selected: 'classic' | 'surveyor' = 'classic') {
+    update(show: boolean, dt: number, camera: Entity, selected: 'classic' | 'surveyor' | 'ptah' = 'classic') {
+        this.inspection.update(show && document.getElementById('menu')?.dataset.screen === 'home', dt, selected);
         if (show !== this.visible) {
+            if (!show) this.scene.ship.setLocalScale(1, 1, 1);
             this.visible = show;
             this.root.enabled = show;
             this.scene.asteroidField.root.enabled = !show;
@@ -116,7 +133,9 @@ export class MenuWorld {
         const t = this.time,
             aspect = appAspect(camera);
         this.scene.ship.setPosition(0, Math.sin(t * 0.4) * 0.14, 0);
-        this.scene.ship.setEulerAngles(-8, 28 + Math.sin(t * 0.12) * 4, -5);
+        this.scene.ship.setEulerAngles(-8 + this.inspection.state.pitch, 28 + this.inspection.state.yaw, -5);
+        const zoom = this.inspection.state.zoom;
+        this.scene.ship.setLocalScale(zoom, zoom, zoom);
         this.viewDistance += ((selected === 'surveyor' ? 10.8 : 11.8) - this.viewDistance) * (1 - Math.exp(-dt * 4));
         camera.setPosition(0, 2, this.viewDistance);
         camera.lookAt(-Math.min(5.5, aspect * 1.9), 0, 0);
@@ -131,9 +150,19 @@ export class MenuWorld {
             e.setLocalPosition(-13 + ((t * 0.45 + i * 17) % 62), 9 - i * 3, -48 - i * 24);
             e.setLocalEulerAngles(-3, -65, -5);
         });
+        if (this.astronaut) {
+            this.astronaut.setLocalPosition(10 + Math.sin(t * 0.13) * 0.3, -2 + Math.sin(t * 0.2) * 0.2, -12);
+            this.astronaut.setLocalEulerAngles(
+                12 + Math.sin(t * 0.11) * 4,
+                -25 + t * 0.6,
+                -15 + Math.sin(t * 0.15) * 5
+            );
+            for (const a of this.astronautAnimations) a.speed = dt > 0 ? 1 : 0;
+        }
         this.field.update(Vec3.ZERO, dt);
     }
     destroy() {
+        this.inspection.destroy();
         this.closed = true;
         this.field.destroy();
         this.root.destroy();

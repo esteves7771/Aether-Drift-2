@@ -24,10 +24,11 @@ Public release: **v0.5f-public**, including Phase 5F-A, Phase 5F-B and the cinem
 | A / D              | Strafe                                |
 | F / Ctrl           | Rise / descend                        |
 | Mouse / arrow keys | Pitch / yaw                           |
+| Space | Evasive roll (A / D direction, 5s cooldown) |
 | Q / E              | Roll                                  |
 | Shift              | Boost                                 |
 | X                  | Brake                                 |
-| Left click / Space | Fire dual cannons                     |
+| Left click / Z | Fire dual cannons                     |
 | Right click        | Soft target selection                 |
 | M                  | Guided missile                        |
 | G                  | EMP                                   |
@@ -90,7 +91,7 @@ The release build explicitly uses `/Aether-Drift-2/`; normal `npm run build` and
 - NASA imagery/models follow NASA's stated usage guidance; no NASA endorsement is implied.
 - Third-party assets retain their respective licenses. This repository does not grant a blanket license over every bundled asset or music track.
 
-Raw asset archives, Blender/FBX conversion inputs, downloaded tool binaries, dependencies, generated builds and local screenshot/report artifacts are intentionally excluded from Git. All eleven production GLBs, required textures and supplied soundtrack files are included. Original local asset sources remain untouched. Offline conversion tools require separately obtained original sources and Blender/FFmpeg; they are not needed to build or play the released game.
+Raw asset archives, Blender/FBX conversion inputs, downloaded tool binaries, dependencies, generated builds and local screenshot/report artifacts are intentionally excluded from Git. Required assets for the existing public features, textures and supplied soundtrack files remain included. New Phase 5H PTAH and Space Voyage assets remain local-only. Original local asset sources remain untouched. Offline conversion tools require separately obtained original sources and Blender/FFmpeg; they are not needed to build or play the released game.
 
 ## Player propulsion visuals
 
@@ -117,3 +118,19 @@ Phase 5G adds proportional cockpit framing and safe menu layering, the imported 
 Ordinary wave quotas progress through 3 / 5 / 7 / 9 / 12 / 15 / 18+, with bounded active populations and the established boss rotation every fifth wave. Human difficulty tuning remains a first pass. Source asset provenance is retained in public/MODEL_CREDITS.md and docs/licenses/models; the supplied dreadnought archive has no original author or license evidence.
 
 Focused browser suites: `npm run test:boss-foundation` and `npm run test:combat-evolution`. Production Pages verification uses `npm run test:release`; set RELEASE_URL for the deployed URL. Debug encounter instrumentation is never shipped.
+
+## Phase 5H local prototype
+
+Three selectable hulls now have data-driven handling, shield and primary-weapon profiles: balanced AE-01 precision lasers, tougher Surveyor sustained cannons and agile PTAH burst plasma. Left mouse or Z fires; Space performs a lateral evasive roll with a five-second cooldown. A/D chooses its side; Q/E remains manual roll. There is no invulnerability. Missiles remain M and EMP remains G.
+
+On the start menu, drag the preview to rotate, wheel to zoom and double-click to reset. Only the displayed ship moves. Noncombat Space Voyage convoys follow bounded world-space corridors; sparse animated EVA characters have no procedural tethers.
+
+Run npm run test:voyage for focused dual-renderer verification. PTAH and Space Voyage assets are intentionally local and ignored; source/license records are under docs/licenses/models. Public Pages builds filter out PTAH, its thumbnail and Space Voyage and fail if those files enter the output. Do not publish this prototype without resolving those asset rights. Ordinary npm run build works locally.
+
+## v0.5h public release scope
+
+The public release includes AE-01 and Surveyor handling/weapon identities, real lateral Space evasion, left mouse/Z primary fire, the interactive garage, untethered menu/gameplay EVA and all existing bosses/combat/audio. The local PTAH thumbnail is now a tightly framed transparent actual-model render.
+
+PTAH (including its artwork) and Space Voyage convoys are excluded from public distribution because their redistribution rights remain unresolved. They remain fully available in local builds. This is intentionally a reduced public release, not the complete three-ship/convoy build. The public roster has two ships with no paging arrows; a persisted local PTAH preference safely falls back to AE-01.
+
+Use npm run build:pages for the filtered public mode and npm run release:verify for byte-identical permitted assets and exclusion checks. Normal npm run build/dev retain local models when present. The distribution gate stays closed to those assets; do not remove it based only on a free-download or CC0 claim.

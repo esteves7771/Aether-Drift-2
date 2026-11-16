@@ -1,9 +1,10 @@
 import type { Command } from './flight';
 
-export type PlayerShip = 'classic' | 'surveyor';
+export type PlayerShip = 'classic' | 'surveyor' | 'ptah';
 export type ThrustMode = 'idle' | 'thrust' | 'boost' | 'cruise' | 'braking';
 /** Nozzle centres measured in the calibrated ship's metre-space, exhaust along +Z. */
 export const PLAYER_ENGINES = {
+    ptah: [{ point: [0, -0.03, 3.4], radius: 0.55, length: 1.2 }],
     classic: [
         { point: [-1.05, -0.1, 2.845], radius: 0.285, length: 1 },
         { point: [1.05, -0.1, 2.845], radius: 0.285, length: 1 }

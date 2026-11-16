@@ -1,91 +1,132 @@
 import type { Entity } from 'playcanvas';
 
+import { AVAILABLE_SHIPS } from './distribution';
 import type { ModelLibrary } from './model-library';
 import { ShipRoster } from './ship-roster';
-/** Two visual choices, identical simulation/muzzle/camera roots. Original fighter stays default. */
+import type { PlayerShip } from './thruster-state';
+/** One selection authority and a bounded model cache below the shared simulation root. */
 export class ShipHangar {
-    selected: 'classic' | 'surveyor' = 'classic';
-    private alternate?: Entity;
-    private loading = false;
+    selected: PlayerShip = 'classic';
+    private desired: PlayerShip = 'classic';
+    private readonly visuals = new Map<PlayerShip, Entity>();
+    private readonly loading = new Map<PlayerShip, Promise<void>>();
+    private playing = false;
+    setPlaying(value: boolean) {
+        this.playing = value;
+        for (const key of AVAILABLE_SHIPS)
+            (document.getElementById('ship-' + key) as HTMLButtonElement).disabled = value;
+    }
     private closed = false;
-    private desired: 'classic' | 'surveyor' = 'classic';
     private readonly library: ModelLibrary;
     private readonly ship: Entity;
-    private readonly original: Entity;
     private readonly panel: HTMLElement;
     private readonly status: HTMLElement;
-    private readonly originalButton: HTMLButtonElement;
-    private readonly alternateButton: HTMLButtonElement;
     readonly roster: ShipRoster;
     private readonly events = new AbortController();
     constructor(library: ModelLibrary, ship: Entity) {
         this.library = library;
         this.ship = ship;
-        this.original = ship.children[0] as Entity;
+        this.visuals.set('classic', ship.children[0] as Entity);
         document
             .querySelector('#roster-slot')!
             .insertAdjacentHTML(
                 'beforeend',
-                `<div id="ship-hangar"><small>▪ PATROL ROSTER <em>/ AVAILABLE SHIPS</em></small><div><button id="ship-classic" type="button" aria-pressed="true"><img src="${import.meta.env.BASE_URL}images/menu-classic.webp" alt="AE-01 fighter"><b>AE-01</b><span>INTERCEPTOR</span></button><button id="ship-surveyor" type="button" aria-pressed="false"><img src="${import.meta.env.BASE_URL}images/menu-surveyor.webp" alt="Surveyor spacecraft"><b>SURVEYOR</b><span>EXPLORER</span></button></div><p id="ship-status" role="status">AE–01 READY</p></div>`
+                `<div id="ship-hangar"><small>▪ PATROL ROSTER <em>/ AVAILABLE SHIPS</em></small><div>${AVAILABLE_SHIPS.map((key, i) => `<button id="ship-${key}" type="button" aria-pressed="${i === 0}"><img src="${import.meta.env.BASE_URL}images/menu-${key}.webp" alt="${key} spacecraft"><b>${key === 'classic' ? 'AE-01' : key.toUpperCase()}</b><span>${key === 'classic' ? 'INTERCEPTOR' : key === 'surveyor' ? 'EXPLORER' : 'STRIKER'}</span></button>`).join('')}</div><p id="ship-status" role="status">AE–01 READY</p></div>`
             );
         this.panel = document.getElementById('ship-hangar')!;
         this.status = document.getElementById('ship-status')!;
         this.roster = new ShipRoster(this.panel.querySelector('div')!);
-        this.originalButton = document.getElementById('ship-classic') as HTMLButtonElement;
-        this.alternateButton = document.getElementById('ship-surveyor') as HTMLButtonElement;
-        this.originalButton.addEventListener('click', () => this.chooseClassic(), { signal: this.events.signal });
-        this.alternateButton.addEventListener('click', () => void this.chooseAlternate(), {
-            signal: this.events.signal
-        });
+        for (const key of AVAILABLE_SHIPS)
+            document
+                .getElementById('ship-' + key)!
+                .addEventListener('click', () => void this.choose(key), { signal: this.events.signal });
+        try {
+            const saved = localStorage.getItem('aether-drift-2-ship');
+            if ((saved === 'surveyor' || saved === 'ptah') && AVAILABLE_SHIPS.includes(saved)) {
+                if (saved === 'ptah') {
+                    this.roster.pages.page = 1;
+                    this.roster.render();
+                }
+                void this.choose(saved);
+            }
+        } catch {
+            /* Storage is optional. */
+        }
     }
     private apply() {
-        this.original.enabled = this.selected === 'classic';
-        if (this.alternate) this.alternate.enabled = this.selected === 'surveyor';
-        this.originalButton.setAttribute('aria-pressed', String(this.selected === 'classic'));
-        this.alternateButton.setAttribute('aria-pressed', String(this.selected === 'surveyor'));
+        for (const [key, e] of this.visuals) e.enabled = key === this.selected;
+        for (const key of AVAILABLE_SHIPS)
+            document.getElementById('ship-' + key)!.setAttribute('aria-pressed', String(key === this.selected));
+        const label =
+            this.selected === 'classic'
+                ? 'AE-01 / INTERCEPTOR'
+                : this.selected === 'surveyor'
+                  ? 'SURVEYOR / EXPLORER'
+                  : 'PTAH / STRIKER';
         this.status.textContent =
-            this.selected === 'classic' ? 'AE–01 READY' : 'SURVEYOR READY / SAME FLIGHT PERFORMANCE';
+            (this.selected === 'classic' ? 'AE–01' : this.selected.toUpperCase()) +
+            ' READY / ' +
+            (this.selected === 'classic' ? 'INTERCEPTOR' : this.selected === 'surveyor' ? 'EXPLORER' : 'STRIKER');
         const caption = document.querySelector('.ship-index');
-        if (caption) caption.textContent = this.selected === 'classic' ? 'AE-01 / INTERCEPTOR' : 'SURVEYOR / EXPLORER';
+        if (caption) caption.textContent = label;
+        try {
+            localStorage.setItem('aether-drift-2-ship', this.selected);
+        } catch {
+            /* Storage is optional. */
+        }
     }
     chooseClassic() {
-        this.desired = 'classic';
-        this.selected = 'classic';
-        this.apply();
+        void this.choose('classic');
     }
-    async chooseAlternate() {
-        this.desired = 'surveyor';
-        if (this.loading) return;
-        if (this.alternate) {
-            this.selected = 'surveyor';
+    chooseAlternate() {
+        return this.choose('surveyor');
+    }
+    async choose(key: PlayerShip) {
+        if (this.playing || !AVAILABLE_SHIPS.includes(key)) return;
+        this.desired = key;
+        if (this.visuals.has(key)) {
+            this.selected = key;
             this.apply();
             return;
         }
-        this.loading = true;
-        this.alternateButton.disabled = true;
-        const launch = document.getElementById('launch') as HTMLButtonElement;
-        launch.disabled = true;
-        this.status.textContent = 'PREPARING SURVEYOR…';
-        const ok = await this.library.load('surveyor');
-        if (this.closed) return;
-        this.loading = false;
-        this.alternateButton.disabled = false;
-        launch.disabled = false;
-        if (!ok) {
-            this.status.textContent = 'SURVEYOR UNAVAILABLE / AE–01 REMAINS READY';
+        const pending = this.loading.get(key);
+        if (pending) {
+            await pending;
+            if (this.desired === key && this.visuals.has(key) && !this.playing) {
+                this.selected = key;
+                this.apply();
+            }
             return;
         }
-        this.alternate = this.library.create('surveyor');
-        if (!this.alternate) return;
-        this.ship.addChild(this.alternate);
-        this.selected = this.desired;
-        this.apply();
+        const launch = document.getElementById('launch') as HTMLButtonElement;
+        launch.disabled = true;
+        this.status.textContent = 'PREPARING ' + key.toUpperCase() + '…';
+        const load = (async () => {
+            const ok = await this.library.load(key === 'ptah' ? 'ptah' : 'surveyor');
+            if (this.closed) return;
+            if (ok) {
+                const e = this.library.create(key === 'ptah' ? 'ptah' : 'surveyor');
+                if (e) {
+                    this.ship.addChild(e);
+                    this.visuals.set(key, e);
+                    e.enabled = false;
+                }
+            }
+            if (this.desired === key && this.visuals.has(key) && !this.playing) {
+                this.selected = key;
+                this.apply();
+            } else if (!ok && this.desired === key) this.status.textContent = key.toUpperCase() + ' UNAVAILABLE';
+            this.loading.delete(key);
+            launch.disabled = this.loading.size > 0;
+        })();
+        this.loading.set(key, load);
+        await load;
     }
     destroy() {
         this.closed = true;
         this.events.abort();
         this.roster.destroy();
-        this.alternate?.destroy();
+        for (const [key, e] of this.visuals) if (key !== 'classic') e.destroy();
         this.panel.remove();
     }
 }

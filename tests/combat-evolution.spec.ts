@@ -152,7 +152,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 h.pilot = true;
                 h.useAbilities = false;
             }, wave);
-            await page.keyboard.down('Space');
+            await page.keyboard.down('KeyZ');
             const phases = new Set<number>(),
                 kinds = new Set<string>(),
                 captures = new Set<string>();
@@ -210,7 +210,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 JSON.stringify({ win, peak, phases: [...phases], kinds: [...kinds], last }, null, 2)
             );
             if (win) {
-                await page.keyboard.up('Space');
+                await page.keyboard.up('KeyZ');
                 await page.evaluate(() => __phase4.advance(60));
                 await page.screenshot({ path: `artifacts/phase5g-eh/${renderer}-wave${wave}-destruction.png` });
             }

@@ -27,6 +27,7 @@ import { Phantom } from './phantom';
 import { Projectiles, sweptHit } from './projectiles';
 import type { RunSummary } from './records';
 import { RunUpgrades } from './run-upgrades';
+import { SHIP_MOUNTS } from './ship-config';
 import { SPECTACLE } from './spectacle-config';
 import { Squadron } from './squadron';
 import { Targeting } from './targeting';
@@ -167,6 +168,7 @@ export class Combat {
         return n;
     }
     reset() {
+        this.burstRemaining = 0;
         this.targeting.reset();
         this.targetingWave = 0;
         for (const e of this.enemies) {
@@ -304,7 +306,9 @@ export class Combat {
         this.emit(this.shieldHit ? 'shield' : 'hull', this.ship.position, 1);
         if (this.ship.hull <= 0) this.emit('explosion', this.ship.position, 2);
     }
+    burstRemaining = 0;
     private firePlayer() {
+        const weapon = this.ship.spec.weapon;
         this.ship.rotation.transformVector(Vec3.FORWARD, this.forward);
         const target = this.getTarget(this.selected);
         this.direction.copy(this.forward);
@@ -313,24 +317,28 @@ export class Combat {
             this.target
                 .copy(target.velocity)
                 .sub(this.ship.velocity)
-                .mulScalar(distance / (COMBAT.player.speed * (1 + this.upgrades.get('velocity'))))
+                .mulScalar(distance / (weapon.speed * (1 + this.upgrades.get('velocity'))))
                 .add(target.position);
             this.delta.sub2(this.target, this.ship.position).normalize();
             if (this.delta.dot(this.forward) > TARGETING.laserCos)
                 this.direction.lerp(this.forward, this.delta, TARGETING.laserBlend).normalize();
         }
-        for (const side of [-1, 1]) {
+        for (const mount of SHIP_MOUNTS[this.ship.ship].muzzles) {
             this.ship.rotation
-                .transformVector(this.muzzlePosition.set(side * 1.35, -0.12, -2.8), this.muzzlePosition)
+                .transformVector(this.muzzlePosition.set(mount[0], mount[1], mount[2]), this.muzzlePosition)
                 .add(this.ship.position);
             const fired = this.projectiles.spawn(
                 this.muzzlePosition,
                 this.direction,
                 this.ship.velocity,
                 COMBAT.player.speed * (1 + this.upgrades.get('velocity')),
-                COMBAT.player.damage * (1 + this.upgrades.get('laser')),
+                weapon.damage * (1 + this.upgrades.get('laser')),
                 COMBAT.player.lifetime,
-                false
+                false,
+                false,
+                false,
+                false,
+                weapon.tag
             );
             if (fired) this.flow.shots++;
         }
@@ -356,7 +364,7 @@ export class Combat {
         this.shieldDelay -= dt;
         if (this.shieldDelay <= 0)
             this.ship.shield = Math.min(
-                COMBAT.shield.capacity,
+                this.ship.shieldCapacity,
                 this.ship.shield + COMBAT.shield.recharge * (1 + this.upgrades.get('shield')) * dt
             );
         this.missileCooldown -= dt;
@@ -539,9 +547,12 @@ export class Combat {
             if (this.selected >= 0) this.selected = this.targeting.clear();
         }
         this.selected = this.targeting.update(this.selected, this.targets, dt);
-        if (firing && this.cooldown <= 0) {
+        const weapon = this.ship.spec.weapon;
+        if (firing && this.cooldown <= 0 && this.burstRemaining === 0) this.burstRemaining = weapon.burst;
+        if (this.burstRemaining > 0 && this.cooldown <= 0) {
             this.firePlayer();
-            this.cooldown = 1 / COMBAT.player.fireRate;
+            this.burstRemaining--;
+            this.cooldown = this.burstRemaining > 0 ? weapon.interval : weapon.recovery;
         }
         for (const p of this.projectiles.items)
             if (p.active) {

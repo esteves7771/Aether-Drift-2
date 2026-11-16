@@ -3,6 +3,22 @@ import { PLAYER_ENGINES } from './thruster-state';
 
 /** Offline inspector bounds are decoded vertices. Calibration stays below semantic simulation roots. */
 export const MODEL_TUNING = {
+    ptah: {
+        file: 'ptah.glb',
+        dims: [3.7624, 0.9166, 3.7312],
+        center: [-0.5999, 0.1383, 0],
+        size: 6.8,
+        dimension: 0,
+        yaw: -90
+    },
+    voyage: {
+        file: 'space-voyage.glb',
+        dims: [94.323, 92.6411, 365.5687],
+        center: [0, 0, 0],
+        size: 260,
+        dimension: 2,
+        yaw: 0
+    },
     artillery: {
         file: 'artillery-dreadnought.glb',
         dims: [2.0362, 1.36, 4.2294],

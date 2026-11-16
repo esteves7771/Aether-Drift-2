@@ -78,7 +78,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         }
         await page.setViewportSize({ width: 1920, height: 1080 });
         await expect(page.locator('#show-ships')).toHaveCount(0);
-        await expect(page.locator('.roster-arrow').first()).toBeHidden();
+        await expect(page.locator('.roster-arrow').first()).toBeVisible();
         await page.locator('#ship-classic').focus();
         await expect(page.locator('#ship-classic')).toBeFocused();
         await page.locator('#ship-surveyor').click();
@@ -154,10 +154,10 @@ for (const renderer of ['webgpu', 'webgl2'])
         await expect.poll(async () => (await read()).enabled).toBe(false);
         const stopped = (await read()).satellite;
         await page.keyboard.down('KeyW');
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.waitForTimeout(500);
         await page.keyboard.up('KeyW');
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect((await read()).satellite).toBe(stopped);
         await page.keyboard.press('Escape');
         await expect(page.locator('#menu')).toHaveAttribute('data-screen', 'pause');

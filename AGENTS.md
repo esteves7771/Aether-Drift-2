@@ -183,3 +183,18 @@ Use `src/music.test.ts` and `tests/music.spec.ts` for soundtrack changes. Genera
 - `encounter-view.ts` owns reusable arrival clipping and essential warning/live beam geometry. Each crossing plane needs anticipation, obstacle clipping and a shared damage cooldown. Low/Medium/High may change cosmetics, never hide damaging projectiles or change hit timing.
 - Phantom/Tesser use RiftArrival with their own timings/footprints and UniverseView's shared environmental exclusions. Keep music hooks and score/death events in their original owners. Single-source boss records subtract the actual arrival duration.
 - `npm run test:combat-evolution` runs isolated E–H browser fixtures. No debug encounter selector ships. Integrated progression tests and precision pilots are functional evidence, not human difficulty validation. See docs/PHASE5G-EH.md and ignored artifacts/phase5g-eh for evidence and tuning limits. This work is local only; do not push or deploy without a new instruction.
+
+## Phase 5H local ownership
+
+- convoys.ts owns two bounded, noncombat world-space convoy groups, sampled safe corridors and rift exclusions. convoy-view.ts demand-loads shared Space Voyage/escort models and reuses native propulsion shading. No targets, score, damage or director membership.
+- ship-config.ts owns three ship profiles and calibrated muzzles/camera/proxy data. Combat and Flight consume the profiles; existing damage/upgrade authorities remain shared. PTAH commits its bounded plasma burst and clears on reset.
+- evasive-roll.ts applies one fixed-step lateral impulse and eased roll with five-second cooldown, no immunity. Space is evade; left mouse/Z fire; Q/E remains manual roll. Pilot camera counter-roll is presentation only.
+- ship-inspection.ts owns menu-only drag/zoom/reset state. It never rotates background/world/camera or changes simulation orientation. living-view.ts retains source EVA animation and removes procedural tethers.
+- PTAH and Space Voyage GLBs remain ignored local inputs; docs/licenses/models records evidence and unresolved distribution status. distribution.ts excludes uncleared models from public-mode runtime; public-assets.mjs filters their files before copying and tools/check-distribution.mjs rejects leaks. Ordinary builds retain all local features. No push/deploy is authorized by Phase 5H.
+- npm run test:voyage uses the isolated preview and tests both renderers. Actual boss health/damage are retained in precision-pilot victories; fixture arrivals and lifecycle tests are functional evidence, not human difficulty validation or natural Wave 1–15 progression. Keep drivers and artifacts out of production.
+
+## v0.5h public packaging
+
+- build:pages uses Vite public-release mode. distribution.ts controls the public two-ship roster, rejects restricted model loads and disables Space Voyage presentation/events. Local modes retain all Phase 5H features.
+- public-assets.mjs stages a filtered public directory before Vite copying; check-distribution.mjs enforces absence of restricted model/thumbnail bytes and validates release-assets.json. verify-release.mjs compares every permitted public asset and rejects test-driver leakage. CI runs it before deployment.
+- Restricted GLBs/thumbnail, source archives and verification captures remain ignored. The public release notes must explicitly identify PTAH/Space Voyage omissions. Publishing is authorized only by the current final-release request, with a tag after live verification.

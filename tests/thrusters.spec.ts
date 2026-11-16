@@ -175,7 +175,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.evaluate(() => __phase4.advance(2));
         expect((await mode()).mode).toBe('idle');
         await page.evaluate(() => __phase4.advance(45));
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => {
             __phase4.settings.graphics = 'medium';
             __phase4.advance(80);
@@ -209,7 +209,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 })
         );
         await shot('combat');
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(await page.evaluate(() => __phase4.combat.projectiles.fired)).toBeGreaterThan(0);
         console.log(renderer, JSON.stringify({ renders: count, metrics, captures }));
         expect(errors).toEqual([]);

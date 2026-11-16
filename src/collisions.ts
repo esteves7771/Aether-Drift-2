@@ -1,6 +1,5 @@
 import { Vec3 } from 'playcanvas';
 
-import { FLIGHT } from './config';
 import type { Flight } from './flight';
 export interface Rock {
     position: Vec3;
@@ -38,7 +37,7 @@ export class Collisions {
             const t = length > 0 ? Math.max(0, Math.min(1, this.offset.dot(this.segment) / length)) : 0;
             this.closest.copy(this.segment).mulScalar(t).add(ship.previous);
             this.normal.sub2(this.closest, rock.position);
-            const radius = rock.radius + FLIGHT.radius;
+            const radius = rock.radius + ship.radius;
             if (this.normal.lengthSq() >= radius * radius) continue;
             if (this.normal.lengthSq() < 0.00001) this.normal.set(0, 0, 1);
             else this.normal.normalize();

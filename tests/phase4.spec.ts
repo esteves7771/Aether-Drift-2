@@ -68,7 +68,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         ).toEqual(before);
         await page.locator('#restart').click();
         await page.locator('#restart-accept').click();
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => {
             __phase4.pilot = true;
         });
@@ -155,7 +155,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 await expect(page.locator('#music-status')).toHaveAttribute('data-state', 'boss');
                 await page.screenshot({ path: 'test-results/phase4-' + renderer + '-phase' + state.phase + '.png' });
                 if (state.phase === 1) {
-                    await page.keyboard.up('Space');
+                    await page.keyboard.up('KeyZ');
                     await page.evaluate(() => {
                         __phase4.useAbilities = false;
                     });
@@ -199,7 +199,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                     await page.evaluate(() => __phase4.advance(10));
                     expect(await page.evaluate(() => __phase4.combat.boss.age)).toBe(age);
                     await page.locator('#launch').click();
-                    await page.keyboard.down('Space');
+                    await page.keyboard.down('KeyZ');
                     timing = await page.evaluate(
                         () =>
                             new Promise<{ median: number; p95: number; max: number; peakDraws: number }>((resolve) => {
@@ -225,7 +225,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                     );
                 }
                 if (state.phase === 1) {
-                    await page.keyboard.down('Space');
+                    await page.keyboard.down('KeyZ');
                     await page.evaluate(() => {
                         __phase4.useAbilities = true;
                     });
@@ -244,7 +244,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             expect(captures.has(kind), 'captured ' + kind).toBe(true);
         expect(maxBolts).toBeLessThan(240);
         await expect(page.locator('#music-status')).toHaveAttribute('data-state', 'combat');
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         await page.evaluate(() => {
             __phase4.pilot = false;
             __phase4.combat.hurtPlayer(999, __phase4.flight.position);

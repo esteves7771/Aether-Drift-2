@@ -36,7 +36,9 @@ export class Missiles {
         m.targetGeneration = target.generation ?? 0;
         m.life = EVOLUTION.missile.lifetime;
         m.speed = EVOLUTION.missile.launchSpeed;
-        ship.rotation.transformVector(this.delta.set(0, -0.65, -2.8), m.position).add(ship.position);
+        ship.rotation
+            .transformVector(this.delta.set(0, -0.65, ship.ship === 'ptah' ? -3.8 : -2.8), m.position)
+            .add(ship.position);
         m.previous.copy(m.position);
         ship.rotation.transformVector(Vec3.FORWARD, m.direction);
         m.inherited.copy(ship.velocity).mulScalar(0.35);

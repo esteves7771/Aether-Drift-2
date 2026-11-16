@@ -37,7 +37,7 @@ await build({
     const driver={combat,flight,app,rocks,cruise,modelLibrary,hangar,living,${baseline ? '' : 'universe,'}thrusters:scene.thrusters,input,chase,settings,pilotCamera,explosions:combatView.explosions,events:captures,useAbilities:true,autoUpgrades:true,pilot:false,advance(ticks:number){for(let i=0;i<ticks;i++)app.fire('update',.05);}};
     Object.assign(globalThis,{__phase4:driver});
     app.on('update',(dt:number)=>{
-        if(driver.pilot&&driver.autoUpgrades&&combat.upgrades.pending){chooseUpgrade(combat.upgrades.offers[0]);window.dispatchEvent(new KeyboardEvent('keydown',{code:'Space',bubbles:true}));return;}
+        if(driver.pilot&&driver.autoUpgrades&&combat.upgrades.pending){chooseUpgrade(combat.upgrades.offers[0]);window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyZ',bubbles:true}));return;}
         if(!driver.pilot||!active||dt<=0)return;
         pilotAge+=dt;
         let target=combat.targets.find(t=>t.active&&t.targetable&&(t.id<16||t.id>=22&&t.id<=28));
@@ -48,7 +48,7 @@ await build({
         }
         if(target){
             const distance=target.position.distance(flight.position);
-            pilotPoint.copy(target.velocity).sub(flight.velocity).mulScalar(distance/480).add(target.position);
+            pilotPoint.copy(target.velocity).sub(flight.velocity).mulScalar(distance/flight.spec.weapon.speed).add(target.position);
             pilotAim.setPosition(flight.position);pilotAim.lookAt(pilotPoint);flight.rotation.copy(pilotAim.getRotation());flight.previousRotation.copy(flight.rotation);combat.selected=target.id;
             pilotMove.set(Math.sin(pilotAge*1.6)*18,Math.cos(pilotAge*1.9)*18,0);
             if(artillery.active&&!artillery.arriving){

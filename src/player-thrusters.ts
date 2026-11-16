@@ -18,7 +18,7 @@ import { thrusterFragmentGLSL, thrusterFragmentWGSL, thrusterVertexGLSL, thruste
 import { PLAYER_ENGINES, ThrusterState } from './thruster-state';
 import type { PlayerShip } from './thruster-state';
 
-function plumeMesh(device: GraphicsDevice, detail: boolean) {
+export function plumeMesh(device: GraphicsDevice, detail: boolean) {
     const positions: number[] = [],
         normals: number[] = [],
         uv: number[] = [],
@@ -199,6 +199,11 @@ export class PlayerThrusters {
         this.root.enabled = ship.hull > 0;
         if (!this.root.enabled) return;
         this.state.update(command, ship.boosting, cruise, dt, active, !started);
+        if (ship.evasion.active && active) {
+            this.state.power = Math.max(0.85, this.state.power);
+            this.state.length = Math.max(3, this.state.length);
+            this.state.jets[ship.evasion.side > 0 ? 0 : 1] = 1;
+        }
         const s = this.state,
             config = PLAYER_ENGINES[this.selected];
         const pulse =

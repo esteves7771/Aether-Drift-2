@@ -30,7 +30,7 @@ for (const renderer of ['webgpu', 'webgl2'])
     test('Run refit pauses and resets / ' + renderer, async ({ page }) => {
         await page.goto('http://127.0.0.1:5181/' + (renderer === 'webgl2' ? '?webgl' : ''));
         await page.locator('#launch').click();
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => {
             __phase4.app.timeScale = 0;
             __phase4.pilot = true;
@@ -127,9 +127,9 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.keyboard.press('c');
         await page.evaluate(() => __phase4.advance(2));
         expect(await page.evaluate(() => __phase4.cruise.active)).toBe(false);
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => __phase4.advance(45));
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(await page.evaluate(() => __phase4.combat.frontier.bases[0].destroyed)).toBe(true);
         expect(await page.evaluate(() => __phase4.combat.score)).toBeGreaterThanOrEqual(350);
         await page.evaluate(() => {

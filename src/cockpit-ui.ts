@@ -1,7 +1,6 @@
 import { Quat, Vec3 } from 'playcanvas';
 
 import type { Combat } from './combat';
-import { COMBAT } from './combat-config';
 import { COCKPIT_FRAMING } from './view-framing';
 /** Fixed raster cockpit with a small live instrument layer. Asset is requested only on first use. */
 export class CockpitHUD {
@@ -62,7 +61,7 @@ export class CockpitHUD {
         const ship = combat.ship,
             set = (key: string, value: string) => (this.fields.get(key)!.textContent = value);
         set('hull', Math.ceil(ship.hull) + '%');
-        set('shield', Math.ceil((ship.shield / COMBAT.shield.capacity) * 100) + '%');
+        set('shield', Math.ceil((ship.shield / ship.shieldCapacity) * 100) + '%');
         set('alert', ship.hull < 30 ? 'HULL CRITICAL' : ship.shield < 15 ? 'SHIELD LOW' : 'SYSTEMS NOMINAL');
         set('speed', Math.round(ship.velocity.length()) + ' m/s');
         set('boost', ship.boosting ? 'BOOST ACTIVE' : Math.round(ship.energy) + '% BOOST');

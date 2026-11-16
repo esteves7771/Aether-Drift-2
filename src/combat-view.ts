@@ -15,6 +15,7 @@ import { PRESETS } from './graphics';
 import type { ImportedFleet } from './imported-fleet';
 import type { ModelLibrary } from './model-library';
 import { PhantomView } from './phantom-view';
+import { SHIP_MOUNTS } from './ship-config';
 import type { SpacecraftArt } from './spacecraft-art';
 import { SPECTACLE } from './spectacle-config';
 type EffectKind = 'ring' | 'flare' | 'spark' | 'trail' | 'emp';
@@ -308,6 +309,18 @@ export class CombatView {
         this.missileTrailTime += dt;
         const leaveTrail = this.missileTrailTime > 0.05 && dt > 0;
         if (leaveTrail) this.missileTrailTime = 0;
+        if (leaveTrail && combat.ship.evasion.active) {
+            const t = this.acquire();
+            if (t) {
+                t.type = 'trail';
+                t.life = t.duration = 0.35;
+                t.size = 1.5;
+                t.position.copy(combat.ship.position);
+                t.velocity.set(0, 0, 0);
+                t.entity.render!.meshInstances[0].mesh = this.quadMesh;
+                t.entity.render!.meshInstances[0].material = this.glow;
+            }
+        }
         for (let i = 0; i < this.missiles.length; i++) {
             const m = combat.missiles.items[i],
                 e = this.missiles[i];
@@ -370,7 +383,7 @@ export class CombatView {
             this.target.copy(this.position).add(p.velocity);
             e.lookAt(this.target);
             e.render!.meshInstances[0].material =
-                p.pattern === 4 || p.pattern === 5
+                p.pattern === 4 || p.pattern === 5 || p.pattern === 7
                     ? this.ion
                     : p.pattern === 2
                       ? this.mint
@@ -382,19 +395,33 @@ export class CombatView {
                             ? this.red
                             : this.mint;
             e.setLocalScale(
-                p.plasma
-                    ? 1.7
-                    : p.seeker
-                      ? 0.7
-                      : p.pattern === 4
-                        ? 0.65
-                        : p.pattern === 2
-                          ? 0.6
+                p.pattern === 7
+                    ? 0.5
+                    : p.pattern === 6
+                      ? 0.24
+                      : p.plasma
+                        ? 1.7
+                        : p.seeker
+                          ? 0.7
+                          : p.pattern === 4
+                            ? 0.65
+                            : p.pattern === 2
+                              ? 0.6
+                              : p.hostile
+                                ? 0.32
+                                : 0.16,
+                p.pattern === 7
+                    ? 0.5
+                    : p.pattern === 6
+                      ? 0.24
+                      : p.plasma
+                        ? 1.4
+                        : p.seeker
+                          ? 0.7
                           : p.hostile
                             ? 0.32
                             : 0.16,
-                p.plasma ? 1.4 : p.seeker ? 0.7 : p.hostile ? 0.32 : 0.16,
-                p.plasma ? 3 : p.seeker ? 5 : p.hostile ? 8 : 15
+                p.pattern === 7 ? 7 : p.pattern === 6 ? 12 : p.plasma ? 3 : p.seeker ? 5 : p.hostile ? 8 : 15
             );
         }
         for (const e of this.effects)
@@ -417,7 +444,10 @@ export class CombatView {
                 e.entity.render!.meshInstances[0].setParameter('material_opacity', Math.min(0.65, f * 0.8));
                 e.entity.setLocalScale(scale, scale, e.type === 'spark' ? scale * 4 : scale);
             }
-        for (const e of this.muzzles) {
+        for (let i = 0; i < this.muzzles.length; i++) {
+            const e = this.muzzles[i],
+                mount = SHIP_MOUNTS[combat.ship.ship].muzzles[i];
+            e.setLocalPosition(mount[0], mount[1], mount[2] - 0.1);
             e.enabled = combat.muzzle > 0;
             const size = 0.3 + combat.muzzle * 6;
             e.setLocalScale(size, size, size * 2);

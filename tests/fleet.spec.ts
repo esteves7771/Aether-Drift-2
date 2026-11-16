@@ -19,7 +19,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.mouse.click(720, 450, { button: 'right' });
         await page.evaluate(() => __phase4.advance(2));
         await expect(page.locator('.enemy-marker.locked')).toHaveCount(1);
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         const bolt = await page.evaluate(() => {
             __phase4.advance(2);
             const p = __phase4.combat.projectiles.items.find((p) => p.active && !p.hostile)!;
@@ -41,7 +41,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.keyboard.press('Escape');
         await page.locator('#restart').click();
         await page.locator('#restart-accept').click();
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => {
             __phase4.pilot = true;
         });
@@ -82,7 +82,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 (s.wave === 5 && s.remaining === 0 && !captured.has('bomber')) ||
                 (s.wave === 6 && s.remaining === 0 && s.group >= s.groups && !captured.has('carrier'))
             ) {
-                await page.keyboard.up('Space');
+                await page.keyboard.up('KeyZ');
                 await page.evaluate(() => {
                     __phase4.useAbilities = false;
                 });
@@ -95,7 +95,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             maxBolts = Math.max(maxBolts, s.bolts);
             expect(s.hull, 'pilot survived Wave ' + s.wave).toBeGreaterThan(0);
             if (s.bomber && !captured.has('bomber')) {
-                await page.keyboard.up('Space');
+                await page.keyboard.up('KeyZ');
                 await page.evaluate(() => {
                     __phase4.useAbilities = false;
                 });
@@ -109,13 +109,13 @@ for (const renderer of ['webgpu', 'webgl2'])
                 expect(await page.evaluate(() => __phase4.combat.fleet.salvos)).toBeGreaterThan(0);
                 await page.screenshot({ path: 'test-results/fleet-' + renderer + '-bomber.png' });
                 captured.add('bomber');
-                await page.keyboard.down('Space');
+                await page.keyboard.down('KeyZ');
                 await page.evaluate(() => {
                     __phase4.useAbilities = true;
                 });
             }
             if (s.carrier && !captured.has('carrier')) {
-                await page.keyboard.up('Space');
+                await page.keyboard.up('KeyZ');
                 await page.evaluate(() => {
                     __phase4.useAbilities = false;
                 });
@@ -157,7 +157,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 );
                 await page.screenshot({ path: 'test-results/fleet-' + renderer + '-carrier-deploy.png' });
                 captured.add('carrier');
-                await page.keyboard.down('Space');
+                await page.keyboard.down('KeyZ');
                 await page.evaluate(() => {
                     __phase4.useAbilities = true;
                 });
@@ -172,7 +172,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 await page.screenshot({ path: 'test-results/fleet-' + renderer + '-phantom-phase' + s.phase + '.png' });
                 captured.add('phase' + s.phase);
                 if (s.phase === 1) {
-                    await page.keyboard.up('Space');
+                    await page.keyboard.up('KeyZ');
                     await page.evaluate(() => {
                         __phase4.useAbilities = false;
                     });
@@ -207,7 +207,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                                 app.on('frameend', frame);
                             })
                     );
-                    await page.keyboard.down('Space');
+                    await page.keyboard.down('KeyZ');
                     await page.evaluate(() => {
                         __phase4.useAbilities = true;
                     });
@@ -236,7 +236,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 .locator('.enemy-marker:not(.locked):not([hidden]) meter')
                 .evaluateAll((es) => es.every((e) => getComputedStyle(e).display === 'none'))
         ).toBe(true);
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         await page.evaluate(() => {
             __phase4.pilot = false;
             __phase4.combat.hurtPlayer(999, __phase4.flight.position);

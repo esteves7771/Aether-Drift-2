@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { RESTRICTED_ASSETS, verifyDistribution } from './check-distribution.mjs';
+
 const root = new URL('../', import.meta.url);
 const digest = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 function files(dir) {
@@ -20,6 +22,10 @@ let bytes = 0,
 for (const file of files(publicDir)) {
     const relative = path.relative(publicDir, file),
         output = path.join(distDir, relative);
+    if (RESTRICTED_ASSETS.includes(relative.replaceAll('\\', '/'))) {
+        assert.ok(!fs.existsSync(output), 'Excluded asset must not be distributed: ' + relative);
+        continue;
+    }
     assert.ok(fs.existsSync(output), 'Missing deployed asset: ' + relative);
     assert.equal(digest(file), digest(output), 'Changed deployed asset: ' + relative);
     const size = fs.statSync(file).size;
@@ -28,6 +34,7 @@ for (const file of files(publicDir)) {
     count++;
 }
 const index = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
+verifyDistribution(distDir);
 assert.ok(index.includes('/Aether-Drift-2/assets/'), 'Pages subpath in built index');
 const manifest = JSON.parse(fs.readFileSync(path.join(distDir, 'audio/music/manifest.json'), 'utf8'));
 assert.deepEqual(Object.keys(manifest).sort(), ['boss', 'combat', 'death', 'menu']);

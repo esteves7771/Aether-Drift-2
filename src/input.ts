@@ -11,6 +11,8 @@ export class Input {
     private missileRequested = false;
     private empRequested = false;
     private cameraRequested = false;
+    private evadeRequested = false;
+    private recentSide = 1;
     private readonly events = new AbortController();
     private settings: Settings;
     constructor(canvas: HTMLCanvasElement, settings: Settings, pause: () => void, reset: () => void) {
@@ -20,6 +22,7 @@ export class Input {
             'keydown',
             (e) => {
                 if (e.defaultPrevented) return;
+                if (document.body.classList.contains('menu-open') && e.code !== 'Escape' && e.code !== 'KeyR') return;
                 if (
                     e.target instanceof Element &&
                     e.target.closest('#menu, #upgrade-panel') &&
@@ -32,6 +35,7 @@ export class Input {
                 if (e.code === 'KeyR' && !e.repeat) reset();
                 if (!e.repeat && e.code === 'KeyM') this.missileRequested = true;
                 if (!e.repeat && e.code === 'KeyG') this.empRequested = true;
+                if (!e.repeat && e.code === 'Space') this.evadeRequested = true;
                 if (!e.repeat && e.code === 'KeyC') this.cameraRequested = true;
                 this.keys.add(e.code);
             },
@@ -83,7 +87,7 @@ export class Input {
     clear() {
         this.keys.clear();
         this.missileRequested = this.empRequested = false;
-        this.cameraRequested = false;
+        this.cameraRequested = this.evadeRequested = false;
         this.mx = this.my = 0;
         this.mouseFire = this.firing = this.targetRequested = false;
         Object.assign(this.command, neutral());
@@ -92,8 +96,9 @@ export class Input {
         const k = (code: string) => Number(this.keys.has(code));
         const c = this.command;
         c.x = k('KeyD') - k('KeyA');
+        if (c.x !== 0) this.recentSide = c.x;
         c.y = k('KeyF') - k('ControlLeft') - k('ControlRight');
-        this.firing = this.mouseFire || this.keys.has('Space');
+        this.firing = this.mouseFire || this.keys.has('KeyZ');
         c.y = Math.max(-1, c.y);
         c.z = k('KeyS') - k('KeyW');
         c.pitch = k('ArrowDown') - k('ArrowUp') - (this.my * 0.002 * this.settings.sensitivity) / dt;
@@ -105,6 +110,11 @@ export class Input {
         c.boost = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
         this.mx = this.my = 0;
         return c;
+    }
+    consumeEvade() {
+        const v = this.evadeRequested;
+        this.evadeRequested = false;
+        return v ? Number(this.keys.has('KeyD')) - Number(this.keys.has('KeyA')) || this.recentSide : 0;
     }
     consumeMissile() {
         const value = this.missileRequested;

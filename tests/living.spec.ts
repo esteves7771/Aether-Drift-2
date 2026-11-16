@@ -78,9 +78,9 @@ for (const renderer of ['webgpu', 'webgl2'])
             h.advance(30);
         });
         await page.screenshot({ path: 'artifacts/phase5e/barrels-' + renderer + '.png' });
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => __phase4.advance(5));
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(
             await page.evaluate(() => __phase4.combat.barrels.items.filter((b) => !b.active).length)
         ).toBeGreaterThan(0);
@@ -137,7 +137,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         const warmed = await page.evaluate(() => __phase4.app.root.findComponents('render').length);
         for (let i = 0; i < 2; i++) {
             await page.keyboard.press('KeyR');
-        await page.locator('#restart-accept').click();
+            await page.locator('#restart-accept').click();
             await page.evaluate(() => __phase4.advance(2));
         }
         expect(await page.evaluate(() => __phase4.app.root.findComponents('render').length)).toBe(warmed);

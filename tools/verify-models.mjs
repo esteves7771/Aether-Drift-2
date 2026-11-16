@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const names = [
+    ...(fs.existsSync('public/models/space-voyage.glb') ? ['space-voyage'] : []),
+    ...(fs.existsSync('public/models/ptah.glb') ? ['ptah'] : []),
     'spaceship-free-001',
     'spaceship',
     'futuristic-sci-fi-spaceship',
@@ -28,7 +30,16 @@ for (const name of requested.length ? requested : names) {
         }
     assert.ok(
         triangles > 500 &&
-            triangles < (name === 'artillery-dreadnought' ? 150000 : name === 'astronaut' ? 60000 : 30000),
+            triangles <
+                (name === 'space-voyage'
+                    ? 80000
+                    : name === 'ptah'
+                      ? 60000
+                      : name === 'artillery-dreadnought'
+                        ? 150000
+                        : name === 'astronaut'
+                          ? 60000
+                          : 30000),
         name + ' triangle budget'
     );
     assert.ok(g.materials.length <= 5, name + ' draw budget');
@@ -42,7 +53,18 @@ for (const name of requested.length ? requested : names) {
     );
     assert.ok(!(g.extensionsRequired ?? []).includes('KHR_draco_mesh_compression'), name + ' no runtime decoder');
     assert.ok(
-        b.byteLength < (name === 'artillery-dreadnought' ? 9 : name === 'astronaut' ? 12 : 6) * 1024 * 1024,
+        b.byteLength <
+            (name === 'space-voyage'
+                ? 9
+                : name === 'ptah'
+                  ? 5
+                  : name === 'artillery-dreadnought'
+                    ? 9
+                    : name === 'astronaut'
+                      ? 12
+                      : 6) *
+                1024 *
+                1024,
         name + ' download budget'
     );
     console.log(

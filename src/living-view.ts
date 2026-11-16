@@ -17,10 +17,12 @@ export class LivingView {
     private readonly barrels: Entity[] = [];
     private readonly turrets: { root: Entity; base: Entity; flash: Entity; instances: MeshInstance[] }[] = [];
     private readonly warning = emission('Volatile cargo hazard light', '#ff491f', 3);
-    private readonly tether = emission('EVA tether', '#8ba9a9', 0.3);
+
     private readonly position = new Vec3();
     private readonly rotation = new Quat();
     private readonly animations: AnimComponent[][] = [];
+    private readonly evaOrigins: Vec3[] = [];
+    private evaTime = 0;
     private readonly ownedMeshes = new Set<Mesh>();
     private requestedCargo = false;
     private requestedTurret = false;
@@ -103,29 +105,29 @@ export class LivingView {
             this.requestedEva = true;
             void this.library.load('astronaut').then((ok) => {
                 if (!ok || this.closed) return;
+                const spots: Vec3[] = [];
                 for (const l of c.frontier.locations)
                     if (l.model)
-                        for (let i = 0; i < 2; i++) {
-                            const e = this.library.create('astronaut')!;
-                            e.name = 'Noncombat EVA ' + l.model + ' ' + i;
-                            e.setPosition(
-                                l.position.x + (l.model === 'iss' ? 20 : 65) + i * 5,
-                                l.position.y + 8,
-                                l.position.z - 12
+                        for (let i = 0; i < 2; i++)
+                            spots.push(
+                                l.position
+                                    .clone()
+                                    .add(new Vec3((l.model === 'iss' ? 48 : 145) + i * 6, 12 + i * 3, -38))
                             );
-                            this.root.addChild(e);
-                            this.library.animate(e, 'astronaut');
-                            this.astronauts.push(e);
-                            this.animations.push(e.findComponents('anim') as AnimComponent[]);
-                            const cable = new ModelBuilder();
-                            cable.box(this.tether, [0, -3, 0], [0.025, 6, 0.025]);
-                            cable.box(this.warning, [0.25, 0.2, 0.18], [0.08, 0.08, 0.08]);
-                            const detail = cable.finish(this.app.graphicsDevice, 'EVA safety tether and light');
-                            e.addChild(detail);
-                            for (const mi of detail.render!.meshInstances) {
-                                if (mi.mesh) this.ownedMeshes.add(mi.mesh);
-                            }
-                        }
+                for (const l of c.frontier.locations.filter((l) => !l.model).slice(0, 2))
+                    spots.push(l.position.clone().add(new Vec3(15, 14, 12)));
+                for (const b of c.frontier.bases.slice(0, 2))
+                    spots.push(b.rock.position.clone().add(new Vec3(b.rock.radius + 12, 15, 0)));
+                for (const p of spots) {
+                    const e = this.library.create('astronaut')!;
+                    e.name = 'Noncombat EVA ' + this.astronauts.length;
+                    e.setPosition(p);
+                    this.root.addChild(e);
+                    this.library.animate(e, 'astronaut');
+                    this.astronauts.push(e);
+                    this.evaOrigins.push(p);
+                    this.animations.push(e.findComponents('anim') as AnimComponent[]);
+                }
             });
         }
         for (let i = 0; i < this.barrels.length; i++) {
@@ -156,10 +158,20 @@ export class LivingView {
                     else if (p.charge > 0) mi.setParameter('material_emissive', LivingView.charge);
                     else mi.deleteParameter('material_emissive');
             }
+        this.evaTime += dt;
+        let visibleEva = 0;
+        const budget = this.quality === 'low' ? 3 : this.quality === 'medium' ? 5 : 8;
         for (let i = 0; i < this.astronauts.length; i++) {
             const e = this.astronauts[i];
-            e.enabled =
-                e.getPosition().distance(player) < LIVING.astronautRange && (this.quality !== 'low' || i % 2 === 0);
+            e.enabled = this.evaOrigins[i].distance(player) < LIVING.astronautRange && visibleEva < budget;
+            if (e.enabled) visibleEva++;
+            const origin = this.evaOrigins[i];
+            e.setPosition(
+                origin.x + Math.sin(this.evaTime * 0.13 + i) * 1.2,
+                origin.y + Math.sin(this.evaTime * 0.17 + i) * 0.6,
+                origin.z + Math.cos(this.evaTime * 0.1 + i) * 0.8
+            );
+            e.setEulerAngles(8, Math.sin(this.evaTime * 0.05 + i) * 18, Math.sin(this.evaTime * 0.09 + i) * 8);
             for (const a of this.animations[i]) {
                 a.enabled = e.enabled;
                 a.speed = dt > 0 ? 1 : 0;
@@ -175,6 +187,5 @@ export class LivingView {
         this.root.destroy();
         for (const m of this.ownedMeshes) m.destroy();
         this.warning.destroy();
-        this.tether.destroy();
     }
 }

@@ -38,3 +38,9 @@ User-supplied space-satellite.zip / Satellite2.obj and Satellite2 PBR maps. Crea
 User-supplied `assets-source/spaceship boss.zip`, containing `SpaceShip.fbx`, a high-poly OBJ, and five DefaultMaterial PBR maps. Creator, original download URL, and license evidence were not included; no author or license is inferred. Integration and public release were authorized by the user. Original source attribution and redistribution evidence remain unverified. No blanket license is applied.
 
 Prepared asset: `artillery-dreadnought.glb`. Modifications: static FBX-to-GLB conversion, geometry reduced from 361,794 to 140,000 triangles, supplied PBR maps relinked, unused color attributes removed, base color reduced to 2048², normal/metallic/roughness/emission to 1024², 8-bit PNG/JPEG re-encoding, embedded resources, calibrated 240 m extent and attached game-local battery apertures/exhaust. See `docs/licenses/models/artillery-dreadnought.md` in the development project.
+
+## Phase 5H local-only additions
+
+- Space Voyage: supplied space-voyage.zip / Space Voyage .fbx; author, source URL and license absent. Main cruiser reduced to 69,710 triangles with two retained PBR materials. Local prototype only, redistribution pending. Details: docs/licenses/models/space-voyage.md.
+- PTAH / NMS Starship: supplied nms-starship.zip / nms_starship.blend; embedded README claims CC0 and credits Twitter @cmzw_. Underlying NMS-associated design rights remain unresolved. Reduced to 48,000 triangles, supplied PBR shading retained, tangent normal baked from height shading. Local prototype only; not cleared for public distribution. Details: docs/licenses/models/ptah.md.
+- Existing LasquetiSpice astronaut attribution above still applies. Phase 5H removes game-generated tether boxes; source mesh, textures, skin and floating animation are retained.

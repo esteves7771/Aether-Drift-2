@@ -42,7 +42,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             .poll(async () => Number(await page.locator('#combat-perf').getAttribute('data-projectiles')))
             .toBeGreaterThan(0);
         await page.mouse.up();
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         const deadline = Date.now() + 22000;
         let maxWave = 0;
         while (Date.now() < deadline) {
@@ -51,7 +51,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             maxWave = Number(await page.locator('#combat-perf').getAttribute('data-wave'));
             if (maxWave >= 2) break;
         }
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(Number(await page.locator('#score').textContent())).toBeGreaterThanOrEqual(200);
         expect(maxWave).toBeGreaterThanOrEqual(2);
         await expect(page.locator('.enemy-marker[data-kind="heavy"]:not([hidden])')).toHaveCount(1);

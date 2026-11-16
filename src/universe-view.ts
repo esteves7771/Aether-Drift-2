@@ -4,6 +4,9 @@ import type { AppBase, RenderComponent, MeshInstance as MeshInstanceType } from 
 import { emission, ModelBuilder } from './art-kit';
 import type { Combat } from './combat';
 import type { GraphicsQuality } from './config';
+import { ConvoyView } from './convoy-view';
+import { Convoys } from './convoys';
+import { VOYAGE_AVAILABLE } from './distribution';
 import type { ModelLibrary } from './model-library';
 import type { SpacecraftArt } from './spacecraft-art';
 import { Universe, AmbientTraffic } from './universe';
@@ -14,6 +17,8 @@ export class UniverseView {
     readonly root = new Entity('Living frontier / noncombat');
     readonly world: Universe;
     readonly traffic: AmbientTraffic;
+    readonly convoys: Convoys;
+    private readonly convoyView?: ConvoyView;
     readonly satellites: { root: Entity; id: number; lamp: Entity; instances: MeshInstanceType[] }[] = [];
     readonly ships: { root: Entity; exhaust: Entity; trail: Entity }[] = [];
     private quality = 1;
@@ -40,6 +45,14 @@ export class UniverseView {
         this.combat = combat;
         this.world = new Universe(combat.frontier, combat.rocks);
         this.traffic = new AmbientTraffic(this.world, combat.frontier);
+        this.convoys = new Convoys(
+            this.world.obstacles,
+            combat.frontier.locations.filter((l) => l.model).map((l) => l.position)
+        );
+        if (VOYAGE_AVAILABLE) {
+            this.convoyView = new ConvoyView(app, library, this.convoys);
+            this.convoyView.root.reparent(this.root);
+        }
         const arrivalLandmarks = this.world.obstacles
             .slice(combat.rocks.length)
             .map((r) => ({ position: r.position, radius: r.radius + 35 }));
@@ -47,7 +60,8 @@ export class UniverseView {
             ...arrivalLandmarks,
             ...combat.frontier.bases.map((b) => ({ position: b.rock.position, radius: b.rock.radius + 45 })),
             ...this.world.satellites.map((s) => ({ position: s.position, radius: s.kind === 'orbit' ? 70 : 20 })),
-            ...combat.enemies
+            ...combat.enemies,
+            ...this.convoys.exclusions
         ];
         combat.dreadnought.avoidance = [
             ...arrivalLandmarks,
@@ -105,11 +119,13 @@ export class UniverseView {
     }
     setQuality(q: GraphicsQuality) {
         this.quality = q === 'low' ? 0 : q === 'medium' ? 1 : 2;
+        this.convoyView?.setQuality(q);
     }
     get visibleSatellites() {
         return this.satellites.filter((s) => s.root.enabled).length;
     }
     reset() {
+        this.convoys.reset(Date.now() >>> 0);
         this.world.reset();
         this.traffic.reset();
         this.sample = 1;
@@ -123,7 +139,16 @@ export class UniverseView {
         this.root.enabled = started;
         if (!started) return;
         this.world.step(dt);
-        this.traffic.step(dt, player, this.combat.boss.active, this.combat.ship.rotation); // All boss encounters get uninterrupted presentation.
+        if (VOYAGE_AVAILABLE) {
+            this.convoys.step(dt, player, this.combat.ship.rotation, this.combat.boss.active || this.traffic.active);
+            this.convoyView?.render(dt, player, started);
+        }
+        this.traffic.step(
+            dt,
+            player,
+            this.combat.boss.active || this.convoys.groups.some((g) => g.active),
+            this.combat.ship.rotation
+        ); // All boss encounters get uninterrupted presentation.
         if (!this.requested) {
             this.requested = true;
             void this.library.load('satellite').then((ok) => {
@@ -247,6 +272,7 @@ export class UniverseView {
         }
     }
     destroy() {
+        this.convoyView?.destroy();
         this.closed = true;
         this.root.destroy();
         this.lampTemplate?.destroy();

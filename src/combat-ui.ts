@@ -25,7 +25,7 @@ export class CombatHUD {
     constructor() {
         document.body.insertAdjacentHTML(
             'beforeend',
-            `<aside id="combat-stats"><small>COMBAT LINK</small><strong id="score">000000</strong><div id="flow"><b id="flow-multiplier">×1.0</b><span id="flow-chain">COMBAT FLOW</span></div><meter id="flow-meter" min="0" max="${ARCADE.flow.window}"></meter><span id="challenge-status"></span><span id="wave-status">WAVE 01 / INBOUND</span></aside><div id="wave-banner"></div><div id="damage-direction">▼</div><div id="shield-impact"></div><small id="combat-perf"></small><div id="targets"></div><div id="score-feedback" hidden><strong></strong><span></span></div><aside id="abilities"><span id="missile-ammo"></span><span id="emp-status"></span><span id="target-status" role="status"></span></aside><aside id="boss-bar" hidden><small id="boss-name">CAPITAL SHIP / DREADNOUGHT</small><strong id="boss-phase"></strong><meter id="boss-health" min="0" max="1"></meter><span id="boss-attack"></span></aside>`
+            `<aside id="combat-stats"><small>COMBAT LINK</small><strong id="score">000000</strong><div id="flow"><b id="flow-multiplier">×1.0</b><span id="flow-chain">COMBAT FLOW</span></div><meter id="flow-meter" min="0" max="${ARCADE.flow.window}"></meter><span id="challenge-status"></span><span id="wave-status">WAVE 01 / INBOUND</span></aside><div id="wave-banner"></div><div id="damage-direction">▼</div><div id="shield-impact"></div><small id="combat-perf"></small><div id="targets"></div><div id="score-feedback" hidden><strong></strong><span></span></div><aside id="abilities"><span id="missile-ammo"></span><span id="emp-status"></span><span id="evasion-status"></span><span id="target-status" role="status"></span></aside><aside id="boss-bar" hidden><small id="boss-name">CAPITAL SHIP / DREADNOUGHT</small><strong id="boss-phase"></strong><meter id="boss-health" min="0" max="1"></meter><span id="boss-attack"></span></aside>`
         );
         const integrity = document.querySelector('.integrity')!;
         integrity.insertAdjacentHTML(
@@ -118,6 +118,7 @@ export class CombatHUD {
                 `${e.label}${'warmup' in e && e.warmup ? ' / PREPARING' : ''}${e.targetable ? '' : ' / ARMORED'} · ${distance} m · ${Math.max(0, Math.ceil((e.health / e.maxHealth) * 100))}%`;
             this.bars[e.id].value = (e.health / e.maxHealth) * 100;
         }
+        (document.getElementById('shield') as HTMLMeterElement).max = combat.ship.shieldCapacity;
         document.getElementById('score')!.textContent = String(combat.score).padStart(6, '0');
         document.getElementById('flow-multiplier')!.textContent = '×' + combat.flow.multiplier.toFixed(1);
         document.getElementById('flow-chain')!.textContent = combat.flow.chain
@@ -146,6 +147,9 @@ export class CombatHUD {
                     ? 'SALVO / STRAFE OR EMP · '
                     : 'SALVO / EVADE · '
                 : 'G / EMP ') + (combat.empCooldown > 0 ? Math.ceil(combat.empCooldown) + 's' : 'READY · 180m');
+        document.getElementById('evasion-status')!.textContent =
+            'SPACE / EVADE ' +
+            (combat.ship.evasion.cooldown > 0 ? Math.ceil(combat.ship.evasion.cooldown) + 's' : 'READY');
         document.getElementById('target-status')!.textContent =
             combat.targeting.messageTime > 0 ? combat.targeting.message : '';
         document.getElementById('abilities')!.dataset.ammo = String(combat.ammo);

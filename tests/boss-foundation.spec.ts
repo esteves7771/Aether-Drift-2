@@ -346,7 +346,7 @@ if (!before)
                 h.pilot = true;
                 h.useAbilities = false;
             });
-            await page.keyboard.down('Space');
+            await page.keyboard.down('KeyZ');
             const phases = new Set<number>(),
                 families = new Set<string>(),
                 captured = new Set<string>();
@@ -451,7 +451,7 @@ if (!before)
                     break;
                 }
             }
-            await page.keyboard.up('Space');
+            await page.keyboard.up('KeyZ');
             peak = Math.max(peak, (performanceSample as { hostile: { max: number } } | undefined)?.hostile.max ?? 0);
             if (!win)
                 fs.writeFileSync(
@@ -507,7 +507,7 @@ if (!before)
                 h.pilot = true;
                 h.useAbilities = true;
             });
-            await page.keyboard.down('Space');
+            await page.keyboard.down('KeyZ');
             const waves = new Set<number>(),
                 phases = new Set<number>(),
                 population: Record<string, number> = {},
@@ -553,7 +553,7 @@ if (!before)
                     phases.add(state.phase);
                     if (!presetCheck && state.bossActive && !state.bossArrival) {
                         presetCheck = true;
-                        await page.keyboard.up('Space');
+                        await page.keyboard.up('KeyZ');
                         await page.keyboard.press('c');
                         await page.evaluate(() => __phase4.advance(2));
                         await page.locator('#cockpit-art').evaluate((i: HTMLImageElement) => i.decode());
@@ -568,7 +568,7 @@ if (!before)
                                 path: `artifacts/phase5g/${renderer}-surveyor-boss-${quality}.png`
                             });
                         }
-                        await page.keyboard.down('Space');
+                        await page.keyboard.down('KeyZ');
                     }
                 }
                 if (state.wave >= 7) {
@@ -576,7 +576,7 @@ if (!before)
                     break;
                 }
             }
-            await page.keyboard.up('Space');
+            await page.keyboard.up('KeyZ');
             fs.writeFileSync(
                 `artifacts/phase5g/${renderer}-patrol-metrics.json`,
                 JSON.stringify(

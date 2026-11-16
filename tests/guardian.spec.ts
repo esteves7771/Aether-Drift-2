@@ -11,7 +11,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.goto('http://127.0.0.1:5181/' + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         await page.locator('#launch').click();
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         const baseline = await page.evaluate(() => {
             __phase4.app.timeScale = 0;
             __phase4.pilot = true;
@@ -75,7 +75,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                     path: 'test-results/frontier-' + renderer + '-guardian-phase' + s.phase + '.png'
                 });
                 if (s.phase === 1) {
-                    await page.keyboard.up('Space');
+                    await page.keyboard.up('KeyZ');
                     await page.evaluate(() => {
                         __phase4.useAbilities = false;
                     });
@@ -113,7 +113,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                                 app.on('frameend', frame);
                             })
                     );
-                    await page.keyboard.down('Space');
+                    await page.keyboard.down('KeyZ');
                     await page.evaluate(() => {
                         __phase4.useAbilities = true;
                     });
@@ -136,7 +136,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         expect(await page.evaluate(() => __phase4.combat.guardianBosses)).toBe(1);
         expect(maxShips).toBeLessThanOrEqual(8);
         expect(maxBolts).toBeLessThan(240);
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         await page.evaluate(() => {
             __phase4.pilot = false;
             __phase4.combat.hurtPlayer(999, __phase4.flight.position);

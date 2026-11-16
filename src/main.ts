@@ -138,7 +138,9 @@ try {
     const pilotCamera = new PilotCamera();
     const chase = new ChaseCamera(camera),
         position = new Vec3(),
-        rotation = new Quat();
+        rotation = new Quat(),
+        cameraRotation = new Quat(),
+        counterRoll = new Quat();
     const records = new Records();
     let runSaved = false;
     let active = false,
@@ -338,6 +340,8 @@ try {
         music.setVolumes(settings.masterVolume, settings.musicVolume);
         graphics.apply(settings.graphics);
         combat.challengesEnabled = settings.challenges;
+        flight.setShip(hangar.selected);
+        hangar.setPlaying(started);
         fps += (1 / Math.max(dt, 0.001) - fps) * 0.03;
         if (active) {
             accumulator += Math.min(dt, 0.1);
@@ -347,6 +351,11 @@ try {
                     ? input.sample(Math.floor(accumulator / FLIGHT.step) * FLIGHT.step)
                     : input.command;
             if (accumulator >= FLIGHT.step) {
+                const evade = input.consumeEvade();
+                if (evade) {
+                    cruise.cancel('EVASIVE MANEUVER');
+                    flight.evasion.trigger(flight, evade);
+                }
                 if (input.consumeCamera()) pilotCamera.toggle();
                 if (input.consumeTarget()) combat.selectTarget(true);
                 if (input.consumeMissile()) {
@@ -398,6 +407,8 @@ try {
         const alpha = active ? accumulator / FLIGHT.step : 1;
         position.lerp(flight.previous, flight.position, alpha);
         rotation.slerp(flight.previousRotation, flight.rotation, alpha);
+        const roll = flight.evasion.previousAngle + (flight.evasion.angle - flight.evasion.previousAngle) * alpha;
+        cameraRotation.copy(rotation).mul(counterRoll.setFromEulerAngles(0, 0, -roll));
         if (!started && menus.homeVisible) {
             menuWorld.update(true, dt, camera, hangar.selected);
         } else {
@@ -406,7 +417,7 @@ try {
             scene.ship.setRotation(rotation);
             chase.update(
                 position,
-                rotation,
+                cameraRotation,
                 settings.distance + feel.pullback,
                 presentationDt,
                 active ? combat.shake : 0,
@@ -417,7 +428,7 @@ try {
             camera,
             scene.ship,
             position,
-            rotation,
+            cameraRotation,
             hangar.selected,
             started && menus.screen !== 'debrief'
         );

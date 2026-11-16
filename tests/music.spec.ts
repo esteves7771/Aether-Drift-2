@@ -122,7 +122,7 @@ test('music streams lazily, crossfades, preserves transport, and follows gamepla
         .locator('audio[data-music-state=combat]')
         .evaluate((a: HTMLAudioElement) => a.currentTime);
     await page.keyboard.press('KeyR');
-        await page.locator('#restart-accept').click();
+    await page.locator('#restart-accept').click();
     expect(
         await page.locator('audio[data-music-state=combat]').evaluate((a: HTMLAudioElement) => a.currentTime)
     ).toBeGreaterThanOrEqual(timeBeforeReset);
@@ -163,9 +163,9 @@ test('missing supplied tracks remain silent without requests, errors, or gamepla
     await expect(page.locator('#music-status')).toHaveAttribute('data-status', 'missing');
     await launchPatrol(page);
     await expect(page.locator('#menu')).toBeHidden();
-    await page.keyboard.down('Space');
+    await page.keyboard.down('KeyZ');
     await page.waitForTimeout(200);
-    await page.keyboard.up('Space');
+    await page.keyboard.up('KeyZ');
     await page.keyboard.press('Escape');
     await expect(page.locator('#menu')).toBeVisible();
     expect(requests).toEqual([]);

@@ -35,11 +35,11 @@ for (const renderer of ['webgpu', 'webgl2'])
         await expect
             .poll(() => page.locator('audio[data-music-state=combat]').evaluate((a: HTMLAudioElement) => a.currentTime))
             .toBeGreaterThan(0.1);
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await expect
             .poll(async () => Number(await page.locator('#combat-perf').getAttribute('data-projectiles')))
             .toBeGreaterThan(0);
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         await expect(page.locator('.enemy-marker[data-id="0"]')).toHaveAttribute('data-health', /\d+/, {
             timeout: 20000
         });
@@ -59,9 +59,9 @@ for (const renderer of ['webgpu', 'webgl2'])
             })
         ).not.toBe(moving);
         await page.mouse.click(720, 450, { button: 'right' });
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.waitForTimeout(900);
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         await page.screenshot({ path: 'artifacts/public-release/combat-' + renderer + '.png' });
         await page.keyboard.press('Escape');
         await expect(page.locator('#end-patrol')).toBeVisible();
@@ -170,7 +170,12 @@ for (const renderer of ['webgpu', 'webgl2'])
                 }
                 return results;
             },
-            { base: baseURL!, models: MODEL_TUNING }
+            {
+                base: baseURL!,
+                models: Object.fromEntries(
+                    Object.entries(MODEL_TUNING).filter(([key]) => key !== 'ptah' && key !== 'voyage')
+                )
+            }
         );
         for (const r of art) expect(r.pixels, r.name + ' actual rendered pixels').toBeGreaterThan(100);
         expect(badResponses).toEqual([]);
@@ -184,7 +189,7 @@ for (const renderer of ['webgpu', 'webgl2'])
     });
 
 for (const renderer of ['webgpu', 'webgl2'])
-    test('Phase 5G public presentation / ' + renderer, async ({ page, baseURL }) => {
+    test('Phase 5H public presentation / ' + renderer, async ({ page, baseURL }) => {
         const errors: string[] = [],
             bad: string[] = [],
             requests: string[] = [];
@@ -211,7 +216,27 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         await expect(page.locator('.command-logo')).toBeVisible();
-        await expect(page.locator('.command-status')).toContainText('v0.5g');
+        await expect(page.locator('.command-status')).toContainText('v0.5h');
+        await expect(page.locator('#ship-ptah')).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Next ships' })).toBeHidden();
+        const inspection = page.locator('#ship-inspection');
+        await expect(inspection).toBeVisible();
+        const region = (await inspection.boundingBox())!;
+        const previewRotation = () =>
+            page.evaluate(() => {
+                const app = [
+                    ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+                ][0];
+                return app.root.findByName('Ship')!.getRotation().toString();
+            });
+        const beforeInspection = await previewRotation();
+        await page.mouse.move(region.x + region.width / 2, region.y + region.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(region.x + region.width / 2 + 100, region.y + region.height / 2 - 30, { steps: 8 });
+        await page.mouse.up();
+        await expect.poll(previewRotation).not.toBe(beforeInspection);
+        await page.mouse.wheel(0, 200);
+        await page.mouse.dblclick(region.x + region.width / 2, region.y + region.height / 2);
         await page.waitForFunction(
             () =>
                 [
@@ -233,6 +258,8 @@ for (const renderer of ['webgpu', 'webgl2'])
             }
             await page.locator('#launch').click();
             await expect(page.locator('#camera-toggle')).toBeVisible();
+            await page.keyboard.press('Space');
+            await expect(page.locator('#abilities')).toContainText('EVADE');
             await expect
                 .poll(() =>
                     page.evaluate(() =>
@@ -314,7 +341,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             .toBe(false);
         await expect(page.locator('.enemy-marker[data-id="0"]')).not.toHaveClass(/armored/, { timeout: 20000 });
         // Only real controls and read-only Engine state: no simulation globals, health edits or effect injection.
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         let sawBlast = false;
         for (let i = 0; i < 100; i++) {
             const state = await page.evaluate(() => {
@@ -349,9 +376,10 @@ for (const renderer of ['webgpu', 'webgl2'])
             await page.waitForTimeout(65);
         }
         await page.screenshot({ path: `artifacts/public-release/5f-live-explosion-${renderer}.png` });
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) await page.keyboard.up(key);
         expect(sawBlast, 'actual combat generated an enabled explosion pool slot').toBe(true);
+        expect(requests.some((url) => /models\/(ptah|space-voyage)\.glb|menu-ptah\.webp/.test(url))).toBe(false);
         expect(bad).toEqual([]);
         expect(errors).toEqual([]);
         console.log('5F live smoke', renderer, {

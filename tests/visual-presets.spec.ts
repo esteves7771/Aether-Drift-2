@@ -68,10 +68,10 @@ for (const renderer of ['webgpu', 'webgl2'])
             await page.locator('#menu-back').click();
             await page.locator('#launch').click();
             await page.waitForTimeout(200);
-            await page.keyboard.down('Space');
+            await page.keyboard.down('KeyZ');
             await page.waitForTimeout(100);
             await page.screenshot({ path: `test-results/spectacle-${renderer}-${preset}.png` });
-            await page.keyboard.up('Space');
+            await page.keyboard.up('KeyZ');
             await page.keyboard.press('Escape');
             await page.locator('#show-settings').click();
         }

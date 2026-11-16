@@ -1,6 +1,8 @@
 import { Vec2, Vec3 } from 'playcanvas';
 import type { CameraComponent, Entity, MeshInstance, RenderComponent, Quat } from 'playcanvas';
 
+import { SHIP_MOUNTS } from './ship-config';
+import type { PlayerShip } from './thruster-state';
 import { COCKPIT_FRAMING } from './view-framing';
 /** Presentation only; camera shares the interpolated simulation attitude, including roll. */
 export class PilotCamera {
@@ -18,7 +20,7 @@ export class PilotCamera {
     reset() {
         this.cockpit = false;
     }
-    update(camera: Entity, ship: Entity, position: Vec3, rotation: Quat, selected: string, inFlight: boolean) {
+    update(camera: Entity, ship: Entity, position: Vec3, rotation: Quat, selected: PlayerShip, inFlight: boolean) {
         const show = this.cockpit && inFlight;
         this.camera = camera.camera!;
         const offset = show ? this.projectionShift : this.centered;
@@ -40,7 +42,11 @@ export class PilotCamera {
         }
         rotation
             .transformVector(
-                this.offset.set(0, selected === 'surveyor' ? 0.4 : 0.55, selected === 'surveyor' ? -0.9 : -1.2),
+                this.offset.set(
+                    SHIP_MOUNTS[selected].camera[0],
+                    SHIP_MOUNTS[selected].camera[1],
+                    SHIP_MOUNTS[selected].camera[2]
+                ),
                 this.offset
             )
             .add(position);

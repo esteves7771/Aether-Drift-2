@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 
 import { musicManifest } from './music-manifest.mjs';
+import { publicAssets } from './public-assets.mjs';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,6 +13,7 @@ export default defineConfig({
         chunkSizeWarningLimit: 3000
     },
     plugins: [
+        publicAssets(),
         musicManifest(),
         {
             // Dev only: install the PlayCanvas Inspector before the app starts (press ` to toggle)

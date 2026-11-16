@@ -13,7 +13,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.goto('http://127.0.0.1:5187/' + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         await expect(page.locator('#show-ships')).toHaveCount(0);
-        await expect(page.locator('.roster-arrow').first()).toBeHidden();
+        await expect(page.locator('.roster-arrow').first()).toBeVisible();
         await page.locator('#ship-surveyor').click();
         await expect(page.locator('#ship-surveyor')).toHaveAttribute('aria-pressed', 'true');
         await page.evaluate(() => {

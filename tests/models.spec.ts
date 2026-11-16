@@ -15,7 +15,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         });
         await page.goto('http://127.0.0.1:5181/' + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
-        expect(requests.every((u) => /\/(satellite|sci-fi-space-station)\.glb$/.test(u))).toBe(true);
+        expect(requests.every((u) => /\/(satellite|sci-fi-space-station|astronaut)\.glb$/.test(u))).toBe(true);
         await expect(page.locator('#ship-classic')).toHaveAttribute('aria-pressed', 'true');
         await page.locator('#ship-surveyor').click();
         await expect(page.locator('#ship-status')).toContainText('SURVEYOR READY');
@@ -38,9 +38,9 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.evaluate(() =>
             __phase4.app.root.findByName('Imported surveyor')!.children[0].setLocalEulerAngles(0, 0, 0)
         );
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => __phase4.advance(3));
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         expect(await page.evaluate(() => __phase4.combat.projectiles.fired)).toBeGreaterThan(0);
         await page.evaluate(() => {
             const h = __phase4;

@@ -2,9 +2,11 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
     testDir: './tests',
     testIgnore: [
+        '**/thumbnail.spec.ts',
         '**/phase4.spec.ts',
         '**/boss-foundation.spec.ts',
         '**/combat-evolution.spec.ts',
+        '**/living-voyage.spec.ts',
         '**/arcade.spec.ts',
         '**/fleet.spec.ts',
         '**/frontier.spec.ts',

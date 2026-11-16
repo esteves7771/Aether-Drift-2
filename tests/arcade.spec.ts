@@ -33,7 +33,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.keyboard.press('Enter');
         await expect(page.locator('#menu')).toBeHidden();
         await expect(page.locator('#music-status')).toHaveAttribute('data-state', 'combat');
-        await page.keyboard.down('Space');
+        await page.keyboard.down('KeyZ');
         await page.evaluate(() => {
             __phase4.app.timeScale = 0;
             __phase4.pilot = true;
@@ -54,7 +54,7 @@ for (const renderer of ['webgpu', 'webgl2'])
                 .evaluateAll((nodes) => nodes.every((n) => getComputedStyle(n).display === 'none'))
         ).toBe(true);
         await page.screenshot({ path: 'test-results/arcade-' + renderer + '-combat.png' });
-        await page.keyboard.up('Space');
+        await page.keyboard.up('KeyZ');
         await page.keyboard.press('Escape');
         const flow = await page.evaluate(() => ({
             score: __phase4.combat.score,
