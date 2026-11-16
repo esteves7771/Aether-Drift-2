@@ -172,9 +172,7 @@ for (const renderer of ['webgpu', 'webgl2'])
             },
             {
                 base: baseURL!,
-                models: Object.fromEntries(
-                    Object.entries(MODEL_TUNING).filter(([key]) => key !== 'ptah' && key !== 'voyage')
-                )
+                models: MODEL_TUNING
             }
         );
         for (const r of art) expect(r.pixels, r.name + ' actual rendered pixels').toBeGreaterThan(100);
@@ -216,9 +214,9 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         await expect(page.locator('.command-logo')).toBeVisible();
-        await expect(page.locator('.command-status')).toContainText('v0.5h');
-        await expect(page.locator('#ship-ptah')).toHaveCount(0);
-        await expect(page.getByRole('button', { name: 'Next ships' })).toBeHidden();
+        await expect(page.locator('.command-status')).toContainText('v0.5h.1');
+        await expect(page.locator('#ship-ptah')).toHaveCount(1);
+        await expect(page.getByRole('button', { name: 'Next ships' })).toBeVisible();
         const inspection = page.locator('#ship-inspection');
         await expect(inspection).toBeVisible();
         const region = (await inspection.boundingBox())!;
@@ -379,7 +377,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.keyboard.up('KeyZ');
         for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) await page.keyboard.up(key);
         expect(sawBlast, 'actual combat generated an enabled explosion pool slot').toBe(true);
-        expect(requests.some((url) => /models\/(ptah|space-voyage)\.glb|menu-ptah\.webp/.test(url))).toBe(false);
+        expect(requests.some((url) => url.includes('menu-ptah.webp'))).toBe(true);
         expect(bad).toEqual([]);
         expect(errors).toEqual([]);
         console.log('5F live smoke', renderer, {
@@ -388,4 +386,108 @@ for (const renderer of ['webgpu', 'webgl2'])
             audio: 'streaming and AudioContext running',
             errors: errors.length
         });
+    });
+for (const renderer of ['webgpu', 'webgl2'])
+    test('Full Phase 5H PTAH and scheduled convoy / ' + renderer, async ({ page, baseURL, request }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(e.message));
+        page.on('console', (m) => {
+            if (m.type() === 'error') errors.push(m.text());
+        });
+        await page.addInitScript({ path: '.agents/skills/inspect-runtime/scripts/devtools-hook.js' });
+        await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
+        await expect(page.locator('.command-status')).toContainText('v0.5h.1');
+        await page.getByRole('button', { name: 'Next ships' }).click();
+        await page.locator('#ship-ptah').click();
+        await expect(page.locator('#ship-ptah')).toHaveAttribute('aria-pressed', 'true');
+        const thumbnail = await page.locator('#ship-ptah img').evaluate(async (img: HTMLImageElement) => {
+            await img.decode();
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            const ctx = c.getContext('2d')!;
+            ctx.drawImage(img, 0, 0);
+            return { width: c.width, alpha: ctx.getImageData(0, 0, 1, 1).data[3] };
+        });
+        expect(thumbnail).toEqual({ width: 440, alpha: 0 });
+        await page.screenshot({ path: `artifacts/public-release/full-ptah-roster-${renderer}.png` });
+        await page.locator('#launch').click();
+        await expect(page.locator('#shield-number')).toContainText('55');
+        await page.keyboard.down('KeyZ');
+        await expect
+            .poll(async () => Number(await page.locator('#combat-perf').getAttribute('data-projectiles')))
+            .toBeGreaterThan(0);
+        await page.keyboard.up('KeyZ');
+        await page.keyboard.press('Space');
+        await expect(page.locator('#evasion-status')).not.toContainText('READY');
+        await page.keyboard.press('KeyG');
+        await expect(page.locator('#emp-status')).not.toContainText('READY');
+        await page.keyboard.press('KeyC');
+        await expect(page.locator('#cockpit')).toBeVisible();
+        await page.keyboard.press('KeyC');
+        await page.keyboard.down('KeyW');
+        await page.keyboard.down('ShiftLeft');
+        await page.evaluate(() => {
+            const app = [
+                ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+            ][0];
+            app.timeScale = 3; // Native Engine clock only; leave route scheduling, AI, damage and populations unchanged.
+        });
+        await page.waitForFunction(
+            () => {
+                const app = [
+                    ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+                ][0];
+                return app.root
+                    .findByName('Space Voyage / noncombat convoys')
+                    ?.children.some((e) => e.enabled && e.name.includes('Space Voyage cruiser'));
+            },
+            undefined,
+            { timeout: 120000 }
+        );
+        await page.keyboard.up('KeyW');
+        await page.keyboard.up('ShiftLeft');
+        const convoy = await page.evaluate(async () => {
+            const app = [
+                ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+            ][0];
+            app.timeScale = 0;
+            app.off('update');
+            const root = app.root.findByName('Space Voyage / noncombat convoys')!;
+            const ships = root.children.filter((e) => e.enabled),
+                cruiser = ships.find((e) => e.name.includes('Space Voyage cruiser'))!;
+            const p = cruiser.getPosition(),
+                camera = app.root.findByName('Chase camera')!;
+            const rear = cruiser.getRotation().transformVector(p.clone().set(0, 0, 1));
+            camera.setPosition(
+                p
+                    .clone()
+                    .add(rear.mulScalar(650))
+                    .add(p.clone().set(200, 160, 0))
+            );
+            camera.lookAt(p);
+            await new Promise<void>((r) => app.once('frameend', () => r()));
+            return {
+                ships: ships.length,
+                cachedShips: root.children.length,
+                cachedEscorts: root.children.filter((e) => e.name.includes('escort')).length,
+                cruisers: ships.filter((e) => e.name.includes('Space Voyage cruiser')).length,
+                engines: cruiser.findByName('Soft convoy exhaust')?.enabled
+            };
+        });
+        // Distant formation members are legitimately culled as the first cruiser enters range.
+        expect(convoy.ships).toBeGreaterThanOrEqual(1);
+        expect(convoy.cachedShips).toBe(18);
+        expect(convoy.cachedEscorts).toBe(12);
+        expect(convoy.cruisers).toBeGreaterThan(0);
+        expect(convoy.engines).toBe(true);
+        await page.screenshot({ path: `artifacts/public-release/full-scheduled-convoy-${renderer}.png` });
+        const manifest = await request.get(new URL('release-assets.json', baseURL).href);
+        expect(await manifest.json()).toEqual({
+            playableShips: ['classic', 'surveyor', 'ptah'],
+            spaceVoyage: true,
+            excluded: []
+        });
+        expect(errors).toEqual([]);
+        console.log('Full Phase 5H', renderer, { url: baseURL, thumbnail, convoy, errors: errors.length });
     });

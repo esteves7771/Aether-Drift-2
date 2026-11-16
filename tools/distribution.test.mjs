@@ -4,24 +4,25 @@ import path from 'node:path';
 
 import { test, expect } from 'vitest';
 
-import { RESTRICTED_ASSETS, verifyDistribution } from './check-distribution.mjs';
-
-test('public output guard rejects each restricted asset rather than trusting a manifest', () => {
+import { REQUIRED_PHASE5H_ASSETS, verifyDistribution } from './check-distribution.mjs';
+test('full release requires every Phase 5H asset', () => {
     const scratch = path.resolve('.local-tools');
-    fs.mkdirSync(scratch, { recursive: true });
     const dir = fs.mkdtempSync(path.join(scratch, 'distribution-test-'));
     try {
         fs.writeFileSync(
             path.join(dir, 'release-assets.json'),
-            JSON.stringify({ playableShips: ['classic', 'surveyor'], spaceVoyage: false, excluded: RESTRICTED_ASSETS })
+            JSON.stringify({ playableShips: ['classic', 'surveyor', 'ptah'], spaceVoyage: true, excluded: [] })
         );
-        expect(() => verifyDistribution(dir)).not.toThrow();
-        for (const file of RESTRICTED_ASSETS) {
+        for (const file of REQUIRED_PHASE5H_ASSETS) {
             const target = path.join(dir, file);
             fs.mkdirSync(path.dirname(target), { recursive: true });
-            fs.writeFileSync(target, 'test marker');
-            expect(() => verifyDistribution(dir)).toThrow('Uncleared asset');
-            fs.unlinkSync(target);
+            fs.writeFileSync(target, Buffer.alloc(1024));
+        }
+        expect(() => verifyDistribution(dir)).not.toThrow();
+        for (const file of REQUIRED_PHASE5H_ASSETS) {
+            fs.unlinkSync(path.join(dir, file));
+            expect(() => verifyDistribution(dir)).toThrow();
+            fs.writeFileSync(path.join(dir, file), Buffer.alloc(1024));
         }
     } finally {
         assert.equal(path.dirname(dir), scratch);

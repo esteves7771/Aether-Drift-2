@@ -190,11 +190,11 @@ Use `src/music.test.ts` and `tests/music.spec.ts` for soundtrack changes. Genera
 - ship-config.ts owns three ship profiles and calibrated muzzles/camera/proxy data. Combat and Flight consume the profiles; existing damage/upgrade authorities remain shared. PTAH commits its bounded plasma burst and clears on reset.
 - evasive-roll.ts applies one fixed-step lateral impulse and eased roll with five-second cooldown, no immunity. Space is evade; left mouse/Z fire; Q/E remains manual roll. Pilot camera counter-roll is presentation only.
 - ship-inspection.ts owns menu-only drag/zoom/reset state. It never rotates background/world/camera or changes simulation orientation. living-view.ts retains source EVA animation and removes procedural tethers.
-- PTAH and Space Voyage GLBs remain ignored local inputs; docs/licenses/models records evidence and unresolved distribution status. distribution.ts excludes uncleared models from public-mode runtime; public-assets.mjs filters their files before copying and tools/check-distribution.mjs rejects leaks. Ordinary builds retain all local features. No push/deploy is authorized by Phase 5H.
+- PTAH/Space Voyage GLBs and the corrected PTAH thumbnail are tracked runtime assets in the user-authorized v0.5h.1 full release. Preserve existing provenance in docs/licenses/models. Public and local runtime behavior is identical.
 - npm run test:voyage uses the isolated preview and tests both renderers. Actual boss health/damage are retained in precision-pilot victories; fixture arrivals and lifecycle tests are functional evidence, not human difficulty validation or natural Wave 1–15 progression. Keep drivers and artifacts out of production.
 
-## v0.5h public packaging
+## v0.5h.1 full public packaging
 
-- build:pages uses Vite public-release mode. distribution.ts controls the public two-ship roster, rejects restricted model loads and disables Space Voyage presentation/events. Local modes retain all Phase 5H features.
-- public-assets.mjs stages a filtered public directory before Vite copying; check-distribution.mjs enforces absence of restricted model/thumbnail bytes and validates release-assets.json. verify-release.mjs compares every permitted public asset and rejects test-driver leakage. CI runs it before deployment.
-- Restricted GLBs/thumbnail, source archives and verification captures remain ignored. The public release notes must explicitly identify PTAH/Space Voyage omissions. Publishing is authorized only by the current final-release request, with a tag after live verification.
+- The user explicitly authorized complete Phase 5H publication. Keep all three roster entries, model loading and convoy scheduling identical across build modes. Do not restore the previous public-only feature exclusions.
+- public-assets.mjs emits the complete release inventory; check-distribution.mjs requires PTAH, its thumbnail and Space Voyage. verify-release.mjs compares every public asset and rejects test-driver leakage. CI runs it before deployment.
+- Source archives, scratch tools, captures and local reports stay ignored; optimized runtime assets are tracked. Preserve original author/license claims without inventing independent verification.

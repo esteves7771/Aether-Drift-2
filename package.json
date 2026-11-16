@@ -1,6 +1,6 @@
 {
     "name": "aether-drift-2",
-    "version": "0.5.0-h",
+    "version": "0.5.1-h",
     "private": true,
     "description": "Aether Drift 2.0 — six-degree-of-freedom arcade space combat",
     "type": "module",

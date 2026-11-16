@@ -6,7 +6,6 @@ import type { Combat } from './combat';
 import type { GraphicsQuality } from './config';
 import { ConvoyView } from './convoy-view';
 import { Convoys } from './convoys';
-import { VOYAGE_AVAILABLE } from './distribution';
 import type { ModelLibrary } from './model-library';
 import type { SpacecraftArt } from './spacecraft-art';
 import { Universe, AmbientTraffic } from './universe';
@@ -18,7 +17,7 @@ export class UniverseView {
     readonly world: Universe;
     readonly traffic: AmbientTraffic;
     readonly convoys: Convoys;
-    private readonly convoyView?: ConvoyView;
+    private readonly convoyView: ConvoyView;
     readonly satellites: { root: Entity; id: number; lamp: Entity; instances: MeshInstanceType[] }[] = [];
     readonly ships: { root: Entity; exhaust: Entity; trail: Entity }[] = [];
     private quality = 1;
@@ -49,10 +48,8 @@ export class UniverseView {
             this.world.obstacles,
             combat.frontier.locations.filter((l) => l.model).map((l) => l.position)
         );
-        if (VOYAGE_AVAILABLE) {
-            this.convoyView = new ConvoyView(app, library, this.convoys);
-            this.convoyView.root.reparent(this.root);
-        }
+        this.convoyView = new ConvoyView(app, library, this.convoys);
+        this.convoyView.root.reparent(this.root);
         const arrivalLandmarks = this.world.obstacles
             .slice(combat.rocks.length)
             .map((r) => ({ position: r.position, radius: r.radius + 35 }));
@@ -119,7 +116,7 @@ export class UniverseView {
     }
     setQuality(q: GraphicsQuality) {
         this.quality = q === 'low' ? 0 : q === 'medium' ? 1 : 2;
-        this.convoyView?.setQuality(q);
+        this.convoyView.setQuality(q);
     }
     get visibleSatellites() {
         return this.satellites.filter((s) => s.root.enabled).length;
@@ -139,10 +136,8 @@ export class UniverseView {
         this.root.enabled = started;
         if (!started) return;
         this.world.step(dt);
-        if (VOYAGE_AVAILABLE) {
-            this.convoys.step(dt, player, this.combat.ship.rotation, this.combat.boss.active || this.traffic.active);
-            this.convoyView?.render(dt, player, started);
-        }
+        this.convoys.step(dt, player, this.combat.ship.rotation, this.combat.boss.active || this.traffic.active);
+        this.convoyView.render(dt, player, started);
         this.traffic.step(
             dt,
             player,
@@ -272,7 +267,7 @@ export class UniverseView {
         }
     }
     destroy() {
-        this.convoyView?.destroy();
+        this.convoyView.destroy();
         this.closed = true;
         this.root.destroy();
         this.lampTemplate?.destroy();

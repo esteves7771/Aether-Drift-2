@@ -4,7 +4,7 @@ A single-player 3D arcade space combat game: fly freely in six degrees of freedo
 
 **[Play Aether Drift 2.0](https://esteves7771.github.io/Aether-Drift-2/)** · [Source](https://github.com/esteves7771/Aether-Drift-2)
 
-Public release: **v0.5f-public**, including Phase 5F-A, Phase 5F-B and the cinematic thruster overhaul. This is a separate project inspired by [the original Aether Drift](https://github.com/esteves7771/Aether-Drift); its original repository is unchanged.
+Public release: **v0.5h.1-public**, including the complete Phase 5H build: PTAH, Space Voyage convoys, EVA, three ship identities, evasive roll and the interactive garage. This is a separate project inspired by [the original Aether Drift](https://github.com/esteves7771/Aether-Drift); its original repository is unchanged.
 
 ## Features
 
@@ -134,3 +134,7 @@ The public release includes AE-01 and Surveyor handling/weapon identities, real 
 PTAH (including its artwork) and Space Voyage convoys are excluded from public distribution because their redistribution rights remain unresolved. They remain fully available in local builds. This is intentionally a reduced public release, not the complete three-ship/convoy build. The public roster has two ships with no paging arrows; a persisted local PTAH preference safely falls back to AE-01.
 
 Use npm run build:pages for the filtered public mode and npm run release:verify for byte-identical permitted assets and exclusion checks. Normal npm run build/dev retain local models when present. The distribution gate stays closed to those assets; do not remove it based only on a free-download or CC0 claim.
+
+## v0.5h.1 — Complete Phase 5H release
+
+Supersedes the reduced v0.5h release described above. Public and local builds now expose the same three ships and all Space Voyage convoy templates, cruiser engine effects, astronauts, garage, evasive roll and existing combat/audio. The optimized PTAH GLB, transparent roster thumbnail and Space Voyage GLB are tracked runtime assets. There is no public-only feature filter. build:pages verifies complete asset inclusion instead of exclusions. Existing asset attribution and provenance records are preserved; publication was explicitly directed by the user on 2026-11-16. No gameplay balancing changed for this release.

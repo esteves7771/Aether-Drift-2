@@ -57,7 +57,7 @@ export class Menu {
         );
         this.panel.insertAdjacentHTML(
             'beforeend',
-            `<div class="command-status"><div>${menuIcon('ship')}<span><small>SELECTED SHIP</small><b class="ship-index">AE-01 / INTERCEPTOR</b></span></div><div>${menuIcon('records')}<span><small>PERSONAL BEST</small><b id="status-best">0</b></span></div><div>${menuIcon('records')}<span><small>LONGEST WAVE</small><b id="status-wave">WAVE 0</b></span></div><div>${menuIcon('planet')}<span><small>SECTOR</small><b>PERSEID EXPANSE</b></span></div><div>${menuIcon('code')}<span><small>BUILD</small><b>v${version.replace(/\.0-([a-z]+)$/, '$1')}</b></span></div></div>`
+            `<div class="command-status"><div>${menuIcon('ship')}<span><small>SELECTED SHIP</small><b class="ship-index">AE-01 / INTERCEPTOR</b></span></div><div>${menuIcon('records')}<span><small>PERSONAL BEST</small><b id="status-best">0</b></span></div><div>${menuIcon('records')}<span><small>LONGEST WAVE</small><b id="status-wave">WAVE 0</b></span></div><div>${menuIcon('planet')}<span><small>SECTOR</small><b>PERSEID EXPANSE</b></span></div><div>${menuIcon('code')}<span><small>BUILD</small><b>v${version.replace(/(\d+)\.(\d+)\.(\d+)-([a-z]+)$/, '$1.$2$4.$3').replace(/\.0$/, '')}</b></span></div></div>`
         );
         el('show-credits').onclick = () => {
             this.parent = this.screen;

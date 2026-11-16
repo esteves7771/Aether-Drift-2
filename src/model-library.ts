@@ -3,7 +3,6 @@ import type { AppBase, ContainerResource, RenderComponent, StandardMaterial, Tex
 
 import { validateRenderAttributes } from './art-kit';
 import type { GraphicsQuality } from './config';
-import { modelAvailable } from './distribution';
 import { MODEL_TUNING } from './model-config';
 import type { ModelKey } from './model-config';
 
@@ -20,7 +19,6 @@ export class ModelLibrary {
         this.app = app;
     }
     load(key: ModelKey) {
-        if (!modelAvailable(key)) return Promise.resolve(false);
         const existing = this.pending.get(key);
         if (existing) return existing;
         const promise = new Promise<boolean>((resolve) => {

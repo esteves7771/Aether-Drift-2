@@ -2,5 +2,7 @@
   "distributionApproved": false,
   "reason": "NMS-associated design; underlying redistribution clearance unresolved",
   "embeddedReadme": "Blender: v3.3+\nLicense: CC0\nTwitter: @cmzw_",
-  "sourceArchive": "assets-source/nms-starship.zip"
+  "sourceArchive": "assets-source/nms-starship.zip",
+  "publicationAuthorizedByUser": true,
+  "publicationRelease": "v0.5h.1-public"
 }

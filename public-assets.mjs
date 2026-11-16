@@ -1,51 +1,32 @@
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import path from 'node:path';
 
-import { RESTRICTED_ASSETS, verifyDistribution } from './tools/check-distribution.mjs';
+import { verifyDistribution } from './tools/check-distribution.mjs';
 
-/** Filter before Vite copies public assets, then enforce the same gate on the completed output. */
+/** Package the same complete assets as local builds, plus a release inventory. */
 export function publicAssets() {
-    let staged;
     let output;
-    let scratch;
+    let publishing = false;
     return {
-        name: 'verified-public-assets',
+        name: 'complete-public-assets',
         apply: 'build',
-        config(config, { mode }) {
-            if (mode !== 'public-release') return;
-            const root = path.resolve(config.root ?? '.');
-            scratch = path.join(root, '.local-tools');
-            fs.mkdirSync(scratch, { recursive: true });
-            staged = fs.mkdtempSync(path.join(scratch, 'public-release-'));
-            const source = path.join(root, 'public');
-            fs.cpSync(source, staged, {
-                recursive: true,
-                filter: (file) => !RESTRICTED_ASSETS.includes(path.relative(source, file).replaceAll('\\', '/'))
-            });
-            fs.writeFileSync(
-                path.join(staged, 'release-assets.json'),
-                JSON.stringify({
-                    playableShips: ['classic', 'surveyor'],
-                    spaceVoyage: false,
-                    excluded: RESTRICTED_ASSETS
-                })
-            );
-            return { publicDir: staged };
-        },
         configResolved(config) {
+            publishing = config.mode === 'public-release';
             output = path.resolve(config.root, config.build.outDir);
         },
+        generateBundle() {
+            if (!publishing) return;
+            this.emitFile({
+                type: 'asset',
+                fileName: 'release-assets.json',
+                source: JSON.stringify({
+                    playableShips: ['classic', 'surveyor', 'ptah'],
+                    spaceVoyage: true,
+                    excluded: []
+                })
+            });
+        },
         closeBundle() {
-            if (!staged) return;
-            try {
-                verifyDistribution(output);
-            } finally {
-                // Only remove the exact temporary directory created above, inside this workspace's scratch root.
-                assert.equal(path.dirname(path.resolve(staged)), path.resolve(scratch));
-                assert.ok(path.basename(staged).startsWith('public-release-'));
-                fs.rmSync(staged, { recursive: true, force: true });
-            }
+            if (publishing) verifyDistribution(output);
         }
     };
 }
