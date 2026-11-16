@@ -4,6 +4,7 @@ import type { AppBase, RenderComponent } from 'playcanvas';
 import { emission, surface } from './art-kit';
 import type { Artillery } from './artillery';
 import { ARTILLERY } from './artillery-config';
+import { BeamKit } from './beam-kit';
 import { BossView } from './boss-view';
 import type { ModelLibrary } from './model-library';
 import { RiftView } from './rift-view';
@@ -25,7 +26,7 @@ export class ArtilleryView {
     private readonly cores: Entity[] = [];
     private readonly engines: Entity[] = [];
     private readonly beams: Entity[] = [];
-    private readonly beamLight = emission('Artillery cutting lance', '#ff725e', 3.2, 0.85);
+    private readonly beamKit: BeamKit;
     private readonly warning = emission('Artillery sweep anticipation', '#ffb15f', 1.2, 0.16);
     private readonly hitColor = new Float32Array(3);
     private hullInstances: MeshInstance[] = [];
@@ -41,6 +42,7 @@ export class ArtilleryView {
     private readonly ring: Mesh;
     constructor(app: AppBase, boss: Artillery) {
         this.fallback = new BossView(app, boss);
+        this.beamKit = new BeamKit(app);
         this.rift = new RiftView(app);
         app.root.addChild(this.root);
         this.sphere = Mesh.fromGeometry(
@@ -74,8 +76,8 @@ export class ArtilleryView {
             this.engines.push(e);
         }
         for (let i = 0; i < 3; i++) {
-            const e = new Entity(i === 0 ? 'Artillery live beam' : 'Artillery sweep boundary');
-            e.addComponent('render', { type: 'box', material: i === 0 ? this.beamLight : this.warning });
+            const e = i === 0 ? this.beamKit.create('Artillery live beam') : new Entity('Artillery sweep boundary');
+            if (i !== 0) e.addComponent('render', { type: 'box', material: this.warning });
             e.enabled = false;
             this.root.addChild(e);
             this.beams.push(e);
@@ -132,23 +134,36 @@ export class ArtilleryView {
             e.enabled = p.active;
             this.cores[i].render!.meshInstances[0].material = p.targetable
                 ? this.live
-                : boss.charge > 0 && (boss.phase === 1 ? i < 4 && i % 2 === boss.firingBank : i === 6)
+                : boss.patterns.permitted &&
+                    (boss.charge > 0 ||
+                        (boss.patterns.state === 'fire' && boss.patterns.time % boss.patterns.spec.interval < 0.12)) &&
+                    (boss.phase === 1 ? i < 4 : i === 6)
                   ? this.hot
                   : this.locked;
         });
         const pattern = boss.patterns;
-        this.hitColor[0] = boss.hitFlash * 0.18;
-        this.hitColor[1] = boss.hitFlash * 0.045;
+        const heat =
+            boss.patterns.permitted && boss.patterns.state === 'telegraph'
+                ? 0.1 * (1 - boss.patterns.winding / boss.patterns.spec.telegraph[boss.phase - 1])
+                : boss.patterns.state === 'fire' && boss.patterns.time < 0.16
+                  ? 0.16
+                  : 0;
+        this.hitColor[0] = boss.hitFlash * 0.18 + heat;
+        this.hitColor[1] = boss.hitFlash * 0.045 + heat * 0.3;
         this.hitColor[2] = boss.hitFlash * 0.012;
         for (const mi of this.hullInstances) {
-            if (boss.hitFlash > 0) mi.setParameter('material_emissive', this.hitColor);
+            if (boss.hitFlash > 0 || heat > 0) mi.setParameter('material_emissive', this.hitColor);
             else mi.deleteParameter('material_emissive');
         }
         for (let i = 0; i < 3; i++) {
             const e = this.beams[i],
                 active = boss.active && !boss.arriving && boss.grace <= 0 && boss.disrupted <= 0;
             e.enabled =
-                active && pattern.kind === 'beam' && (i === 0 ? pattern.beamActive : pattern.state === 'telegraph');
+                active &&
+                pattern.kind === 'beam' &&
+                (i === 0
+                    ? pattern.beamActive || (pattern.state === 'recover' && pattern.time < 0.16)
+                    : pattern.state === 'telegraph');
             if (!e.enabled) continue;
             const end = i === 1 ? pattern.warningEnd : i === 2 ? pattern.warningFar : pattern.beamEnd,
                 length = pattern.beamOrigin.distance(end);
@@ -156,6 +171,15 @@ export class ArtilleryView {
                 e.enabled = false;
                 continue;
             }
+            if (i === 0)
+                this.beamKit.update(
+                    e,
+                    pattern.beamOrigin,
+                    end,
+                    boss.age,
+                    pattern.beamActive ? 1 : Math.max(0, 1 - pattern.time / 0.16),
+                    0
+                );
             this.position.lerp(pattern.beamOrigin, end, 0.5);
             e.setPosition(this.position);
             e.lookAt(end);
@@ -169,9 +193,9 @@ export class ArtilleryView {
         this.rift.destroy();
         this.fallback.destroy();
         this.root.destroy();
+        this.beamKit.destroy();
         this.sphere.destroy();
         this.ring.destroy();
-        for (const m of [this.metal, this.live, this.locked, this.hot, this.engine, this.beamLight, this.warning])
-            m.destroy();
+        for (const m of [this.metal, this.live, this.locked, this.hot, this.engine, this.warning]) m.destroy();
     }
 }

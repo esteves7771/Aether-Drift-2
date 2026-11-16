@@ -166,6 +166,7 @@ export class Phantom extends Boss {
         }
         this.velocity.lerp(this.velocity, this.vector, 1 - Math.exp(-2.2 * dt));
         this.position.add(this.vector.copy(this.velocity).mulScalar(dt));
+        this.returnToEngagement(ship, this.arrival.anchor, dt);
         for (const r of rocks) {
             this.vector.sub2(this.position, r.position);
             const d = this.vector.length(),

@@ -1,5 +1,6 @@
 import { Mat4, Quat, Vec3 } from 'playcanvas';
 
+import { BULLETHELL } from './bullethell-config';
 import type { Rock } from './collisions';
 import type { CombatTarget } from './combat-target';
 import { EVOLUTION } from './evolution-config';
@@ -10,6 +11,7 @@ import { SPECTACLE } from './spectacle-config';
 export class BossPart implements CombatTarget {
     readonly targetRole = 'boss' as const;
     active = false;
+    generation = 0;
     health = 0;
     maxHealth = 0;
     exposed = false;
@@ -102,6 +104,20 @@ export class Boss {
     private readonly matrix = new Mat4();
     private readonly desired = new Quat();
     private readonly facing = new Quat();
+    protected returnToEngagement(ship: Flight, anchor: Vec3, dt: number) {
+        if (
+            this.position.distance(anchor) <= BULLETHELL.maximumRoam ||
+            this.position.distance(ship.position) <= BULLETHELL.maximumRange ||
+            dt <= 0
+        )
+            return;
+        this.position.lerp(
+            this.previous,
+            anchor,
+            Math.min(1, (BULLETHELL.returnSpeed * dt) / Math.max(1, this.previous.distance(anchor)))
+        );
+        this.velocity.sub2(this.position, this.previous).mulScalar(1 / dt);
+    }
     get arriving() {
         return this.active && this.age < EVOLUTION.boss.arrival;
     }
@@ -114,6 +130,7 @@ export class Boss {
         return EVOLUTION.boss.turretHealth * 4 + EVOLUTION.boss.weakHealth * 2 + EVOLUTION.boss.coreHealth;
     }
     reset() {
+        for (const part of this.parts) part.generation++;
         this.active = false;
         this.dying = 0;
         this.charge = 0;

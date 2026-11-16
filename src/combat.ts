@@ -4,6 +4,9 @@ import { ARCADE } from './arcade-config';
 import { Artillery } from './artillery';
 import { Barrel, Barrels } from './barrels';
 import { BossPart } from './boss';
+import { BossEncounter } from './boss-encounter';
+import { BossFleet } from './boss-fleet';
+import type { EncounterBoss } from './boss-fleet';
 import { BOSS_PATTERNS } from './boss-pattern-config';
 import type { Rock } from './collisions';
 import { COMBAT } from './combat-config';
@@ -22,6 +25,7 @@ import { Frontier, InstallationPart } from './frontier';
 import { Guardian } from './guardian';
 import { bossForWave, GUARDIAN } from './guardian-config';
 import { LIVING } from './living-config';
+import { MissileStorm } from './missile-storm';
 import { Missiles } from './missiles';
 import { Phantom } from './phantom';
 import { Projectiles, sweptHit } from './projectiles';
@@ -45,15 +49,32 @@ export class Combat {
     readonly enemyPatterns = new EnemyPatterns();
     readonly phantom = new Phantom();
     readonly guardian = new Tesser();
+    readonly allBosses = [this.dreadnought, this.phantom, this.guardian] as const;
+    readonly defenseFleet = new BossFleet();
+    readonly encounter = new BossEncounter();
+    private beamDamageCooldown = 0;
+    get hasBossEncounter() {
+        return this.encounter.pending >= 0 || this.allBosses.some((b) => b.active || b.dying > 0);
+    }
     get boss(): Artillery | Phantom | Tesser {
         const kind = bossForWave(this.wave);
-        return kind === 'guardian' ? this.guardian : kind === 'phantom' ? this.phantom : this.dreadnought;
+        const primary = kind === 'guardian' ? this.guardian : kind === 'phantom' ? this.phantom : this.dreadnought;
+        return primary.active
+            ? primary
+            : (this.allBosses.find((b) => b.active) ??
+                  (primary.dying > 0 ? primary : (this.allBosses.find((b) => b.dying > 0) ?? primary)));
     }
     bestGuardianTime: number | null = null;
     guardianBosses = 0;
     bestPhantomTime: number | null = null;
     phantomBosses = 0;
     readonly missiles = new Missiles();
+    readonly storm = new MissileStorm();
+    private readonly stormLaunch = () => {
+        this.flow.shots++;
+        this.muzzle = 0.08;
+        this.emit('salvo', this.ship.position, 0.55);
+    };
     readonly fleet = new Fleet();
     readonly director = new WaveDirector();
     readonly targets: CombatTarget[] = [...this.enemies, ...this.dreadnought.parts, ...this.phantom.parts];
@@ -163,12 +184,16 @@ export class Combat {
         this.targets.push(...this.guardian.parts);
     }
     get remaining() {
-        let n = this.boss.active || this.boss.dying > 0 ? 1 : 0;
+        let n = this.encounter.pending >= 0 ? 1 : 0;
+        for (const b of this.allBosses) if (b.active || b.dying > 0) n++;
         for (const e of this.enemies) if (e.active) n++;
         return n;
     }
     reset() {
         this.burstRemaining = 0;
+        this.defenseFleet.reset();
+        this.encounter.reset();
+        this.beamDamageCooldown = 0;
         this.targeting.reset();
         this.targetingWave = 0;
         for (const e of this.enemies) {
@@ -192,6 +217,7 @@ export class Combat {
         this.bestPhantomTime = null;
         this.phantomBosses = 0;
         this.missiles.reset();
+        this.storm.reset(this.missiles);
         this.squadron.reset();
         this.ammo = EVOLUTION.missile.starting;
         this.missileCooldown = this.empCooldown = this.empPulse = this.victory = this.bossReward = 0;
@@ -304,7 +330,10 @@ export class Combat {
         this.flow.damage(damage > absorbed);
         this.lastHull = this.ship.hull;
         this.emit(this.shieldHit ? 'shield' : 'hull', this.ship.position, 1);
-        if (this.ship.hull <= 0) this.emit('explosion', this.ship.position, 2);
+        if (this.ship.hull <= 0) {
+            this.storm.cancel(this.missiles);
+            this.emit('explosion', this.ship.position, 2);
+        }
     }
     burstRemaining = 0;
     private firePlayer() {
@@ -350,9 +379,12 @@ export class Combat {
         this.observeHull();
         if (this.ship.hull <= 0) return;
         this.duration += dt;
+        this.storm.step(dt, this.ship, this.targets, this.missiles, this.stormLaunch);
         this.flow.step(
             dt,
-            this.boss.dying <= 0 &&
+            this.encounter.pending < 0 &&
+                !this.allBosses.some((b) => b.active && (b.arriving || b.grace > 0)) &&
+                this.boss.dying <= 0 &&
                 this.remaining > 0 &&
                 (!this.boss.active ||
                     (!this.boss.arriving && this.boss.grace <= 0 && this.boss.parts.some((p) => p.targetable)))
@@ -383,131 +415,29 @@ export class Combat {
         if (spawn !== 'none' && this.director.group === 1)
             this.challenge.begin(this.wave, this.flow, this.challengesEnabled);
         if (spawn === 'boss') {
-            this.boss.spawn(this.ship, this.rocks);
+            const boss = this.boss;
+            this.encounter.begin(this.wave, this.allBosses, boss);
+            boss.spawn(this.ship, this.rocks);
+            this.defenseFleet.begin();
             this.event('boss:spawn');
             this.emit('charge', this.boss.position, 2);
         } else if (spawn === 'squad') this.spawnWave();
-        const attacks = this.guardian.attack;
-        const tells = this.boss.patterns.tells,
-            salvos = this.boss.patterns.salvos;
-        this.boss.step(dt, this.ship, this.rocks, this.projectiles);
-        if (this.boss.active) {
-            const b = this.boss,
-                p = b.patterns;
-            if (p.tells !== tells) this.emit('charge', b.position, 0.7);
-            if (p.salvos !== salvos) this.emit('salvo', b.position, 1.2);
-            if (
-                p.beamActive &&
-                b.beamCooldown <= 0 &&
-                (Number.isFinite(
-                    sweptHit(
-                        p.beamOrigin,
-                        p.beamEnd,
-                        this.ship.previous,
-                        this.ship.position,
-                        BOSS_PATTERNS.beam.radius + 3
-                    )
-                ) ||
-                    (p.profile === 'tesser' &&
-                        p.kind === 'cross' &&
-                        Number.isFinite(
-                            sweptHit(
-                                p.secondOrigin,
-                                p.secondEnd,
-                                this.ship.previous,
-                                this.ship.position,
-                                BOSS_PATTERNS.beam.radius + 3
-                            )
-                        )))
-            ) {
-                this.hurtPlayer(BOSS_PATTERNS.beam.damage, p.beamOrigin);
-                b.beamCooldown = BOSS_PATTERNS.beam.hitInterval;
-            }
-        }
-        if (this.guardian.active && this.guardian.attack !== attacks)
-            this.emit('salvo', this.guardian.warningOrigin, 2);
-        if (this.guardian.active && this.guardian.escortsPending) {
-            this.guardian.escortsPending = false;
-            for (let i = 0; i < GUARDIAN.escorts; i++) {
-                const e = this.enemies.find((t) => !t.active);
-                if (!e) break;
-                this.guardian.rotation
-                    .transformVector(this.delta.set(i ? 180 : -180, 75, -100), this.target)
-                    .add(this.guardian.position);
-                if (this.rocks.every((r) => r.position.distance(this.target) > r.radius + 20))
-                    e.spawn('interceptor', this.target, this.ship.rotation, true);
-            }
-        }
-        if (this.boss.dying > 0) {
-            const deathBeats =
-                this.boss instanceof Phantom
-                    ? [0, 0.35, 0.85, 1.6, 2.7, 3.8, 4.8]
-                    : this.boss instanceof Tesser
-                      ? [0, 0.8, 1.8, 2.8, 3.7, 4.3, 5.2]
-                      : SPECTACLE.boss.beats;
-            while (
-                this.boss.deathStage + 1 < SPECTACLE.boss.beats.length &&
-                this.boss.deathAge >= deathBeats[this.boss.deathStage + 1]
-            ) {
-                const stage = ++this.boss.deathStage;
-                this.boss.rotation
-                    .transformVector(
-                        this.delta.set(
-                            stage === 1 ? -64 : stage === 2 ? 64 : 0,
-                            stage === 3 ? 20 : 0,
-                            stage === 4 ? 105 : stage === 2 ? -45 : 0
-                        ),
-                        this.target
-                    )
-                    .add(this.boss.position);
-                if (this.boss instanceof Phantom) this.target.lerp(this.boss.position, this.target, 0.18);
-                this.emit(
-                    stage === SPECTACLE.boss.finalBeat
-                        ? 'capital-final'
-                        : this.boss instanceof Phantom
-                          ? 'elite-explosion'
-                          : 'capital-burst',
-                    this.target,
-                    this.boss instanceof Phantom
-                        ? stage === SPECTACLE.boss.finalBeat
-                            ? 5
-                            : 1.5
-                        : stage === SPECTACLE.boss.finalBeat
-                          ? 9
-                          : stage === 0
-                            ? 2
-                            : 3.5,
-                    this.boss instanceof Phantom ? 'phantom' : this.boss instanceof Guardian ? 'tesser' : 'dreadnought'
-                );
-                this.shake = Math.max(this.shake, stage === SPECTACLE.boss.finalBeat ? 0.65 : 0.18);
-                if (stage === SPECTACLE.boss.finalBeat) {
-                    this.victory = EVOLUTION.boss.victory;
-                    this.flow.rewardTime = 1.35;
-                    this.event('boss:defeated');
-                }
-            }
-        }
-        if (this.boss.active && !this.boss.arriving && this.boss.collisionCooldown <= 0)
-            for (const h of this.boss.hull) {
-                this.delta.sub2(this.ship.position, h.position);
-                const distance = this.delta.length();
-                if (distance < h.radius + 3) {
-                    if (distance < 0.01) this.delta.set(0, 1, 0);
-                    else this.delta.mulScalar(1 / distance);
-                    this.ship.position
-                        .copy(this.delta)
-                        .mulScalar(h.radius + 3.1)
-                        .add(h.position);
-                    this.ship.previous.copy(this.ship.position);
-                    this.ship.velocity.mulScalar(0.2);
-                    this.hurtPlayer(18, h.position);
-                    this.boss.collisionCooldown = 1;
-                    break;
-                }
-            }
+        this.beamDamageCooldown = Math.max(0, this.beamDamageCooldown - dt);
+        this.encounter.step(dt, this.allBosses, this.ship, this.rocks);
+        for (const boss of this.allBosses) this.stepBoss(boss, dt);
+        this.guardian.escortsPending = false;
+        this.defenseFleet.step(
+            dt,
+            this.allBosses,
+            this.enemies,
+            this.ship,
+            this.rocks,
+            this.encounter.dual,
+            this.spawnObstacles
+        );
         this.barrels.step(dt, this.ship.position);
-        this.frontier.step(dt, this.ship, this.projectiles, this.boss.active || this.boss.dying > 0);
-        this.frontier.dispatchAmbush(this.enemies, this.ship, this.boss.active || this.boss.dying > 0);
+        this.frontier.step(dt, this.ship, this.projectiles, this.hasBossEncounter);
+        this.frontier.dispatchAmbush(this.enemies, this.ship, this.hasBossEncounter);
         let hostilePressure = 0;
         for (const p of this.projectiles.items) if (p.active && p.hostile) hostilePressure++;
         const attackBudget = this.boss.active
@@ -518,6 +448,7 @@ export class Combat {
               ? 1
               : this.director.attackers;
         this.squadron.step(dt, this.enemies, this.ship, attackBudget, Math.max(0, this.wave - 5));
+        this.defenseFleet.coordinate(this.enemies, this.allBosses);
         for (const e of this.enemies)
             if (e.active) {
                 if (
@@ -566,6 +497,129 @@ export class Combat {
         this.missiles.step(dt, this.getTarget);
         for (const p of this.missiles.items) if (p.active) this.trace(p);
     }
+    private stepBoss(boss: EncounterBoss, dt: number) {
+        const tells = boss.patterns.tells,
+            salvos = boss.patterns.salvos;
+        boss.step(dt, this.ship, this.rocks, this.projectiles);
+        if (boss.active) {
+            const b = boss,
+                p = b.patterns;
+            if (p.tells !== tells) this.emit('charge', b.position, 0.7);
+            if (p.salvos !== salvos) this.emit('salvo', b.position, 1.2);
+            if (
+                p.beamActive &&
+                b.beamCooldown <= 0 &&
+                this.beamDamageCooldown <= 0 &&
+                (Number.isFinite(
+                    sweptHit(
+                        p.beamOrigin,
+                        p.beamEnd,
+                        this.ship.previous,
+                        this.ship.position,
+                        BOSS_PATTERNS.beam.radius + 3
+                    )
+                ) ||
+                    (p.profile === 'tesser' &&
+                        p.kind === 'cross' &&
+                        Number.isFinite(
+                            sweptHit(
+                                p.secondOrigin,
+                                p.secondEnd,
+                                this.ship.previous,
+                                this.ship.position,
+                                BOSS_PATTERNS.beam.radius + 3
+                            )
+                        )))
+            ) {
+                this.hurtPlayer(BOSS_PATTERNS.beam.damage, p.beamOrigin);
+                b.beamCooldown = BOSS_PATTERNS.beam.hitInterval;
+                this.beamDamageCooldown = BOSS_PATTERNS.beam.hitInterval;
+            }
+        }
+        if (boss.dying > 0) {
+            const deathBeats =
+                boss instanceof Phantom
+                    ? [0, 0.35, 0.85, 1.6, 2.7, 3.8, 4.8]
+                    : boss instanceof Tesser
+                      ? [0, 0.8, 1.8, 2.8, 3.7, 4.3, 5.2]
+                      : SPECTACLE.boss.beats;
+            while (
+                boss.deathStage + 1 < SPECTACLE.boss.beats.length &&
+                boss.deathAge >= deathBeats[boss.deathStage + 1]
+            ) {
+                const stage = ++boss.deathStage;
+                boss.rotation
+                    .transformVector(
+                        this.delta.set(
+                            stage === 1 ? -64 : stage === 2 ? 64 : 0,
+                            stage === 3 ? 20 : 0,
+                            stage === 4 ? 105 : stage === 2 ? -45 : 0
+                        ),
+                        this.target
+                    )
+                    .add(boss.position);
+                if (boss instanceof Phantom) this.target.lerp(boss.position, this.target, 0.18);
+                this.emit(
+                    stage === SPECTACLE.boss.finalBeat
+                        ? 'capital-final'
+                        : boss instanceof Phantom
+                          ? 'elite-explosion'
+                          : 'capital-burst',
+                    this.target,
+                    boss instanceof Phantom
+                        ? stage === SPECTACLE.boss.finalBeat
+                            ? 5
+                            : 1.5
+                        : stage === SPECTACLE.boss.finalBeat
+                          ? 9
+                          : stage === 0
+                            ? 2
+                            : 3.5,
+                    boss instanceof Phantom ? 'phantom' : boss instanceof Guardian ? 'tesser' : 'dreadnought'
+                );
+                this.shake = Math.max(this.shake, stage === SPECTACLE.boss.finalBeat ? 0.65 : 0.18);
+                if (stage === SPECTACLE.boss.finalBeat) {
+                    if (this.encounter.pending < 0 && !this.allBosses.some((b) => b.active))
+                        this.victory = EVOLUTION.boss.victory;
+                    this.flow.rewardTime = 1.35;
+                    if (
+                        !this.encounter.victoryAnnounced &&
+                        this.encounter.pending < 0 &&
+                        this.allBosses.every(
+                            (b) => !b.active && (b.dying <= 0 || b.deathStage >= SPECTACLE.boss.finalBeat)
+                        )
+                    ) {
+                        this.encounter.victoryAnnounced = true;
+                        this.event('boss:defeated');
+                    }
+                }
+            }
+        }
+        if (boss.active && !boss.arriving && boss.collisionCooldown <= 0)
+            for (const h of boss.hull) {
+                this.delta.sub2(this.ship.position, h.position);
+                const distance = this.delta.length();
+                if (distance < h.radius + 3) {
+                    if (distance < 0.01) this.delta.set(0, 1, 0);
+                    else this.delta.mulScalar(1 / distance);
+                    this.ship.position
+                        .copy(this.delta)
+                        .mulScalar(h.radius + 3.1)
+                        .add(h.position);
+                    this.ship.previous.copy(this.ship.position);
+                    this.ship.velocity.mulScalar(0.2);
+                    this.hurtPlayer(18, h.position);
+                    boss.collisionCooldown = 1;
+                    break;
+                }
+            }
+    }
+    activateStorm() {
+        if (this.upgrades.pending) return false;
+        if (!this.storm.activate(this.ship, this.targets, this.selected, this.missiles)) return false;
+        this.emit('charge', this.ship.position, 0.6);
+        return true;
+    }
     launchMissile() {
         if (this.ship.hull <= 0 || this.ammo <= 0 || this.missileCooldown > 0) return false;
         const target = this.targeting.missile(this.getTarget(this.selected), this.targets);
@@ -584,8 +638,9 @@ export class Combat {
         for (const e of this.enemies)
             if (e.active && e.position.distance(this.ship.position) <= EVOLUTION.emp.radius)
                 e.disrupted = EVOLUTION.emp.duration;
-        if (this.boss.active && this.boss.position.distance(this.ship.position) <= EVOLUTION.emp.radius + 50)
-            this.boss.disrupted = EVOLUTION.emp.bossDuration;
+        for (const boss of this.allBosses)
+            if (boss.active && boss.position.distance(this.ship.position) <= EVOLUTION.emp.radius + 50)
+                boss.disrupted = EVOLUTION.emp.bossDuration;
         for (const p of this.frontier.targets)
             if (p.active && p.position.distance(this.ship.position) <= EVOLUTION.emp.radius)
                 p.disrupted = EVOLUTION.emp.duration;
@@ -688,14 +743,15 @@ export class Combat {
                         victim = e;
                     }
                 }
-            if (this.boss.active)
-                for (const h of this.boss.hull) {
-                    const t = sweptHit(p.previous, p.position, h.previous, h.position, h.radius + p.radius);
-                    if (t < nearest) {
-                        nearest = t;
-                        victim = undefined;
+            for (const boss of this.allBosses)
+                if (boss.active)
+                    for (const h of boss.hull) {
+                        const t = sweptHit(p.previous, p.position, h.previous, h.position, h.radius + p.radius);
+                        if (t < nearest) {
+                            nearest = t;
+                            victim = undefined;
+                        }
                     }
-                }
         }
         if (nearest === Infinity) return;
         p.position.lerp(p.previous, p.position, nearest);
@@ -719,38 +775,38 @@ export class Combat {
             if (victim instanceof Barrel) {
                 this.barrels.damage(victim, p.damage, (b) => this.barrelBlast(b, !p.hostile));
             } else if (victim instanceof BossPart) {
-                const phaseBefore = this.boss.phase;
-                if (this.boss.damage(victim, p.damage)) {
-                    if (this.boss instanceof Artillery && this.boss.phase !== phaseBefore) {
-                        this.emit('emp', this.boss.position, 3);
+                const boss = this.allBosses.find((b) => b.parts.includes(victim))!;
+                const phaseBefore = boss.phase;
+                if (boss.damage(victim, p.damage)) {
+                    if (boss instanceof Artillery && boss.phase !== phaseBefore) {
+                        this.emit('emp', boss.position, 3);
                         this.shake = Math.max(this.shake, 0.22);
                     }
-                    if (this.boss instanceof Guardian && victim.id < 28)
+                    if (boss instanceof Guardian && victim.id < 28)
                         this.flow.kill(GUARDIAN.componentScore, this.ship.boosting, 'TESSER SYSTEM DOWN');
                     else if (victim.id < 12) this.flow.kill(ARCADE.scoring.turret, this.ship.boosting, 'TURRET DOWN');
                     this.emit('explosion', victim.position, 2, 'turret');
-                    if (!this.boss.active) {
+                    if (!boss.active) {
                         this.flow.kill(
-                            this.boss instanceof Guardian
+                            boss instanceof Guardian
                                 ? GUARDIAN.score
-                                : this.boss instanceof Phantom
+                                : boss instanceof Phantom
                                   ? FLEET.phantom.score
                                   : ARCADE.scoring.boss,
                             this.ship.boosting,
-                            this.boss instanceof Guardian
+                            boss instanceof Guardian
                                 ? 'TESSER VICTORY'
-                                : this.boss instanceof Phantom
+                                : boss instanceof Phantom
                                   ? 'PHANTOM VICTORY'
                                   : 'CAPITAL VICTORY'
                         );
                         this.bosses++;
-                        const time = this.boss.age - this.boss.arrival.duration;
-                        if (this.boss instanceof Guardian) {
+                        const time = boss.age - boss.arrival.duration;
+                        if (boss instanceof Guardian) {
                             this.guardianBosses++;
                             this.bestGuardianTime =
                                 this.bestGuardianTime === null ? time : Math.min(this.bestGuardianTime, time);
-                            for (const e of this.enemies) e.active = false;
-                        } else if (this.boss instanceof Phantom) {
+                        } else if (boss instanceof Phantom) {
                             this.phantomBosses++;
                             this.bestPhantomTime =
                                 this.bestPhantomTime === null ? time : Math.min(this.bestPhantomTime, time);
@@ -759,7 +815,12 @@ export class Combat {
                         this.kills++;
                         this.bossReward = this.flow.lastReward;
                         this.shake = 0.25;
-                        for (const shot of this.projectiles.items) if (shot.hostile) shot.active = false;
+                        for (const shot of this.projectiles.items)
+                            if (
+                                shot.hostile &&
+                                (!this.allBosses.some((b) => b.active) || shot.owner === boss.parts[0].id)
+                            )
+                                shot.active = false;
                     }
                 }
             } else if (victim instanceof InstallationPart) {

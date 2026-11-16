@@ -200,8 +200,8 @@ export class PlayerThrusters {
         if (!this.root.enabled) return;
         this.state.update(command, ship.boosting, cruise, dt, active, !started);
         if (ship.evasion.active && active) {
-            this.state.power = Math.max(0.85, this.state.power);
-            this.state.length = Math.max(3, this.state.length);
+            this.state.power = Math.max(0.95, this.state.power);
+            this.state.length = Math.max(3.4, this.state.length);
             this.state.jets[ship.evasion.side > 0 ? 0 : 1] = 1;
         }
         const s = this.state,

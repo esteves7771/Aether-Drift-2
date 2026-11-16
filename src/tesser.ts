@@ -185,6 +185,7 @@ export class Tesser extends Guardian {
         }
         this.velocity.lerp(this.velocity, this.vectorT, 1 - Math.exp(-dt * 2));
         this.position.add(this.vectorT.copy(this.velocity).mulScalar(dt));
+        this.returnToEngagement(ship, this.arrival.anchor, dt);
         this.matrixT.setLookAt(this.position, ship.position, Vec3.UP);
         this.desiredT.setFromMat4(this.matrixT);
         this.rotation.slerp(this.rotation, this.desiredT, 1 - Math.exp(-dt * 0.7));

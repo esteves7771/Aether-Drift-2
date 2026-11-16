@@ -1,7 +1,8 @@
+import { BULLETHELL } from './bullethell-config';
 /** Ordinary attacks stay smaller than capital barrages; seconds, metres, bounded counts. */
 export const ENEMY_PATTERNS = {
-    hostileLimit: 60,
-    reserve: 32,
+    hostileLimit: BULLETHELL.ordinary,
+    reserve: BULLETHELL.playerReserve,
     majorSlots: 1,
     standard: { count: 3, spread: 0.018, interval: 0.18, tell: 0.5, cooldown: 3.2 },
     veteran: { count: 5, spread: 0.065, interval: 0.16, tell: 0.85, cooldown: 3.8 },

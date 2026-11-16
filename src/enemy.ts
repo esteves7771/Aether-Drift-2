@@ -25,6 +25,7 @@ export class Enemy {
     active = false;
     generation = 0;
     owner = -1;
+    escortOwner = -1;
     ownerGeneration = 0;
     deployments = 0;
     orphanTime = 0;
@@ -101,6 +102,7 @@ export class Enemy {
         this.plasma = false;
         this.generation++;
         this.owner = -1;
+        this.escortOwner = -1;
         this.ownerGeneration = this.deployments = this.orphanTime = this.warmup = 0;
         this.elite = elite;
         this.disrupted = 0;

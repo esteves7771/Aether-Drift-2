@@ -1,7 +1,8 @@
 import { Quat, Vec3 } from 'playcanvas';
 
+import { BULLETHELL } from './bullethell-config';
 import type { Flight } from './flight';
-export const EVADE = { duration: 0.7, cooldown: 5, impulse: 34 } as const;
+export const EVADE = BULLETHELL.evade;
 /** Actual bounded lateral impulse and local-axis attitude rotation; no invulnerability or projectile removal. */
 export class EvasiveRoll {
     active = false;

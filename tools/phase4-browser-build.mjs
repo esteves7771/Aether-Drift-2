@@ -34,12 +34,36 @@ await build({
                         `
     const pilotAim=new Entity('Test pilot orientation'), pilotPoint=new Vec3(), pilotMove=new Vec3(), pilotDelta=new Vec3();
     let pilotAge=0;
-    const driver={combat,flight,app,rocks,cruise,modelLibrary,hangar,living,${baseline ? '' : 'universe,'}thrusters:scene.thrusters,input,chase,settings,pilotCamera,explosions:combatView.explosions,events:captures,useAbilities:true,autoUpgrades:true,pilot:false,advance(ticks:number){for(let i=0;i<ticks;i++)app.fire('update',.05);}};
+    const driver={combat,flight,app,rocks,cruise,modelLibrary,hangar,living,${baseline ? '' : 'universe,'}thrusters:scene.thrusters,input,chase,settings,pilotCamera,explosions:combatView.explosions,view:combatView,events:captures,useAbilities:true,autoUpgrades:true,pilot:false,controlsOnly:false,advance(ticks:number){for(let i=0;i<ticks;i++)app.fire('update',.05);}};
     Object.assign(globalThis,{__phase4:driver});
     app.on('update',(dt:number)=>{
         if(driver.pilot&&driver.autoUpgrades&&combat.upgrades.pending){chooseUpgrade(combat.upgrades.offers[0]);window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyZ',bubbles:true}));return;}
         if(!driver.pilot||!active||dt<=0)return;
         pilotAge+=dt;
+        if(driver.controlsOnly){
+            const bosses=combat.allBosses;
+            const boss=combat.boss;
+            const target= boss.active?(boss.parts.find(p=>p.targetable)??combat.enemies.find(e=>e.targetable)??boss.parts.find(p=>p.active)):combat.enemies.find(e=>e.targetable);
+            if(!target)return;
+            const distance=target.position.distance(flight.position);
+            pilotPoint.copy(target.velocity).sub(flight.velocity).mulScalar(distance/480).add(target.position);
+            const local=flight.rotation.clone().invert().transformVector(pilotPoint.clone().sub(flight.position));
+            const yaw=Math.atan2(local.x,-local.z),pitch=Math.atan2(local.y,Math.hypot(local.x,local.z));
+            window.dispatchEvent(new MouseEvent('mousemove',{movementX:Math.round(yaw*3*dt/(.002*settings.sensitivity)),movementY:Math.round(-pitch*3*dt/(.002*settings.sensitivity)),bubbles:true}));
+            const set=(code:string,down:boolean)=>window.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code,bubbles:true,repeat:down}));
+            const tap=(code:string)=>{window.dispatchEvent(new KeyboardEvent('keydown',{code,bubbles:true}));window.dispatchEvent(new KeyboardEvent('keyup',{code,bubbles:true}));};
+            set('KeyW',distance>440);set('KeyS',distance<300);set('KeyD',Math.sin(pilotAge*.65)>0);set('KeyA',Math.sin(pilotAge*.65)<=0);
+            set('KeyF',Math.sin(pilotAge*.83)>.3);set('ControlLeft',Math.sin(pilotAge*.83)<-.3);set('ShiftLeft',distance>700||bosses.some(b=>b.active&&b.patterns.beamActive));
+            if(Math.abs(yaw)<.16&&Math.abs(pitch)<.16)document.getElementById('application-canvas')!.dispatchEvent(new MouseEvent('mousedown',{button:2,bubbles:true}));
+            if(driver.useAbilities){
+                if(combat.ammo>0&&combat.missileCooldown<=0)tap('KeyM');
+                if(combat.storm.ready)tap('KeyV');
+                if(combat.empCooldown<=0&&combat.enemies.some(e=>e.targetable&&e.position.distance(flight.position)<170))tap('KeyG');
+                if(flight.evasion.cooldown<=0&&bosses.some(b=>b.active&&b.patterns.state==='fire'))tap('Space');
+            }
+            return;
+        }
+
         let target=combat.targets.find(t=>t.active&&t.targetable&&(t.id<16||t.id>=22&&t.id<=28));
         const artillery=combat.boss;
         if(artillery.active){
@@ -78,6 +102,7 @@ await build({
                 if(pilotDelta.length()>15)pilotMove.copy(pilotDelta).normalize().mulScalar(75);
             }
             flight.velocity.copy(pilotMove);
+            if(driver.useAbilities&&combat.storm.ready)combat.activateStorm();
             if(driver.useAbilities&&combat.wave>=3&&combat.ammo>0&&combat.missileCooldown<=0)combat.launchMissile();
         }
         if(driver.useAbilities&&combat.empCooldown<=0&&combat.enemies.some(e=>e.active&&e.position.distance(flight.position)<150))combat.emp();

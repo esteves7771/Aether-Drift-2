@@ -10,6 +10,7 @@ export class Input {
     private targetRequested = false;
     private missileRequested = false;
     private empRequested = false;
+    private stormRequested = false;
     private cameraRequested = false;
     private evadeRequested = false;
     private recentSide = 1;
@@ -35,6 +36,7 @@ export class Input {
                 if (e.code === 'KeyR' && !e.repeat) reset();
                 if (!e.repeat && e.code === 'KeyM') this.missileRequested = true;
                 if (!e.repeat && e.code === 'KeyG') this.empRequested = true;
+                if (!e.repeat && e.code === 'KeyV') this.stormRequested = true;
                 if (!e.repeat && e.code === 'Space') this.evadeRequested = true;
                 if (!e.repeat && e.code === 'KeyC') this.cameraRequested = true;
                 this.keys.add(e.code);
@@ -86,7 +88,7 @@ export class Input {
     }
     clear() {
         this.keys.clear();
-        this.missileRequested = this.empRequested = false;
+        this.missileRequested = this.empRequested = this.stormRequested = false;
         this.cameraRequested = this.evadeRequested = false;
         this.mx = this.my = 0;
         this.mouseFire = this.firing = this.targetRequested = false;
@@ -115,6 +117,11 @@ export class Input {
         const v = this.evadeRequested;
         this.evadeRequested = false;
         return v ? Number(this.keys.has('KeyD')) - Number(this.keys.has('KeyA')) || this.recentSide : 0;
+    }
+    consumeStorm() {
+        const v = this.stormRequested;
+        this.stormRequested = false;
+        return v;
     }
     consumeMissile() {
         const value = this.missileRequested;

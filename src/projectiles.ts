@@ -1,5 +1,6 @@
 import { Vec3 } from 'playcanvas';
 
+import { BULLETHELL } from './bullethell-config';
 import { COMBAT } from './combat-config';
 import { FLEET } from './fleet-config';
 export class Projectile {
@@ -10,6 +11,7 @@ export class Projectile {
     alien = false;
     guide = 0;
     pattern = 0;
+    owner = -1;
     get missile() {
         return this.seeker;
     }
@@ -57,8 +59,17 @@ export class Projectiles {
         seeker = false,
         plasma = false,
         alien = false,
-        pattern = 0
+        pattern = 0,
+        owner = -1
     ) {
+        if (hostile) {
+            let active = 0;
+            for (const item of this.items) if (item.active) active++;
+            if (active >= this.items.length - BULLETHELL.playerReserve) {
+                this.dropped++;
+                return false;
+            }
+        }
         const p = this.items.find((item) => !item.active);
         if (!p) {
             this.dropped++;
@@ -70,6 +81,7 @@ export class Projectiles {
         p.plasma = plasma;
         p.alien = alien;
         p.pattern = pattern;
+        p.owner = owner;
         p.guide = seeker ? FLEET.missile.guide : 0;
         p.position.copy(position);
         p.previous.copy(position);

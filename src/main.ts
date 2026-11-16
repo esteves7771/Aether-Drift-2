@@ -362,6 +362,10 @@ try {
                     cruise.cancel('WEAPONS / DECELERATING');
                     combat.launchMissile();
                 }
+                if (input.consumeStorm()) {
+                    cruise.cancel('MISSILE STORM');
+                    combat.activateStorm();
+                }
                 if (input.consumeEMP()) {
                     cruise.cancel('SYSTEMS / DECELERATING');
                     combat.emp();

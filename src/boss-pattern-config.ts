@@ -1,3 +1,5 @@
+import { BULLETHELL } from './bullethell-config';
+
 export type PatternKind = 'fan' | 'banks' | 'helix' | 'beam' | 'seekers' | 'sphere' | 'cross' | 'finale';
 export interface PatternSpec {
     name: string;
@@ -41,17 +43,17 @@ export const PATTERNS: Record<PatternKind, PatternSpec> = {
         damage: 13
     },
     fan: {
-        name: 'LAYERED PLASMA FAN',
+        name: 'ARTILLERY CURTAIN',
         hint: 'FIND THE STAGGERED GAP / STRAFE',
         telegraph: [1.8, 1.65, 1.5],
         fire: 1.2,
         recovery: [4.5, 3.8, 3.2],
         interval: 0.65,
         speed: 125,
-        damage: 18
+        damage: 11
     },
     banks: {
-        name: 'ALTERNATING BATTERIES',
+        name: 'CRIMSON BARRAGE',
         hint: 'KEEP LATERAL THRUST / BREAK AIM',
         telegraph: [1.5, 1.35, 1.2],
         fire: 2.1,
@@ -95,11 +97,11 @@ export const BOSS_PATTERNS = {
     sequences: [
         ['fan', 'banks', 'helix', 'banks'],
         ['seekers', 'beam', 'fan', 'helix', 'banks'],
-        ['helix', 'beam', 'seekers', 'banks', 'fan']
+        ['finale', 'beam', 'helix', 'banks', 'fan']
     ] as readonly (readonly PatternKind[])[],
-    hostileLimit: 96,
-    playerReserve: 32,
+    hostileLimit: BULLETHELL.single,
+    playerReserve: BULLETHELL.playerReserve,
     life: 7,
     aimLead: 0.3,
-    beam: { length: 900, radius: 2.8, damage: 8, hitInterval: 0.22, sweep: 0.48 }
+    beam: { length: BULLETHELL.beamLength, radius: 2.8, damage: 8, hitInterval: 0.22, sweep: 0.48 }
 } as const;

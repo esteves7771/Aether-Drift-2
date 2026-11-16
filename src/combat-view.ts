@@ -8,6 +8,7 @@ import type { Combat } from './combat';
 import { COMBAT } from './combat-config';
 import type { CombatEvent } from './combat-config';
 import type { GraphicsQuality } from './config';
+import { EnergyProjectiles } from './energy-projectiles';
 import { EVOLUTION } from './evolution-config';
 import type { BlastClass } from './explosion-config';
 import { CinematicExplosions } from './explosions';
@@ -34,6 +35,7 @@ class Effect {
 }
 export class CombatView {
     readonly explosions: CinematicExplosions;
+    readonly energy: EnergyProjectiles;
     readonly root = new Entity('Combat');
     private readonly enemyRoots: Entity[] = [];
     get enemyVisualRoots(): readonly Entity[] {
@@ -89,6 +91,7 @@ export class CombatView {
         secondarySound?: (point: Vec3, size: number) => void
     ) {
         this.art = art;
+        this.energy = new EnergyProjectiles(app);
         this.explosions = new CinematicExplosions(app);
         this.secondarySound = secondarySound;
         this.bossView = new ArtilleryView(app, boss);
@@ -200,6 +203,7 @@ export class CombatView {
         validateRenderAttributes(this.root);
     }
     setQuality(level: GraphicsQuality) {
+        this.energy.setQuality(level);
         this.explosions.setQuality(level);
         this.warmFrames = 4;
         this.limit = PRESETS[level].effects;
@@ -304,6 +308,7 @@ export class CombatView {
                 }
             }
         this.warmup.enabled = this.warmFrames-- > 0;
+        if (camera) this.energy.render(combat.projectiles, camera, alpha, dt);
         this.bossView.render(combat.dreadnought, alpha, combat.wave);
         this.phantomView.render(combat.phantom, alpha);
         this.missileTrailTime += dt;
@@ -313,7 +318,7 @@ export class CombatView {
             const t = this.acquire();
             if (t) {
                 t.type = 'trail';
-                t.life = t.duration = 0.35;
+                t.life = t.duration = 0.42;
                 t.size = 1.5;
                 t.position.copy(combat.ship.position);
                 t.velocity.set(0, 0, 0);
@@ -328,14 +333,15 @@ export class CombatView {
             if (m.active) {
                 this.position.lerp(m.previous, m.position, alpha);
                 e.setPosition(this.position);
+                e.render!.meshInstances[0].material = m.storm ? this.ion : this.orange;
                 this.target.copy(this.position).add(m.direction);
                 e.lookAt(this.target);
                 if (leaveTrail) {
                     const trace = this.acquire();
                     if (trace) {
                         trace.type = 'trail';
-                        trace.life = trace.duration = 0.4;
-                        trace.size = 1;
+                        trace.life = trace.duration = m.storm ? 0.65 : 0.4;
+                        trace.size = m.storm ? 1.5 : 1;
                         trace.position.copy(this.position);
                         trace.velocity.set(0, 0, 0);
                         trace.entity.render!.meshInstances[0].mesh = this.quadMesh;
@@ -376,8 +382,8 @@ export class CombatView {
         for (let i = 0; i < this.bolts.length; i++) {
             const p = combat.projectiles.items[i],
                 e = this.bolts[i];
-            e.enabled = p.active;
-            if (!p.active) continue;
+            e.enabled = p.active && !p.hostile;
+            if (!p.active || p.hostile) continue;
             this.position.lerp(p.previous, p.position, alpha);
             e.setPosition(this.position);
             this.target.copy(this.position).add(p.velocity);
@@ -462,6 +468,7 @@ export class CombatView {
         this.explosions.destroy();
         this.ion.destroy();
         this.alien.destroy();
+        this.energy.destroy();
         this.bossView.destroy();
         this.phantomView.destroy();
         this.elite.destroy();

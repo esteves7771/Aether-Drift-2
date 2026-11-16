@@ -23,7 +23,7 @@ export const EVOLVED_BOSSES = {
             accent: [0.25, 0.8, 1.5] as const
         },
         sequences: [
-            ['banks', 'seekers', 'banks', 'fan'],
+            ['helix', 'banks', 'seekers', 'cross'],
             ['cross', 'helix', 'seekers', 'banks'],
             ['finale', 'cross', 'helix', 'seekers', 'fan']
         ] as readonly (readonly PatternKind[])[]
@@ -58,21 +58,21 @@ export function encounterSpec(profile: EncounterProfile, kind: PatternKind): Pat
         name:
             profile === 'phantom'
                 ? {
-                      banks: 'HUNTER BURST',
+                      banks: 'CRIMSON HUNTER VOLLEY',
                       seekers: 'TRACKING SALVO',
-                      helix: 'SPIRAL LANCE',
-                      cross: 'CROSS-VECTOR STRIKE',
-                      finale: 'PREDATOR FINALE',
+                      helix: 'VIOLET SPIRAL LANCE',
+                      cross: 'PHANTOM CROSS-STRIKE',
+                      finale: 'FINAL HUNT',
                       fan: 'SHIFTING ION FAN',
                       beam: 'PRECISION LANCE',
                       sphere: 'HUNTER CONE'
                   }[kind]
                 : {
-                      sphere: 'PARTIAL SPHERICAL BURST',
-                      helix: 'ROTATING HELIX',
+                      sphere: 'GEOMETRIC SPHERE',
+                      helix: 'SINGULARITY HELIX',
                       cross: 'CROSSING BEAM SWEEP',
-                      fan: 'GEOMETRIC BARRAGE',
-                      finale: 'SINGULARITY SEQUENCE',
+                      fan: 'ORBITAL CURTAIN',
+                      finale: 'SINGULARITY OVERDRIVE',
                       banks: 'WEAPON BANKS',
                       seekers: 'ION SALVO',
                       beam: 'GRAVITATIONAL LANCE'

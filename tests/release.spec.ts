@@ -1,7 +1,107 @@
+import fs from 'node:fs';
+
 import { expect, test } from '@playwright/test';
 import type { AppBase, Asset, ContainerResource, Entity, RenderComponent } from 'playcanvas';
 
 import { MODEL_TUNING } from '../src/model-config';
+
+// Run unchanged against the local Pages build and the actual public URL.
+// Only the Engine clock is accelerated; combat uses real controls and unchanged health.
+for (const renderer of ['webgpu', 'webgl2'])
+    test('Phase 5I production abilities / ' + renderer, async ({ page, baseURL, request }) => {
+        const errors: string[] = [],
+            bad: string[] = [];
+        page.on('pageerror', (e) => errors.push(e.message));
+        page.on('console', (m) => {
+            if (m.type() === 'error') errors.push(m.text());
+        });
+        page.on('response', (r) => {
+            if (r.status() >= 400) bad.push(r.url());
+        });
+        await page.addInitScript({ path: '.agents/skills/inspect-runtime/scripts/devtools-hook.js' });
+        await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
+        await expect(page.locator('.command-status')).toContainText('v0.5i');
+        const asset = fs.readFileSync('dist/index.html', 'utf8').match(/src="([^"]+\.js)"/)![1];
+        const deployedBundle = await request.get(new URL(asset, baseURL).href);
+        expect(deployedBundle.status()).toBe(200);
+        expect((await deployedBundle.body()).equals(fs.readFileSync('dist/assets/' + asset.split('/').pop()))).toBe(
+            true
+        );
+        expect(await page.evaluate(() => '__phase4' in globalThis)).toBe(false);
+        await page.locator('#show-settings').click();
+        await page.locator('#graphics').selectOption('low');
+        await page.locator('#menu-back').click();
+        await page.locator('#ship-surveyor').click();
+        await expect(page.locator('#ship-status')).toContainText('SURVEYOR READY');
+        await page.locator('#launch').click();
+        await page.keyboard.press('Space');
+        await expect(page.locator('#evasion-status')).toContainText('3s');
+        // Keep moving in a small orbit while charging; a stationary pilot is legitimately killed.
+        await page.keyboard.down('KeyD');
+        await page.keyboard.down('ArrowRight');
+        await page.evaluate(() => {
+            const app = [
+                ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+            ][0];
+            app.timeScale = 3;
+        });
+        for (let i = 0; i < 90; i++) {
+            if ((await page.locator('#storm-status').textContent()) === 'V / STORM READY') break;
+            if (i % 4 === 0) await page.keyboard.press('KeyG');
+            await page.waitForTimeout(500);
+        }
+        await expect(page.locator('#storm-status')).toContainText('READY');
+        await expect(page.locator('#evasion-status')).toContainText('READY');
+        await page.keyboard.up('KeyD');
+        await page.keyboard.up('ArrowRight');
+        await page.keyboard.down('KeyX');
+        await page.evaluate(() => {
+            const app = [
+                ...(globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }).__playcanvasApps.keys()
+            ][0];
+            app.timeScale = 0.5;
+        });
+        await page.keyboard.press('KeyC');
+        await expect(page.locator('#cockpit')).toBeVisible();
+        const ammo = await page.locator('#missile-ammo').textContent();
+        await page.keyboard.press('KeyV');
+        await expect
+            .poll(
+                () =>
+                    page.evaluate(() => {
+                        const app = [
+                            ...(
+                                globalThis as unknown as { __playcanvasApps: Map<AppBase, unknown> }
+                            ).__playcanvasApps.keys()
+                        ][0];
+                        return app.root.findByName('Guided missile 0')?.enabled;
+                    }),
+                { timeout: 5000 }
+            )
+            .toBe(true);
+        await expect(page.locator('#storm-charge')).toHaveAttribute('value', /^(0|1|2)(\.|$)/);
+        expect(await page.locator('#missile-ammo').textContent()).toBe(ammo);
+        await page.keyboard.up('KeyX');
+        await page.screenshot({ path: `artifacts/public-release/5i-storm-${renderer}.png` });
+        await page.keyboard.press('Escape');
+        const charge = await page.locator('#storm-charge').getAttribute('value');
+        await page.waitForTimeout(250);
+        expect(await page.locator('#storm-charge').getAttribute('value')).toBe(charge);
+        await page.locator('#launch').click();
+        await page.keyboard.press('KeyC');
+        await expect(page.locator('#cockpit')).toBeHidden();
+        await page.keyboard.press('KeyR');
+        await page.locator('#restart-accept').click();
+        await expect(page.locator('#storm-status')).toContainText('0%');
+        expect(errors).toEqual([]);
+        expect(bad).toEqual([]);
+        console.log('Phase 5I public controls', {
+            renderer,
+            url: baseURL,
+            storm: 'charged and physically launched',
+            ammo
+        });
+    });
 
 for (const renderer of ['webgpu', 'webgl2'])
     test('Pages release / ' + renderer, async ({ page, baseURL, request }) => {
@@ -214,7 +314,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
         await expect(page.locator('#perf')).toContainText(renderer.toUpperCase());
         await expect(page.locator('.command-logo')).toBeVisible();
-        await expect(page.locator('.command-status')).toContainText('v0.5h.1');
+        await expect(page.locator('.command-status')).toContainText('v0.5i');
         await expect(page.locator('#ship-ptah')).toHaveCount(1);
         await expect(page.getByRole('button', { name: 'Next ships' })).toBeVisible();
         const inspection = page.locator('#ship-inspection');
@@ -396,7 +496,7 @@ for (const renderer of ['webgpu', 'webgl2'])
         });
         await page.addInitScript({ path: '.agents/skills/inspect-runtime/scripts/devtools-hook.js' });
         await page.goto(baseURL! + (renderer === 'webgl2' ? '?webgl' : ''));
-        await expect(page.locator('.command-status')).toContainText('v0.5h.1');
+        await expect(page.locator('.command-status')).toContainText('v0.5i');
         await page.getByRole('button', { name: 'Next ships' }).click();
         await page.locator('#ship-ptah').click();
         await expect(page.locator('#ship-ptah')).toHaveAttribute('aria-pressed', 'true');

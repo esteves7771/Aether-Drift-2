@@ -1,6 +1,7 @@
 import { Vec3 } from 'playcanvas';
 
 import { BOSS_PATTERNS, PATTERNS } from './boss-pattern-config';
+import { BULLETHELL } from './bullethell-config';
 import type { Rock } from './collisions';
 import { EVOLVED_BOSSES, encounterSpec } from './evolved-boss-config';
 import type { EncounterProfile } from './evolved-boss-config';
@@ -25,6 +26,9 @@ export class BossPatterns {
     }
 
     phase = 1;
+    permitted = true;
+    limit: number = BULLETHELL.single;
+    readonly chargeOrigin = new Vec3();
     index = 0;
     state: PatternStage = 'telegraph';
     time = 0;
@@ -42,6 +46,7 @@ export class BossPatterns {
     beamActive = false;
     obstacles: readonly Rock[] = [];
     private started = false;
+    private longRange = false;
     private pulse = 0;
     private readonly geometry = new PatternGeometry();
     private readonly direction = new Vec3();
@@ -50,7 +55,7 @@ export class BossPatterns {
         const sequence = (
             this.profile === 'artillery' ? BOSS_PATTERNS.sequences : EVOLVED_BOSSES[this.profile].sequences
         )[this.phase - 1];
-        return sequence[this.index % sequence.length];
+        return this.longRange ? 'banks' : sequence[this.index % sequence.length];
     }
     get spec() {
         return this.specs[this.kind];
@@ -59,7 +64,9 @@ export class BossPatterns {
         return this.index % 2;
     }
     get winding() {
-        return this.state === 'telegraph' ? Math.max(0, this.spec.telegraph[this.phase - 1] - this.time) : 0;
+        return this.permitted && this.state === 'telegraph'
+            ? Math.max(0, this.spec.telegraph[this.phase - 1] - this.time)
+            : 0;
     }
     reset(phase = 1) {
         this.phase = phase;
@@ -67,6 +74,7 @@ export class BossPatterns {
         this.state = 'telegraph';
         this.time = 0;
         this.started = false;
+        this.longRange = false;
         this.pulse = 0;
         this.beamActive = false;
         this.tells = this.salvos = 0;
@@ -78,6 +86,7 @@ export class BossPatterns {
         this.beamActive = false;
     }
     private begin(ship: Flight) {
+        this.longRange = this.chargeOrigin.distance(ship.position) > 900;
         this.aim.copy(ship.velocity).mulScalar(BOSS_PATTERNS.aimLead).add(ship.position);
         this.started = true;
         this.tells++;
@@ -102,10 +111,7 @@ export class BossPatterns {
                 active++;
                 if (p.hostile) hostile++;
             }
-        let budget = Math.min(
-            BOSS_PATTERNS.hostileLimit - hostile,
-            shots.items.length - active - BOSS_PATTERNS.playerReserve
-        );
+        let budget = Math.min(this.limit - hostile, shots.items.length - active - BOSS_PATTERNS.playerReserve);
         if (budget <= 0) return;
         if (this.profile === 'tesser' && this.phase === 1 && this.pulse % 2 === 1 && s.banks.some((b) => !b.active))
             return;
@@ -120,14 +126,15 @@ export class BossPatterns {
                     origin,
                     this.direction,
                     this.zero,
-                    spec.speed,
+                    Math.min(spec.speed * 1.6, Math.max(spec.speed, origin.distance(this.aim) / 5)),
                     spec.damage,
                     BOSS_PATTERNS.life,
                     true,
                     seeker,
                     plasma,
                     false,
-                    tag
+                    tag,
+                    this.profile === 'artillery' ? 8 : this.profile === 'phantom' ? 15 : 22
                 )
             )
                 budget--;
@@ -135,37 +142,41 @@ export class BossPatterns {
         if (kind === 'sphere' && this.pulse < 2) {
             // A perforated forward spherical cap: no closed wall, with a broad diagonal corridor.
             for (let row = -2; row <= 2; row++)
-                for (let lane = -3; lane <= 3; lane++) {
-                    if (Math.abs(lane - row) < 1.1 || (lane + row + this.pulse) % 4 === 0) continue;
-                    shoot(lane * 0.16, row * 0.2, false, true, 1);
+                for (let lane = -4; lane <= 4; lane++) {
+                    if (Math.abs(lane - row) < 1.2) continue;
+                    shoot(Math.tan(lane * 0.13) * Math.cos(row * 0.16), Math.tan(row * 0.16), false, true, 1);
                 }
-        } else if (kind === 'cross' && this.profile === 'phantom') {
-            shoot((this.pulse % 2 ? 1 : -1) * 0.025, Math.sin(this.pulse) * 0.04, false, false, 2);
         } else if (kind === 'finale') {
             if (this.pulse < 2) {
-                shoot(-0.09, 0.06, true, false, 5);
-                shoot(0.09, -0.06, true, false, 5);
-            } else if (this.pulse > 3) {
-                const a = this.pulse * 0.8;
-                shoot(Math.cos(a) * 0.24, Math.sin(a) * 0.24, false, true, 4);
-                shoot(-Math.cos(a) * 0.24, -Math.sin(a) * 0.24, false, true, 4);
-            }
-        } else if (kind === 'fan' && (this.pulse === 0 || (this.phase > 1 && this.pulse === 1))) {
-            for (let row = -1; row <= 1; row++)
-                for (let lane = -2; lane <= 2; lane++) {
-                    if (lane === ((row + this.index + this.pulse + 3) % 3) - 1) continue;
-                    shoot(lane * 0.125 + this.pulse * 0.045, row * 0.17, false, true, 1);
+                for (let row = -2; row <= 2; row++)
+                    for (let lane = -4; lane <= 4; lane++) {
+                        if (Math.abs(lane - (this.index % 2 ? 2 : -2)) <= 1) continue;
+                        shoot(lane * 0.095, row * 0.115, false, true, 1);
+                    }
+            } else if (this.pulse < 6) {
+                for (let i = -3; i <= 3; i++) shoot(i * 0.035, -i * 0.025, false, false, 2);
+            } else {
+                const a = this.pulse * 0.6;
+                for (let stream = 0; stream < 3; stream++) {
+                    const angle = a + stream * 2.094;
+                    shoot(Math.cos(angle) * 0.28, Math.sin(angle) * 0.28, false, false, 4);
                 }
-        } else if (kind === 'banks') {
-            for (let i = -1; i <= 1; i++) shoot(i * 0.018, i * 0.025, false, false, 2);
-        } else if (kind === 'helix') {
-            const a = this.pulse * 0.7 + this.index * 0.8;
-            for (let i = 0; i < (this.phase === 1 ? 2 : 3); i++) {
-                const angle = a + i * Math.PI * 0.9,
-                    r = i === 2 ? 0.12 : 0.29;
-                shoot(Math.cos(angle) * r, Math.sin(angle) * r, false, false, 4);
             }
-            if (this.pulse % 4 === 0) shoot(0, 0, false, false, 4);
+        } else if (kind === 'fan' && this.pulse < 2) {
+            for (let row = -2; row <= 2; row++)
+                for (let lane = -4; lane <= 4; lane++) {
+                    if (Math.abs(lane - (this.index % 2 ? 2 : -2)) <= 1) continue;
+                    shoot(lane * 0.095 + row * row * 0.008, row * 0.115, false, true, 1);
+                }
+        } else if (kind === 'banks' || (kind === 'cross' && this.profile === 'phantom')) {
+            for (let i = -3; i <= 3; i++) shoot(i * 0.034, (this.pulse % 2 ? 1 : -1) * i * 0.03, false, false, 2);
+        } else if (kind === 'helix') {
+            const streams = this.phase === 3 ? 4 : 3;
+            for (let stream = 0; stream < streams; stream++) {
+                const a = this.pulse * 0.52 * (stream % 2 ? -1 : 1) + (stream * Math.PI * 2) / streams;
+                const r = stream === 2 ? 0.17 : 0.3;
+                shoot(Math.cos(a) * r, Math.sin(a) * r, false, false, 4);
+            }
         } else if (kind === 'seekers' && this.pulse < 2) {
             shoot(-0.085, 0.075, true, false, 5);
             shoot(0.085, -0.075, true, false, 5);
@@ -249,6 +260,14 @@ export class BossPatterns {
     }
     step(dt: number, phase: number, ship: Flight, sources: PatternSources, shots: Projectiles, rocks: readonly Rock[]) {
         if (dt <= 0) return;
+        if (
+            (!this.permitted || sources.muzzle.distance(ship.position) > BULLETHELL.maximumRange) &&
+            this.state !== 'fire'
+        ) {
+            this.beamActive = false;
+            return;
+        }
+        this.chargeOrigin.copy(this.source(sources, this.pulse));
         if (phase !== this.phase) this.reset(phase);
         if (!this.started) this.begin(ship);
         this.time += dt;

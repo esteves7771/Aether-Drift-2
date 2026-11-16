@@ -136,12 +136,12 @@ export class UniverseView {
         this.root.enabled = started;
         if (!started) return;
         this.world.step(dt);
-        this.convoys.step(dt, player, this.combat.ship.rotation, this.combat.boss.active || this.traffic.active);
+        this.convoys.step(dt, player, this.combat.ship.rotation, this.combat.hasBossEncounter || this.traffic.active);
         this.convoyView.render(dt, player, started);
         this.traffic.step(
             dt,
             player,
-            this.combat.boss.active || this.convoys.groups.some((g) => g.active),
+            this.combat.hasBossEncounter || this.convoys.groups.some((g) => g.active),
             this.combat.ship.rotation
         ); // All boss encounters get uninterrupted presentation.
         if (!this.requested) {

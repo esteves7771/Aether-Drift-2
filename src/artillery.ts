@@ -164,6 +164,7 @@ export class Artillery extends Boss {
         }
         this.grace = Math.max(0, this.grace - dt);
         this.move(dt, ship, rocks);
+        this.returnToEngagement(ship, this.arrival.anchor, dt);
         this.updateParts(dt > 0 ? dt : 1);
         if (this.grace > 0) {
             this.patterns.beamActive = false;

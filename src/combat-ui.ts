@@ -25,7 +25,7 @@ export class CombatHUD {
     constructor() {
         document.body.insertAdjacentHTML(
             'beforeend',
-            `<aside id="combat-stats"><small>COMBAT LINK</small><strong id="score">000000</strong><div id="flow"><b id="flow-multiplier">×1.0</b><span id="flow-chain">COMBAT FLOW</span></div><meter id="flow-meter" min="0" max="${ARCADE.flow.window}"></meter><span id="challenge-status"></span><span id="wave-status">WAVE 01 / INBOUND</span></aside><div id="wave-banner"></div><div id="damage-direction">▼</div><div id="shield-impact"></div><small id="combat-perf"></small><div id="targets"></div><div id="score-feedback" hidden><strong></strong><span></span></div><aside id="abilities"><span id="missile-ammo"></span><span id="emp-status"></span><span id="evasion-status"></span><span id="target-status" role="status"></span></aside><aside id="boss-bar" hidden><small id="boss-name">CAPITAL SHIP / DREADNOUGHT</small><strong id="boss-phase"></strong><meter id="boss-health" min="0" max="1"></meter><span id="boss-attack"></span></aside>`
+            `<aside id="combat-stats"><small>COMBAT LINK</small><strong id="score">000000</strong><div id="flow"><b id="flow-multiplier">×1.0</b><span id="flow-chain">COMBAT FLOW</span></div><meter id="flow-meter" min="0" max="${ARCADE.flow.window}"></meter><span id="challenge-status"></span><span id="wave-status">WAVE 01 / INBOUND</span></aside><div id="wave-banner"></div><div id="damage-direction">▼</div><div id="shield-impact"></div><small id="combat-perf"></small><div id="targets"></div><div id="score-feedback" hidden><strong></strong><span></span></div><aside id="abilities"><span id="missile-ammo"></span><span id="emp-status"></span><span id="evasion-status"></span><span id="storm-status"></span><meter id="storm-charge" min="0" max="45" value="0"></meter><span id="target-status" role="status"></span></aside><aside id="boss-bar" hidden><small id="boss-name">CAPITAL SHIP / DREADNOUGHT</small><strong id="boss-phase"></strong><meter id="boss-health" min="0" max="1"></meter><span id="boss-attack"></span><div id="dual-boss" hidden><small id="dual-name"></small><meter id="dual-health" min="0" max="1"></meter><span id="dual-attack"></span></div></aside>`
         );
         const integrity = document.querySelector('.integrity')!;
         integrity.insertAdjacentHTML(
@@ -63,7 +63,7 @@ export class CombatHUD {
             const marker = this.markers[e.id];
             marker.hidden =
                 !e.active ||
-                (e.targetRole === 'boss' && combat.boss.arriving) ||
+                (e.targetRole === 'boss' && combat.allBosses.some((b) => b.arriving && b.parts.some((p) => p === e))) ||
                 (e.id >= 40 && combat.selected !== e.id) ||
                 (((e.id >= 16 && e.id < 22) || (e.id >= 30 && e.id < 40)) &&
                     e.position.distance(combat.ship.position) > 450);
@@ -147,6 +147,13 @@ export class CombatHUD {
                     ? 'SALVO / STRAFE OR EMP · '
                     : 'SALVO / EVADE · '
                 : 'G / EMP ') + (combat.empCooldown > 0 ? Math.ceil(combat.empCooldown) + 's' : 'READY · 180m');
+        document.getElementById('storm-status')!.textContent =
+            combat.storm.feedback > 0
+                ? combat.storm.message
+                : combat.storm.ready
+                  ? 'V / STORM READY'
+                  : 'V / STORM ' + Math.floor((combat.storm.charge / 45) * 100) + '%';
+        (document.getElementById('storm-charge') as HTMLMeterElement).value = combat.storm.charge;
         document.getElementById('evasion-status')!.textContent =
             'SPACE / EVADE ' +
             (combat.ship.evasion.cooldown > 0 ? Math.ceil(combat.ship.evasion.cooldown) + 's' : 'READY');
@@ -157,6 +164,28 @@ export class CombatHUD {
         const boss = combat.boss,
             bar = document.getElementById('boss-bar')!;
         bar.hidden = !boss.active;
+        const secondary = combat.allBosses.find((b) => b !== boss && b.active),
+            dual = document.getElementById('dual-boss')!;
+        dual.hidden = !combat.encounter.dual || (!secondary && combat.encounter.pending < 0);
+        if (!dual.hidden) {
+            document.getElementById('dual-name')!.textContent = secondary
+                ? secondary instanceof Phantom
+                    ? 'PHANTOM / SECOND CAPITAL'
+                    : secondary instanceof Guardian
+                      ? 'TESSER / SECOND CAPITAL'
+                      : 'DREADNOUGHT / SECOND CAPITAL'
+                : 'SECOND RIFT / SIGNATURE BUILDING';
+            (document.getElementById('dual-health') as HTMLMeterElement).value = secondary
+                ? secondary.health / secondary.maxHealth
+                : 1;
+            document.getElementById('dual-attack')!.textContent = secondary
+                ? secondary.arriving
+                    ? 'ARRIVING'
+                    : secondary.patterns.permitted
+                      ? secondary.attackName
+                      : 'REPOSITIONING / NEXT ATTACK'
+                : 'WEAPONS HOLD';
+        }
         document.getElementById('boss-name')!.textContent =
             boss instanceof Guardian
                 ? 'TESSER / THE GRAVITATIONAL ARCHITECT'

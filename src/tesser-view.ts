@@ -17,6 +17,7 @@ export class TesserView {
     private readonly rotation = new Quat();
     private readonly point = new Vec3();
     private meshes: MeshInstance[] = [];
+    private readonly heat = new Float32Array(3);
     private requested = false;
     private closed = false;
     constructor(app: AppBase, privateLibrary: ModelLibrary) {
@@ -65,16 +66,26 @@ export class TesserView {
         this.root.setPosition(this.point.lerp(boss.previous, boss.position, alpha));
         this.root.setRotation(this.rotation.slerp(boss.previousRotation, boss.rotation, alpha));
         for (let i = 0; i < 7; i++)
-            this.systems[i].enabled = boss.parts[i].active && (boss.parts[i].targetable || boss.arriving);
+            this.systems[i].enabled =
+                boss.parts[i].active &&
+                (boss.parts[i].targetable || boss.arriving || (boss.charge > 0 && boss.patterns.permitted));
         for (const e of this.engines) {
             e.enabled = boss.dying <= 0 || boss.deathAge < 1.5;
             e.setLocalScale(1, 1, boss.arriving ? 15 : boss.phase >= 2 ? 8 : 4);
         }
+        const f =
+            boss.charge > 0
+                ? 1 - boss.patterns.winding / boss.patterns.spec.telegraph[boss.phase - 1]
+                : boss.patterns.state === 'fire' && boss.patterns.time < 0.16
+                  ? 1
+                  : 0;
+        this.heat[0] = 0.08 + f * 0.16;
+        this.heat[1] = 0.025 + f * 0.05;
+        this.heat[2] = 0.15 + f * 0.35;
         for (const mi of this.meshes)
-            if (boss.phase === 2) mi.setParameter('material_emissive', TesserView.unstable);
+            if (boss.phase >= 2 || f > 0) mi.setParameter('material_emissive', this.heat);
             else mi.deleteParameter('material_emissive');
     }
-    private static readonly unstable = new Float32Array([0.24, 0.035, 0.015]);
     destroy() {
         this.encounter.destroy();
         this.closed = true;

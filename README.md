@@ -138,3 +138,17 @@ Use npm run build:pages for the filtered public mode and npm run release:verify 
 ## v0.5h.1 — Complete Phase 5H release
 
 Supersedes the reduced v0.5h release described above. Public and local builds now expose the same three ships and all Space Voyage convoy templates, cruiser engine effects, astronauts, garage, evasive roll and existing combat/audio. The optimized PTAH GLB, transparent roster thumbnail and Space Voyage GLB are tracked runtime assets. There is no public-only feature filter. build:pages verifies complete asset inclusion instead of exclusions. Existing asset attribution and provenance records are preserved; publication was explicitly directed by the user on 2026-11-16. No gameplay balancing changed for this release.
+
+## Phase 5I — local combat prototype
+
+Bosses now use plasma curtains, kinetic barrages, linked violet patterns and telegraphed beams, with finite escort fleets. Wave 20 introduces coordinated Dreadnought/Phantom combat; later paired encounters occur every twentieth wave. Boss health, component gates, models, rift entrances and soundtrack lifecycle remain intact.
+
+Space evasion now recharges in three seconds. V launches a six-missile Storm after 45 seconds of active recharge; it uses its own charge and preserves normal M ammunition. All three ships support the ability in chase and cockpit views. Left mouse/Z fires, M fires a normal missile, G activates EMP, C switches camera, and Escape pauses.
+
+Run `npm run test:bullethell` for the isolated dual-renderer suite. Production bundles exclude its encounter fixtures and pilot. Captures, video and performance evidence are local in artifacts/phase5i; the implementation report is docs/PHASE5I.md. This milestone is not published. Software-renderer timings are regression evidence rather than hardware performance or human difficulty validation.
+
+## v0.5i — Cinematic Boss Combat 2.0
+
+The complete user-approved Phase 5I implementation is the public release scope: cinematic energy effects and large 3D patterns, distinct Dreadnought/Phantom/Tesser attacks, finite boss escorts, coordinated dual-boss encounters from Wave 20, three-second evasion and charged Missile Storm. All three spacecraft, cockpit, garage, Space Voyage, exploration, audio and production assets remain included. The earlier local-only milestone description records development history; publication was explicitly authorized after personal playtesting.
+
+Release tag: `v0.5i-public`. No test pilot, encounter selector, screenshot gallery or recording is included in the game distribution. Later paired encounters retain unit coverage; hardware performance remains device-dependent, especially on High.

@@ -168,7 +168,8 @@ describe('Phantom encounter and retained progression', () => {
                 c.selected = target.id;
                 if (c.wave >= 3 && c.ammo > 0 && c.missileCooldown <= 0) c.launchMissile();
             }
-            ship.velocity.set(Math.sin(i * 0.013) * 16, Math.cos(i * 0.017) * 16, 0);
+            if (c.storm.ready) c.activateStorm();
+            ship.velocity.set(Math.sin(i * 0.013) * 42, Math.cos(i * 0.017) * 42, 0);
             ship.previous.copy(ship.position);
             ship.position.add(delta.copy(ship.velocity).mulScalar(dt));
             if (c.empCooldown <= 0 && c.enemies.some((e) => e.active && e.position.distance(ship.position) < 150))
@@ -184,7 +185,7 @@ describe('Phantom encounter and retained progression', () => {
         expect([...phases]).toEqual([1, 2, 3]);
         expect(roles.has('bomber')).toBe(true);
         expect(roles.has('carrier')).toBe(true);
-        expect(c.bosses).toBe(4);
+        expect(c.bosses).toBe(5);
         expect(c.phantom.health).toBe(0);
         expect(events).toEqual(Array.from({ length: 4 }, () => ['boss:spawn', 'boss:defeated']).flat());
         const store = { getItem: () => null, setItem: quiet },

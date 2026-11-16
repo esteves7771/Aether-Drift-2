@@ -12,7 +12,7 @@ describe('real lateral evasive roll', () => {
             for (let i = 0; i < 100; i++) f.step(neutral(), 1 / 120, true);
             expect(f.position.x * side).toBeGreaterThan(15);
             expect(f.evasion.active).toBe(false);
-            expect(f.evasion.cooldown).toBeGreaterThan(4);
+            expect(f.evasion.cooldown).toBeGreaterThan(2);
             expect(f.rotation.transformVector(Vec3.FORWARD).distance(Vec3.FORWARD)).toBeLessThan(0.001);
             f.reset();
             expect(f.evasion.cooldown).toBe(0);
